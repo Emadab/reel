@@ -8,7 +8,7 @@ Branch `expansion/phase-8-cross-media`, stacked on phase 7.
 - `c145cbe` Goodreads, StoryGraph and IMDb TV imports with review and no duplicates
 - `cd85707` Never let a cache write deadlock a job: commit per step, best-effort cache writes
 - `4bdf7c1` Per-medium Timeline, Stats (with All media), For you, Taste map and Import pages
-- `(next)` README section and this report
+- `5257191` README section and this report
 
 ## What exists
 In every media mode, the sidebar now has the same sections as movies: Library, Timeline, Stats, For you, Taste map, and Calendar (with announcements on).
