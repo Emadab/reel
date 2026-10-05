@@ -15,7 +15,8 @@ from app.config import settings
 from app.models import Feedback, Watch, WatchlistItem
 from app.recommender import candidates, ranker, service
 from app.routers import history, search
-from conftest import drain, log
+from conftest import drain
+from conftest import log as log_
 from test_import_and_recs import DIARY, IMDB
 
 GOLDEN = Path(__file__).parent / "golden" / "movies.json"
@@ -46,8 +47,14 @@ def _clean(v):
 def _scenario(c) -> dict:
     out: dict = {}
 
+    def log(*a, **kw):  # every write is followed by its background work, so retraining never races the next write
+        w = log_(*a, **kw)
+        drain(c)
+        return w
+
     def call(name: str, method: str, path: str, **kw):
         r = c.request(method, path, **kw)
+        drain(c)
         out[name] = {"status": r.status_code, "body": _clean(r.json()) if r.content and "json" in r.headers.get("content-type", "") else None}
         return r
 

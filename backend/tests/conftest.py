@@ -4,6 +4,7 @@ import hashlib
 import io
 import os
 import re
+import shutil
 import tempfile
 
 os.environ["DATA_DIR"] = tempfile.mkdtemp(prefix="reel-test-")
@@ -128,6 +129,11 @@ def client(monkeypatch):
     monkeypatch.setattr(features, "embed_texts", fake_embed)
     db.engine.dispose()
     SQLModel.metadata.drop_all(db.engine)
+    from app.config import settings
+
+    for folder in (settings.media_dir, settings.models_dir):  # every test starts with a cold image/model cache
+        shutil.rmtree(folder, ignore_errors=True)
+        folder.mkdir()
     with tmdb_router(), TestClient(app_module().app) as c:
         yield c
         c.portal.call(jobs.drain)  # let background jobs finish before the next test resets the database
