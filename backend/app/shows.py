@@ -1,0 +1,130 @@
+"""TV series: fetch (TMDB metadata + TVmaze airstamps), episode ticks, state derivation and up next.
+
+Derived states (§5.3): watching while aired regular episodes remain unwatched; caught_up when all aired
+episodes are watched and the show continues; completed when it has ended or been canceled. Specials
+(season 0) never count. Sticky states (on_hold, dropped) are never overridden."""
+from datetime import UTC, datetime
+
+from fastapi import HTTPException
+from sqlmodel import Session, col, select
+
+from . import items
+from .models_media import Episode, Event, Item, Run
+from .providers import tvmaze
+from .providers.base import ItemData
+from .providers.http import ProviderUnavailable
+from .providers.tmdb_tv import provider as tmdb_tv
+from .status import STICKY, transition
+
+
+async def fetch_show(tmdb_id: str) -> ItemData | None:
+    data = await tmdb_tv.fetch(tmdb_id)
+    if data is None or not (imdb := data.external_ids.get("imdb")):
+        return data
+    try:
+        found = await tvmaze.lookup_imdb(imdb)
+        if not found:
+            return data
+        exact = {(e.season, e.number): e for e in await tvmaze.episodes(found["tvmaze_id"]) if e.season > 0}
+    except ProviderUnavailable:
+        return data  # TMDB's dates are good enough until TVmaze is reachable
+    data.external_ids["tvmaze"] = found["tvmaze_id"]
+    for e in data.episodes:
+        if (m := exact.get((e.season, e.number))) and m.airstamp_utc:
+            e.airstamp_utc = m.airstamp_utc
+            e.provider_ids.update(m.provider_ids)
+    return data
+
+
+def now() -> datetime:
+    return datetime.now(UTC)
+
+
+def aired(e: Episode, at: datetime | None = None) -> bool:
+    return e.airstamp_utc is not None and items.utc(e.airstamp_utc) <= (at or now())
+
+
+def episodes(s: Session, item_id: int) -> list[Episode]:
+    return list(s.exec(select(Episode).where(Episode.item_id == item_id).order_by(col(Episode.season), col(Episode.number))))
+
+
+def watched_ids(s: Session, run: Run | None) -> set[int]:
+    if not run:
+        return set()
+    return {e.episode_id for e in s.exec(select(Event).where(Event.run_id == run.id, Event.kind == "episode_watched")) if e.episode_id}
+
+
+def derive(s: Session, item: Item, run: Run, at: datetime | None = None) -> None:
+    """Recompute progress and the derived state. Caller commits."""
+    regular = [e for e in episodes(s, item.id) if not e.is_special]  # type: ignore[arg-type]
+    on_air = [e for e in regular if aired(e, at)]
+    seen = watched_ids(s, run)
+    n_seen = sum(1 for e in on_air if e.id in seen)
+    run.progress = {"watched": n_seen, "aired": len(on_air), "total": len(regular)}
+    s.add(run)
+    if run.status in STICKY or (run.status is None and n_seen == 0):
+        return
+    if n_seen < len(on_air):
+        target = "watching"
+    else:
+        target = "completed" if item.status in ("ended", "canceled") else "caught_up"
+    if not transition(s, run, "show", target, source="derived"):
+        # no direct edge (completed → watching after a revival airs): go through caught_up
+        if transition(s, run, "show", "caught_up", source="derived"):
+            transition(s, run, "show", target, source="derived")
+
+
+def active_run(s: Session, item: Item) -> Run:
+    """The run episode ticks go to; a show you've never ticked gets its first run here."""
+    run = items.current_run(s, item.id)  # type: ignore[arg-type]
+    return run or items.new_run(s, item)
+
+
+def set_watched(s: Session, item: Item, episode_ids: list[int], watched: bool, when: datetime | None = None) -> Run:
+    run = active_run(s, item)
+    eps = {e.id: e for e in episodes(s, item.id)}  # type: ignore[arg-type]
+    if any(i not in eps for i in episode_ids):
+        raise HTTPException(404, "Episode not found")
+    seen = watched_ids(s, run)
+    for i in episode_ids:
+        if watched and i not in seen:
+            if not eps[i].is_special and not aired(eps[i]):
+                continue  # can't have watched what hasn't aired
+            s.add(Event(item_id=item.id, run_id=run.id, episode_id=i, kind="episode_watched",  # type: ignore[arg-type]
+                        occurred_at=when or now(), payload={"season": eps[i].season, "number": eps[i].number}))
+        elif not watched and i in seen:
+            # an untick undoes a mistaken tick rather than recording an "unwatched" fact
+            for ev in s.exec(select(Event).where(Event.run_id == run.id, Event.episode_id == i, Event.kind == "episode_watched")):
+                s.delete(ev)
+    s.flush()
+    derive(s, item, run)
+    s.commit()
+    return run
+
+
+def next_episode(s: Session, item: Item, run: Run | None) -> Episode | None:
+    seen = watched_ids(s, run)
+    return next((e for e in episodes(s, item.id) if not e.is_special and aired(e) and e.id not in seen), None)  # type: ignore[arg-type]
+
+
+def upcoming_episode(s: Session, item: Item) -> Episode | None:
+    return next((e for e in episodes(s, item.id) if not e.is_special and e.airstamp_utc and not aired(e)), None)  # type: ignore[arg-type]
+
+
+def episode_out(e: Episode, seen: set[int]) -> dict:
+    return {"id": e.id, "season": e.season, "number": e.number, "title": e.title, "overview": e.overview,
+            "airstamp": items.utc(e.airstamp_utc).isoformat() if e.airstamp_utc else None, "aired": aired(e),
+            "runtime": e.runtime_min, "still": e.still_path, "special": e.is_special, "watched": e.id in seen}
+
+
+def rederive_all(s: Session) -> int:
+    """Time passing airs episodes: re-derive every show run that isn't sticky (startup + scheduler)."""
+    changed = 0
+    for item in s.exec(select(Item).where(Item.kind == "show")):
+        run = items.current_run(s, item.id)  # type: ignore[arg-type]
+        if run and run.status not in STICKY:
+            before = run.status
+            derive(s, item, run)
+            changed += run.status != before
+    s.commit()
+    return changed
