@@ -12,7 +12,7 @@ from typing import Any
 
 import httpx
 from fastapi import HTTPException
-from sqlmodel import Session
+from sqlmodel import Session, col, select
 
 from .. import db, net
 from ..config import settings
@@ -56,6 +56,14 @@ class Client:
         self.limiter = Limiter(rate)
         self.http = httpx.AsyncClient(base_url=base_url, timeout=net.TIMEOUT, follow_redirects=True, headers=headers or {})
         self._inflight: dict[str, asyncio.Future] = {}
+
+    def forget(self, path_prefix: str) -> None:
+        """Drop cached responses under a path, so the next call refetches (e.g. a game's release date)."""
+        prefix = str(self.http.base_url).rstrip("/") + path_prefix
+        with Session(db.engine) as s:
+            for row in s.exec(select(HttpCache).where(col(HttpCache.url).startswith(prefix))):
+                s.delete(row)
+            s.commit()
 
     async def get(self, path: str, params: dict | None = None, ttl: int | None = None, headers: dict | None = None) -> Any:
         return await self.request("GET", path, params=params, ttl=ttl, headers=headers)

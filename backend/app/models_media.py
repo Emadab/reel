@@ -129,3 +129,33 @@ class Event(SQLModel, table=True):
     occurred_at: datetime = Field(default_factory=now, index=True)
     date_precision: str = "day"
     payload: dict = _json(dict)
+
+
+class Follow(SQLModel, table=True):
+    """Explicit follows: a book author or series (announcements), or a muted item (notify=False)."""
+    id: int | None = Field(default=None, primary_key=True)
+    target_kind: str  # item | author | series
+    target_id: str
+    name: str | None = None
+    notify: bool = True
+    created_at: datetime = Field(default_factory=now)
+
+
+class Notification(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    item_id: int | None = Field(default=None, index=True)
+    episode_id: int | None = None
+    type: str  # episode_aired | season_announced | date_moved | renewed | canceled | ended | digital_release | book_announced | released | dlc
+    payload: dict = _json(dict)  # title, text, path (where clicking goes), push (deliver outside the app)
+    dedupe_key: str = Field(unique=True)
+    created_at: datetime = Field(default_factory=now, index=True)
+    seen_at: datetime | None = None
+    delivered_desktop_at: datetime | None = None
+    delivered_push_at: datetime | None = None
+
+
+class SyncState(SQLModel, table=True):
+    provider: str = Field(primary_key=True)
+    job: str = Field(primary_key=True)
+    last_run_at: datetime | None = None
+    cursor: dict = _json(dict)
