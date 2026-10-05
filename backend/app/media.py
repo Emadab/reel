@@ -1,5 +1,6 @@
 """Image download (data/media/...) and poster palette extraction (ARCHITECTURE §4)."""
 import asyncio
+import hashlib
 import math
 from pathlib import Path
 
@@ -161,3 +162,41 @@ def poster_art(tmdb_id: int, palette: list[str], dominant: str | None) -> dict:
 
 def on_glow_text(glow: str) -> str:
     return "#120904" if contrast(glow, "#120904") >= 4.5 else "#FFFFFF"
+
+
+# ---- images for shows, books and games: data/media/<kind>/<sha1 of url>.<ext> ----
+any_client = httpx.AsyncClient(timeout=net.TIMEOUT, follow_redirects=True, headers={"User-Agent": "Reel/0.1 (personal media tracker)"})
+
+
+async def store_image(kind: str, url: str | None) -> str | None:
+    """Download once and return the /media/... URL; None when there is no image or we're offline."""
+    if not url:
+        return None
+    ext = Path(url.split("?")[0]).suffix.lower()
+    ext = ext if ext in (".jpg", ".jpeg", ".png", ".webp") else ".jpg"
+    name = f"{hashlib.sha1(url.encode()).hexdigest()[:20]}{ext}"
+    f = settings.media_dir / kind / name
+    if not f.exists():
+        if net.offline():
+            return None
+        try:
+            async with _sem:
+                r = await any_client.get(url)
+        except httpx.TransportError:
+            net.mark_offline()
+            return None
+        if r.status_code != 200 or not r.headers.get("content-type", "image").startswith("image"):
+            return None
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_bytes(r.content)
+    return f"/media/{kind}/{name}"
+
+
+def palette_for(media_url: str | None) -> tuple[list[str], str | None]:
+    """Palette from a stored image, reusing the poster method; ([], None) if it can't be read."""
+    if not media_url:
+        return [], None
+    try:
+        return extract_palette(settings.media_dir / media_url.removeprefix("/media/"))
+    except Exception:  # a corrupt or tiny image must not break an add
+        return [], None
