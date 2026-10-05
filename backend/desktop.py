@@ -72,6 +72,7 @@ if user32:
     user32.SetWindowLongPtrW.argtypes = [wt.HWND, ctypes.c_int, ctypes.c_ssize_t]
     user32.IsZoomed.argtypes = [wt.HWND]
     user32.GetDpiForWindow.argtypes = [wt.HWND]
+    user32.SetWindowPos.argtypes = [wt.HWND, wt.HWND, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, wt.UINT]
 
 
 def hwnd_of(window: webview.Window) -> int:
@@ -84,19 +85,43 @@ def on_ui(window: webview.Window, fn) -> None:
     window.native.BeginInvoke(Action(fn))
 
 
-def fit_maximized(window: webview.Window) -> None:
-    """A borderless form maximizes over the taskbar; cap it to the work area of its current monitor."""
-    from System.Drawing import Rectangle  # type: ignore[import-not-found]
-    from System.Windows.Forms import Screen  # type: ignore[import-not-found]
+class RECT(ctypes.Structure):
+    _fields_ = [("left", ctypes.c_long), ("top", ctypes.c_long), ("right", ctypes.c_long), ("bottom", ctypes.c_long)]
 
-    form = window.native
-    scr = Screen.FromHandle(form.Handle)
-    wa, b = scr.WorkingArea, scr.Bounds
-    form.MaximizedBounds = Rectangle(wa.X - b.X, wa.Y - b.Y, wa.Width, wa.Height)
+
+if user32:
+    SUBCLASSPROC = ctypes.WINFUNCTYPE(ctypes.c_ssize_t, wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM, ctypes.c_size_t, ctypes.c_size_t)
+    comctl32 = ctypes.windll.comctl32
+    comctl32.SetWindowSubclass.argtypes = [wt.HWND, SUBCLASSPROC, ctypes.c_size_t, ctypes.c_size_t]
+    comctl32.DefSubclassProc.restype = ctypes.c_ssize_t
+    comctl32.DefSubclassProc.argtypes = [wt.HWND, wt.UINT, wt.WPARAM, wt.LPARAM]
+    user32.GetSystemMetricsForDpi.argtypes = [ctypes.c_int, wt.UINT]
+
+
+def _frame_proc(hwnd, msg, wp, lp, _id, _ref):
+    """The window keeps its native resizable frame styles (so Windows snaps, maximizes and animates it like any other
+    window) but no visible frame: the client area takes the whole window. Maximized windows overhang the monitor by
+    the frame width, so then the client is inset by exactly that much."""
+    if msg == 0x83 and wp:  # WM_NCCALCSIZE
+        if user32.IsZoomed(hwnd):
+            dpi = user32.GetDpiForWindow(hwnd) or 96
+            pad = user32.GetSystemMetricsForDpi(92, dpi)  # SM_CXPADDEDBORDER
+            fx = user32.GetSystemMetricsForDpi(32, dpi) + pad  # SM_CXFRAME
+            fy = user32.GetSystemMetricsForDpi(33, dpi) + pad  # SM_CYFRAME
+            r = ctypes.cast(lp, ctypes.POINTER(RECT)).contents  # NCCALCSIZE_PARAMS.rgrc[0]
+            r.left += fx
+            r.right -= fx
+            r.top += fy
+            r.bottom -= fy
+        return 0
+    return comctl32.DefSubclassProc(hwnd, msg, wp, lp)
+
+
+_frame_proc_ref = SUBCLASSPROC(_frame_proc) if user32 else None  # kept alive for the window's lifetime
 
 
 class Chrome:
-    """The custom title bar's window controls (the window is frameless). Called from the page as pywebview.api.*"""
+    """The custom title bar's window controls (the frame is hidden). Called from the page as pywebview.api.*"""
 
     def __init__(self) -> None:
         self._window: webview.Window | None = None
@@ -109,12 +134,7 @@ class Chrome:
         if user32.IsZoomed(hwnd_of(w)):
             w.restore()
             return False
-
-        def go() -> None:
-            fit_maximized(w)
-            w.native.WindowState = w.native.WindowState.Maximized
-
-        on_ui(w, go)
+        w.maximize()
         return True
 
     def is_maximized(self) -> bool:
@@ -137,7 +157,7 @@ class Chrome:
 
 
 def setup_native(window: webview.Window, maximized: bool) -> None:
-    """Runs once the native form exists: crisp DPI-sized icons, Win11 corners, taskbar minimize, saved maximize."""
+    """Runs once the native form exists: hide the frame, crisp DPI-sized icons, Win11 corners, saved maximize."""
     for _ in range(100):
         if window.native is not None:
             break
@@ -157,15 +177,12 @@ def setup_native(window: webview.Window, maximized: bool) -> None:
                     user32.SendMessageW(hwnd, 0x80, which, h)  # WM_SETICON
             # rounded corners on Windows 11 (no-op on 10)
             ctypes.windll.dwmapi.DwmSetWindowAttribute(hwnd, 33, ctypes.byref(ctypes.c_int(2)), 4)
-            # min/max boxes + system menu: taskbar click minimizes, Win+arrows work; nothing is drawn (no caption)
-            style = user32.GetWindowLongPtrW(hwnd, -16)
-            user32.SetWindowLongPtrW(hwnd, -16, style | 0x20000 | 0x10000 | 0x80000)
-            fit_maximized(window)
+            comctl32.SetWindowSubclass(hwnd, _frame_proc_ref, 1, 0)
+            user32.SetWindowPos(hwnd, None, 0, 0, 0, 0, 0x27)  # SWP_FRAMECHANGED|NOMOVE|NOSIZE|NOZORDER: drop the frame now
             if maximized:
                 window.native.WindowState = window.native.WindowState.Maximized
 
         on_ui(window, native)
-        window.events.moved += lambda *_: on_ui(window, lambda: fit_maximized(window))
     except Exception:
         pass  # cosmetic only
 
@@ -191,7 +208,7 @@ def main() -> None:
     window = webview.create_window(
         "Reel", f"http://127.0.0.1:{port}{start}", width=g["width"], height=g["height"], x=g["x"], y=g["y"],
         min_size=(390, 600), background_color="#07080C", text_select=True,
-        frameless=True, easy_drag=False, shadow=True, js_api=chrome,  # the UI draws its own title bar
+        js_api=chrome,  # a normal resizable window whose frame setup_native hides; the UI draws its own title bar
     )
     chrome._window = window
 

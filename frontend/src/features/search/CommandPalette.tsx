@@ -161,9 +161,9 @@ function PaletteBody({ initialFor, initialQuery }: { initialFor?: PaletteFilm; i
   };
 
   return (
-    <div className="relative rounded-[24px] bg-(--color-bg-dialog) border border-(--line-4) backdrop-blur-[40px] backdrop-saturate-[140%] shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(0,0,0,0.4)] overflow-hidden max-[639px]:rounded-none max-[639px]:min-h-full palette-in">
-      <Command label="Search films" shouldFilter={false} value={selected} onValueChange={setSelected} loop onKeyDown={onKeyDown}>
-        <div className="flex items-center gap-[14px] px-[22px] h-[68px] border-b border-(--line-1)">
+    <div className="relative flex flex-col max-h-[calc(100dvh-96px)] max-[639px]:max-h-dvh rounded-[24px] bg-(--color-bg-dialog) border border-(--line-4) backdrop-blur-[40px] backdrop-saturate-[140%] shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(0,0,0,0.4)] overflow-hidden max-[639px]:rounded-none max-[639px]:min-h-full palette-in">
+      <Command label="Search films" shouldFilter={false} value={selected} onValueChange={setSelected} loop onKeyDown={onKeyDown} className={cx("flex flex-col min-h-0", formFor && !isCommand ? "shrink-[3] min-h-[188px]" : "shrink")}>
+        <div className="shrink-0 flex items-center gap-[14px] px-[22px] h-[68px] border-b border-(--line-1)">
           <IconSearch size={20} strokeWidth={1.8} className="text-ink-3 shrink-0" />
           <Command.Input
             autoFocus
@@ -175,7 +175,7 @@ function PaletteBody({ initialFor, initialQuery }: { initialFor?: PaletteFilm; i
           />
           <Kbd className="text-ink-3 px-[7px] py-[3px]">Esc</Kbd>
         </div>
-        <Command.List className="pt-[14px] px-3 pb-[6px] max-h-[min(52vh,420px)] overflow-y-auto empty:hidden">
+        <Command.List className="min-h-0 pt-[14px] px-3 pb-[6px] max-h-[min(52vh,420px)] overflow-y-auto scroll-quiet empty:hidden">
           {isCommand ? (
             <>
               <GroupHeading left="COMMANDS" />
@@ -211,7 +211,7 @@ function PaletteBody({ initialFor, initialQuery }: { initialFor?: PaletteFilm; i
       </Command>
 
       {formFor && !isCommand && (
-        <div ref={formRef}>
+        <div ref={formRef} className="shrink min-h-0 overflow-y-auto scroll-quiet">
           <LogWatchForm
             key={formFor.tmdb_id}
             id="log-form"
@@ -223,7 +223,7 @@ function PaletteBody({ initialFor, initialQuery }: { initialFor?: PaletteFilm; i
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 py-[14px] px-[22px] border-t border-(--line-1)">
+      <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 py-[14px] px-[22px] border-t border-(--line-1)">
         <div className="flex flex-wrap gap-4 text-[12px] text-ink-3">
           <span className="flex gap-[6px] items-center"><Kbd className="rounded-[5px] px-[6px] py-px">↑↓</Kbd>choose</span>
           <span className="flex gap-[6px] items-center"><Kbd className="rounded-[5px] px-[6px] py-px">Tab</Kbd>next field</span>
@@ -262,20 +262,22 @@ export function EditWatchDialog() {
   const { id: _id, tmdb_id: _t, ...initial } = watch;
   return (
     <Dialog open onClose={close} label="Edit watch" top={96} className="w-[calc(100%-32px)] max-w-[760px] max-[639px]:max-w-none max-[639px]:w-full max-[639px]:h-full max-[639px]:m-0">
-      <div className="rounded-[24px] bg-(--color-bg-dialog) border border-(--line-4) backdrop-blur-[40px] backdrop-saturate-[140%] shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(0,0,0,0.4)] overflow-hidden palette-in max-[639px]:rounded-none max-[639px]:min-h-full">
-        <LogWatchForm
-          id="edit-form"
-          heading={`Edit ${film.title}${film.year ? ` (${film.year})` : ""}`}
-          hint={null}
-          initial={initial}
-          onSubmit={async (v) => {
-            await edit.mutateAsync({ id: watch.id, patch: v });
-            close();
-            toast({ text: "Watch updated" });
-          }}
-          className="m-3"
-        />
-        <div className="flex flex-wrap items-center justify-between gap-3 py-[14px] px-[22px] border-t border-(--line-1)">
+      <div className="flex flex-col max-h-[calc(100dvh-120px)] max-[639px]:max-h-dvh rounded-[24px] bg-(--color-bg-dialog) border border-(--line-4) backdrop-blur-[40px] backdrop-saturate-[140%] shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(0,0,0,0.4)] overflow-hidden palette-in max-[639px]:rounded-none max-[639px]:min-h-full">
+        <div className="min-h-0 overflow-y-auto scroll-quiet">
+          <LogWatchForm
+            id="edit-form"
+            heading={`Edit ${film.title}${film.year ? ` (${film.year})` : ""}`}
+            hint={null}
+            initial={initial}
+            onSubmit={async (v) => {
+              await edit.mutateAsync({ id: watch.id, patch: v });
+              close();
+              toast({ text: "Watch updated" });
+            }}
+            className="m-3"
+          />
+        </div>
+        <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 py-[14px] px-[22px] border-t border-(--line-1)">
           {confirm ? (
             <span className="flex items-center gap-3 text-[14px]">
               Delete this watch?
