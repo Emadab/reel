@@ -18,10 +18,10 @@ import { Kbd, cx } from "./ui";
 type NavItem = { to: string; label: string; icon: ComponentType<{ size?: number; strokeWidth?: number }>; end?: boolean; media?: boolean; announcements?: boolean };
 const NAV_ALL: NavItem[] = [
   { to: "/", label: "Library", icon: IconLibrary, end: true, media: true },
-  { to: "/timeline", label: "Timeline", icon: IconTimeline },
-  { to: "/stats", label: "Stats", icon: IconStats },
-  { to: "/for-you", label: "For you", icon: IconForYou },
-  { to: "/map", label: "Taste map", icon: IconTasteMap },
+  { to: "/timeline", label: "Timeline", icon: IconTimeline, media: true },
+  { to: "/stats", label: "Stats", icon: IconStats, media: true },
+  { to: "/for-you", label: "For you", icon: IconForYou, media: true },
+  { to: "/map", label: "Taste map", icon: IconTasteMap, media: true },
   { to: "/calendar", label: "Calendar", icon: IconCalendar, media: true, announcements: true },
 ];
 /** The same sections in every mode, under the mode's prefix (movies keep the original routes). */

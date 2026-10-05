@@ -57,14 +57,14 @@ export function Heatmap({ start, end, days }: { start: string; end: string; days
   );
 }
 
-export function HeatmapLegend() {
+export function HeatmapLegend({ unit = "films" }: { unit?: string }) {
   return (
     <div className="flex items-center gap-[6px] text-[12px] text-ink-3" aria-hidden>
       <span>none</span>
       <span className="size-[13px] rounded-[3px] bg-(--fill-cell-empty)" />
       <span className="size-[13px] rounded-[3px]" style={{ background: mix(accent, 55, "#07080C") }} />
       <span className="size-[13px] rounded-[3px] bg-accent" />
-      <span>2 films</span>
+      <span>2 {unit}</span>
     </div>
   );
 }

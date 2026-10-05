@@ -82,6 +82,30 @@ export type CalendarEntry = { at: string; day: string; item: ItemCard; label: st
 export type FollowState = { notify: boolean; priority: boolean };
 export type FollowRow = { id: number; target_kind: "author" | "series"; target_id: string; name: string };
 
+export type RunRef = { id: number; status: string; finished_on: string; precision: "day" | "month" | "year"; rating: number | null; run_no: number };
+export type TimelineEntry = ItemCard & { run: RunRef };
+export type MediaTimeline = {
+  year: number;
+  totals: { finished: number; approx: number; hours?: number; episodes?: number; pages?: number };
+  months: { month: number; items: TimelineEntry[]; approx: TimelineEntry[]; activity: number }[];
+  year_only: TimelineEntry[];
+};
+export type MediaStats = {
+  kpis: { items: number; finished: number; dropped: number; drop_rate: number | null; in_progress: number; active_days: number;
+    avg_rating: number | null; hours?: number; episodes?: number; pages?: number };
+  genres: { name: string; value: number; count?: number }[];
+  people: { title: string; rows: { name: string; count: number }[] }[];
+  ratings: { bin: number; count: number }[];
+  mean: number | null;
+  heatmap: { start: string; end: string; days: { date: string; count: number }[] };
+};
+export type AllStats = { rows: { kind: "movie" | Kind; label: string; finished: number; finished_label: string; hours: number | null; pages: number | null; drop_rate: number | null; drop_label: string | null }[]; hours: number };
+export type MediaRec = ItemCard & { score: number; because: ItemCard[]; reasons: string[]; overview: string | null };
+export type MediaRecs = { items: MediaRec[]; model: string | null; learned_from: number; computing: boolean };
+export type MapPoint = { id: number; title: string; x: number; y: number; kind: "mine" | "suggested"; rating?: number | null; status?: string | null; color?: string; score?: number; poster: string | null };
+export type ImportRow = { raw: { title: string; author: string | null; status: string; rating: number | null; date: string | null; precision: string }; status: "pending" | "matched" | "ambiguous" | "unmatched"; ext_id?: string | null; include?: boolean; options?: { ext_id: string; title: string; year: number | string | null; subtitle?: string | null }[] };
+export type MediaImportJob = { id: number; source: string; committed: boolean; state: string; progress: { done: number; total: number }; summary: { matched: number; ambiguous: number; unmatched: number; included: number }; rows: ImportRow[] };
+
 export type MediaSort = "recent" | "rating" | "year" | "title";
 
 export const mediaApi = {
@@ -112,6 +136,21 @@ export const mediaApi = {
   follows: () => request<FollowRow[]>("GET", "/follows"),
   addFollow: (body: { target_kind: "author" | "series"; target_id: string; name: string }) => request<FollowRow[]>("POST", "/follows", { body }),
   removeFollow: (id: number) => request<void>("DELETE", `/follows/${id}`),
+  timeline: (kind: Kind, year: number) => request<MediaTimeline>("GET", `/media/${kind}/timeline`, { params: { year } }),
+  years: (kind: Kind) => request<{ year: number; total: number; approx: number }[]>("GET", `/media/${kind}/timeline/years`),
+  stats: (kind: Kind | "all", range: string) => request<MediaStats>("GET", `/media/${kind}/stats`, { params: { range } }),
+  allStats: (range: string) => request<AllStats>("GET", "/media/all/stats", { params: { range } }),
+  recs: (kind: Kind) => request<MediaRecs>("GET", `/media/${kind}/recommendations`),
+  recompute: (kind: Kind) => request<void>("POST", `/media/${kind}/recommendations/recompute`),
+  tastemap: (kind: Kind) => request<{ points: MapPoint[] }>("GET", `/media/${kind}/tastemap`),
+  importUpload: (source: string, file: File) => {
+    const fd = new FormData();
+    fd.append("files", file);
+    return request<{ job_id: number; rows: number }>("POST", `/media/import/${source}`, { body: fd });
+  },
+  importJob: (id: number) => request<MediaImportJob>("GET", `/media/import/${id}`),
+  patchImportRow: (id: number, i: number, body: { ext_id?: string; include?: boolean }) => request<unknown>("PATCH", `/media/import/${id}/rows/${i}`, { body }),
+  commitImport: (id: number) => request<{ created: number; skipped: number }>("POST", `/media/import/${id}/commit`),
   backlog: () => request<(ItemCard & { hours_left: number | null })[]>("GET", "/media/backlog"),
 };
 
@@ -124,6 +163,16 @@ export const useNotifications = (enabled: boolean) =>
   useQuery({ queryKey: ["media", "notifications"], queryFn: mediaApi.notifications, enabled, refetchInterval: 60_000 });
 export const useCalendar = (kind: Kind) => useQuery({ queryKey: ["media", kind, "calendar"], queryFn: () => mediaApi.calendar(kind) });
 export const useFollows = (enabled: boolean) => useQuery({ queryKey: ["media", "follows"], queryFn: mediaApi.follows, enabled });
+export const useMediaTimeline = (kind: Kind, year: number) =>
+  useQuery({ queryKey: ["media", kind, "timeline", year], queryFn: () => mediaApi.timeline(kind, year), placeholderData: keepPreviousData });
+export const useMediaYears = (kind: Kind) => useQuery({ queryKey: ["media", kind, "years"], queryFn: () => mediaApi.years(kind) });
+export const useMediaStats = (kind: Kind, range: string) =>
+  useQuery({ queryKey: ["media", kind, "stats", range], queryFn: () => mediaApi.stats(kind, range), placeholderData: keepPreviousData });
+export const useAllStats = (range: string, enabled: boolean) =>
+  useQuery({ queryKey: ["media", "all", "stats", range], queryFn: () => mediaApi.allStats(range), enabled });
+export const useMediaRecs = (kind: Kind) =>
+  useQuery({ queryKey: ["media", kind, "recs"], queryFn: () => mediaApi.recs(kind), refetchInterval: (q) => (q.state.data?.computing ? 4000 : false) });
+export const useMediaMap = (kind: Kind) => useQuery({ queryKey: ["media", kind, "map"], queryFn: () => mediaApi.tastemap(kind) });
 export const useBacklog = () => useQuery({ queryKey: ["media", "backlog"], queryFn: mediaApi.backlog });
 export const useUpNext = (enabled: boolean) => useQuery({ queryKey: ["media", "show", "up-next"], queryFn: mediaApi.upNext, enabled });
 

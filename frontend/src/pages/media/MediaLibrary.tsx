@@ -6,7 +6,7 @@ import { useAmbientGlow } from "../../components/Glow";
 import { IconCheck, IconPlus } from "../../components/Icons";
 import { Poster, posterBg } from "../../components/Poster";
 import { useToast } from "../../components/Toasts";
-import { Button, PageHeader, PillTab, SectionTitle, cx } from "../../components/ui";
+import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx } from "../../components/ui";
 import { usePalette } from "../../features/search/palette";
 import { num } from "../../lib/format";
 import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
@@ -135,6 +135,7 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
   return (
     <main className={cx("flex flex-col gap-8 pt-9 pb-16 max-[1023px]:pt-7 max-[639px]:pt-5 max-[639px]:pb-24 box-border min-w-0", pagePad)}>
       <PageHeader title={MODES[kind].label} subline={all.data ? subline : " "}>
+        {kind !== "game" && <ButtonLink to={`${MODES[kind].base}/import`}>Import</ButtonLink>}
         <Button variant="primary" onClick={() => openPalette()}>
           <IconPlus size={16} />
           {MODES[kind].add}

@@ -28,7 +28,7 @@ function kpis(s: StatsT, all: boolean, year: number) {
   ];
 }
 
-function ChartPanel({ title, extra, right, table, children, className = "" }: { title: string; extra?: ReactNode; right?: ReactNode; table?: ReactNode; children: ReactNode; className?: string }) {
+export function ChartPanel({ title, extra, right, table, children, className = "" }: { title: string; extra?: ReactNode; right?: ReactNode; table?: ReactNode; children: ReactNode; className?: string }) {
   const [asTable, setAsTable] = useState(false);
   return (
     <section className={`p-6 rounded-[22px] bg-(--fill-glass) border border-(--line-2) flex flex-col ${className}`}>
