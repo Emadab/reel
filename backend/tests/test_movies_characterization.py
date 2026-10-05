@@ -70,10 +70,12 @@ def _scenario(c) -> dict:
     extra = log(c, 11104, "2026-09-01", 6)
     call("delete_watch", "DELETE", f"/api/watches/{extra['id']}")
     call("delete_missing", "DELETE", "/api/watches/999999")
+    drain(c)  # edits trigger a background recompute; reading mid-job makes neighbour scores timing-dependent
     call("recent", "GET", "/api/watches/recent")
     call("movie", "GET", "/api/movies/329865")
     call("movie_missing", "GET", "/api/movies/1")
     call("refresh", "POST", "/api/movies/335984/refresh")
+    drain(c)
     for tab in ("watched", "watchlist", "rewatches"):
         for sort in ("recent", "rating", "year", "title", "runtime"):
             call(f"library_{tab}_{sort}", "GET", "/api/library", params={"tab": tab, "sort": sort})
