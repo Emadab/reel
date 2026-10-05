@@ -10,7 +10,9 @@ import { IconSearch } from "../../components/Icons";
 import { Poster } from "../../components/Poster";
 import { useToast } from "../../components/Toasts";
 import { Badge, ErrorLine, Kbd, cx } from "../../components/ui";
+import { MODES, useMode } from "../../lib/mode";
 import { emptyValues, LogWatchForm, type LogValues } from "./LogWatchForm";
+import { MediaPalette } from "./MediaPalette";
 import { usePalette, type PaletteFilm } from "./palette";
 
 function useDebounced<T>(value: T, ms: number): T {
@@ -73,9 +75,10 @@ function GroupHeading({ left, right }: { left: string; right?: string }) {
 export function CommandPalette() {
   const { state, close } = usePalette();
   const open = state.kind === "palette";
+  const mode = useMode();
   return (
-    <Dialog open={open} onClose={close} label="Search films" className="w-[calc(100%-32px)] max-w-[762px] max-[639px]:max-w-none max-[639px]:w-full max-[639px]:h-full max-[639px]:m-0 palette-dialog">
-      {open && <PaletteBody initialFor={state.logFor} initialQuery={state.query} />}
+    <Dialog open={open} onClose={close} label={mode === "movie" ? "Search films" : `Search ${MODES[mode].noun[1]}`} className="w-[calc(100%-32px)] max-w-[762px] max-[639px]:max-w-none max-[639px]:w-full max-[639px]:h-full max-[639px]:m-0 palette-dialog">
+      {open && (mode === "movie" ? <PaletteBody initialFor={state.logFor} initialQuery={state.query} /> : <MediaPalette kind={mode} />)}
     </Dialog>
   );
 }

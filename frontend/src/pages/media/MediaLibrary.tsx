@@ -1,0 +1,196 @@
+import { useMemo } from "react";
+import { Link, useSearchParams } from "react-router";
+import { mediaApi, useMediaLibrary, useMediaMut, useUpNext, type ItemCard, type Kind, type MediaSort, type UpNext } from "../../api/media";
+import { FilterChip } from "../../components/FilterChip";
+import { useAmbientGlow } from "../../components/Glow";
+import { IconCheck, IconPlus } from "../../components/Icons";
+import { Poster, posterBg } from "../../components/Poster";
+import { useToast } from "../../components/Toasts";
+import { Button, PageHeader, PillTab, SectionTitle, cx } from "../../components/ui";
+import { usePalette } from "../../features/search/palette";
+import { num } from "../../lib/format";
+import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
+import { asFilm, fraction, itemPath, MediaCard, Meter, pagePad, progressText, Ring, wallGrid } from "./parts";
+import { BacklogPlanner } from "./BacklogPlanner";
+
+const SORTS: { value: MediaSort; label: string }[] = [
+  { value: "recent", label: "recent activity" },
+  { value: "rating", label: "my rating" },
+  { value: "year", label: "release year" },
+  { value: "title", label: "title" },
+];
+
+function chipLabel(name: string, values: string[]) {
+  if (!values.length) return name;
+  return values.length === 1 ? `${name}: ${values[0]}` : `${name} · ${values.length}`;
+}
+
+/** Shows: the next aired episode of everything you're watching, ticked off right here. */
+function UpNextRail() {
+  const up = useUpNext(true);
+  const tick = useMediaMut((u: UpNext) => mediaApi.episodes(u.item.id, { episode_ids: [u.episode.id], watched: true }));
+  const toast = useToast();
+  if (!up.data?.length) return null;
+  return (
+    <section className="flex flex-col gap-4" aria-label="Up next">
+      <SectionTitle>Up next</SectionTitle>
+      <div className="flex gap-4 overflow-x-auto scroll-quiet pb-2 -mb-2">
+        {up.data.map((u) => {
+          const code = `S${u.episode.season} · E${u.episode.number}`;
+          const f = fraction("show", u.progress) ?? 0;
+          return (
+            <div key={u.item.id} className="shrink-0 w-[360px] max-[639px]:w-[300px] flex items-center gap-4 p-[14px] rounded-[22px] bg-(--fill-glass) border border-(--line-2) backdrop-blur-[24px]">
+              <Link to={itemPath(u.item)} className="mini-poster shrink-0" aria-label={u.item.title}>
+                <Poster film={asFilm(u.item)} size="rec" className="w-[64px]" layout={false} shadow={false} />
+              </Link>
+              <div className="flex-1 min-w-0 flex flex-col gap-[6px]">
+                <Link to={itemPath(u.item)} className="text-[15px] font-medium truncate no-underline">{u.item.title}</Link>
+                <span className="font-mono text-[12px] tracking-[0.06em] text-accent">{code}</span>
+                <span className="text-[13px] text-ink-3 truncate">{u.episode.title ?? "Untitled episode"}</span>
+              </div>
+              <Ring value={f} label={`${u.progress.watched}/${u.progress.aired}`} />
+              <button
+                type="button"
+                aria-label={`Mark ${u.item.title} ${code} watched`}
+                title="Mark watched"
+                disabled={tick.isPending}
+                onClick={async () => {
+                  await tick.mutateAsync(u);
+                  toast({ text: <>Watched <em>{u.item.title}</em> {code}</> });
+                }}
+                className="size-11 shrink-0 rounded-full grid place-items-center border border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_12%,transparent)] text-accent hover:bg-accent hover:text-on-accent"
+              >
+                <IconCheck size={17} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/** Books and games: what you're in the middle of, with its progress. */
+function InProgressStrip({ kind, items }: { kind: Kind; items: ItemCard[] }) {
+  const now = items.filter((i) => i.status === START[kind].status || i.status === "dipping");
+  if (!now.length) return null;
+  return (
+    <section className="flex flex-col gap-4" aria-label={kind === "book" ? "Currently reading" : "Now playing"}>
+      <SectionTitle>{kind === "book" ? "Currently reading" : "Now playing"}</SectionTitle>
+      <div className="flex gap-4 overflow-x-auto scroll-quiet pb-2 -mb-2">
+        {now.map((i) => {
+          const f = fraction(kind, i.progress);
+          return (
+            <Link key={i.id} to={itemPath(i)} className="mini-poster shrink-0 w-[320px] flex items-center gap-4 p-[14px] rounded-[22px] bg-(--fill-glass) border border-(--line-2) backdrop-blur-[24px] no-underline text-ink hover:text-ink hover:border-(--line-4)">
+              <Poster film={asFilm(i)} size="rec" className="w-[64px]" layout={false} shadow={false} />
+              <div className="flex-1 min-w-0 flex flex-col gap-[8px]">
+                <span className="text-[15px] font-medium truncate">{i.title}</span>
+                <span className="text-[13px] text-ink-3 truncate">{i.subtitle ?? " "}</span>
+                {f != null && <Meter value={f} />}
+                <span className="font-mono text-[12px] text-ink-4">{progressText(kind, i.progress) ?? "no progress logged yet"}</span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+export default function MediaLibrary({ kind }: { kind: Kind }) {
+  const [sp, setSp] = useSearchParams();
+  const { openPalette } = usePalette();
+  const tabs = TABS[kind];
+  const tab = tabs.find((t) => t.id === sp.get("tab")) ?? null;
+  const genre = sp.getAll("genre");
+  const sort = (sp.get("sort") as MediaSort) || "recent";
+  const all = useMediaLibrary(kind, { sort });
+  const lib = useMediaLibrary(kind, { status: tab?.statuses, genre, sort });
+  const items = lib.data?.items ?? [];
+  const everything = all.data?.items ?? [];
+  const counts = all.data?.counts ?? {};
+  const first = tab ?? null;
+  useAmbientGlow(everything[0]?.palette[0] ?? (everything[0] ? posterBg(asFilm(everything[0])) : null));
+
+  const update = (k: string, values: string[]) => {
+    const next = new URLSearchParams(sp);
+    next.delete(k);
+    values.forEach((v) => next.append(k, v));
+    setSp(next, { replace: true });
+  };
+
+  const subline = useMemo(() => {
+    const n = counts.all ?? 0;
+    const [one, many] = MODES[kind].noun;
+    const parts = [`${num(n)} ${n === 1 ? one : many}`];
+    if (kind === "show") parts.push(`${num(everything.reduce((a, i) => a + (i.progress.watched ?? 0), 0))} episodes watched`);
+    if (kind === "book") parts.push(`${num(counts.finished ?? 0)} finished`);
+    if (kind === "game") parts.push(`${num(Math.round(everything.reduce((a, i) => a + (i.progress.hours ?? 0), 0)))} hours played`);
+    return parts.join(" · ");
+  }, [counts, everything, kind]);
+
+  const sortLabel = SORTS.find((s) => s.value === sort)?.label ?? SORTS[0].label;
+  const filtered = genre.length > 0;
+
+  return (
+    <main className={cx("flex flex-col gap-8 pt-9 pb-16 max-[1023px]:pt-7 max-[639px]:pt-5 max-[639px]:pb-24 box-border min-w-0", pagePad)}>
+      <PageHeader title={MODES[kind].label} subline={all.data ? subline : " "}>
+        <Button variant="primary" onClick={() => openPalette()}>
+          <IconPlus size={16} />
+          {MODES[kind].add}
+        </Button>
+      </PageHeader>
+
+      {kind === "show" ? <UpNextRail /> : <InProgressStrip kind={kind} items={everything} />}
+      {kind !== "show" && <BacklogPlanner kind={kind} />}
+
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div role="tablist" aria-label="Collection" className="flex flex-wrap gap-[6px]">
+          <PillTab on={!first} label="All" count={counts.all} onClick={() => update("tab", [])} />
+          {tabs.map((t) => (
+            <PillTab key={t.id} on={first?.id === t.id} label={t.label} count={t.statuses.reduce((a, s) => a + (counts[s] ?? 0), 0)} onClick={() => update("tab", [t.id])} />
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <FilterChip label={chipLabel("Genre", genre)} multi options={(all.data?.genres ?? []).map((g) => ({ value: g, label: g }))} selected={genre} onChange={(v) => update("genre", v)} />
+          <FilterChip label={`Sort: ${sortLabel}`} align="right" options={SORTS} selected={[sort]} onChange={(v) => update("sort", v[0] && v[0] !== "recent" ? [v[0]] : [])} />
+        </div>
+      </div>
+
+      {lib.isLoading ? (
+        <div className={wallGrid} aria-busy>
+          {Array.from({ length: 12 }, (_, i) => (
+            <div key={i} className="flex flex-col gap-[10px]">
+              <div className="skeleton aspect-[2/3] rounded-[12px]" />
+              <div className="skeleton h-[14px] rounded-[4px] w-3/4" />
+            </div>
+          ))}
+        </div>
+      ) : lib.isError ? (
+        <p className="m-0 font-mono text-[13px] text-wild">{(lib.error as Error).message}</p>
+      ) : items.length === 0 ? (
+        <div className="flex flex-col items-center gap-5 py-20 text-center">
+          <p className="m-0 font-mono text-[13px] text-ink-3b">
+            {filtered
+              ? `No ${MODES[kind].noun[1]} match these filters.`
+              : first
+                ? `Nothing in ${first.label.toLowerCase()} yet. Press Shift ↵ on a search result to add to ${SHELF_LABEL[kind].wishlist.toLowerCase()}.`
+                : `Nothing here yet. Press Ctrl K to find your first ${MODES[kind].noun[0]}.`}
+          </p>
+          {filtered ? (
+            <Button onClick={() => update("genre", [])}>Clear filters</Button>
+          ) : (
+            <Button variant="primary" onClick={() => openPalette()}>
+              <IconPlus size={16} />
+              {MODES[kind].add}
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className={cx(wallGrid, lib.isPlaceholderData && "opacity-60 transition-opacity")}>
+          {items.map((i) => <MediaCard key={i.id} item={i} />)}
+        </div>
+      )}
+    </main>
+  );
+}

@@ -1,0 +1,658 @@
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
+import { useLocation, useNavigate, useParams } from "react-router";
+import { mediaApi, useItem, useMediaMut, type Episode, type Goal, type ItemDetail, type Kind, type RunOut } from "../../api/media";
+import { mix } from "../../components/Glow";
+import { IconCheck, IconChevronDown, IconChevronLeft, IconMore, IconPlus } from "../../components/Icons";
+import { Poster, posterBg } from "../../components/Poster";
+import { RatingInput } from "../../components/Rating";
+import { useToast } from "../../components/Toasts";
+import { Button, ErrorLine, Eyebrow, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
+import { onColor } from "../../lib/color";
+import { formatFullDate, formatWatchDate, rating, relativeTime } from "../../lib/format";
+import { backTarget } from "../../lib/history";
+import { MODES, SHELF_LABEL, START, STATUS_LABEL, USER_SET, statusLabel } from "../../lib/mode";
+import { asFilm, fraction, Meter, pagePad, progressText } from "./parts";
+
+const ITEM_STATUS: Record<string, string> = { released: "Released", upcoming: "Upcoming", returning: "Returning series", ended: "Ended", canceled: "Canceled" };
+const FINAL = new Set(["completed", "finished", "beaten", "dropped", "abandoned", "did_not_finish", "retired"]);
+const GOALS: { id: Goal; label: string }[] = [{ id: "main", label: "Main story" }, { id: "main_extras", label: "Main + extras" }, { id: "completionist", label: "Completionist" }];
+
+function useOutside(open: boolean, close: () => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: globalThis.MouseEvent) => !ref.current?.contains(e.target as Node) && close();
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && close();
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open, close]);
+  return ref;
+}
+
+const menuItem = "w-full h-11 flex items-center gap-2 px-3 rounded-[10px] bg-transparent hover:bg-(--fill-ctl) border-0 text-[14px] text-left cursor-pointer text-ink no-underline hover:text-ink";
+const menuBox = "absolute left-0 top-[calc(100%+8px)] z-30 w-[260px] p-2 rounded-[16px] bg-[rgba(20,22,30,0.92)] border border-(--line-4) backdrop-blur-[24px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)]";
+
+/** The status control: only the transitions the backend allows (shows: only the ones you set yourself), plus shelves. */
+function StatusMenu({ item }: { item: ItemDetail }) {
+  const [open, setOpen] = useState(false);
+  const ref = useOutside(open, () => setOpen(false));
+  const toast = useToast();
+  const setStatus = useMediaMut((s: string) => mediaApi.setStatus(item.id, s));
+  const shelf = useMediaMut((s: string) => mediaApi.patch(item.id, { shelf: s }));
+  const userSet = USER_SET[item.kind];
+  const next = item.allowed.filter((s) => !userSet || userSet.has(s));
+  const shelves = (item.kind === "show" ? ["wishlist", "not_interested"] : ["wishlist", "backlog", "not_interested"]).filter((s) => s !== item.shelf);
+  const active = item.runs.length > 0 && item.status && !FINAL.has(item.status) && !(item.shelf && item.status === item.shelf);
+  const run = async (fn: () => Promise<unknown>, text: string) => {
+    setOpen(false);
+    try {
+      await fn();
+      toast({ text });
+    } catch (e) {
+      toast({ text: e instanceof Error ? e.message : "Couldn't change that" });
+    }
+  };
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 h-[46px] px-[18px] rounded-[14px] bg-white/8 border border-(--line-5) text-ink text-[14px] cursor-pointer backdrop-blur-[16px] hover:bg-white/10"
+      >
+        <span className="size-2 rounded-full bg-accent shadow-[0_0_10px_var(--color-accent)]" />
+        {item.in_library ? statusLabel(item.kind, item.status) : "Not in your library"}
+        <IconChevronDown size={12} />
+      </button>
+      {open && (
+        <div role="menu" className={menuBox}>
+          {next.map((s) => (
+            <button key={s} role="menuitem" type="button" className={menuItem} onClick={() => run(() => setStatus.mutateAsync(s), `Marked ${STATUS_LABEL[s].toLowerCase()}`)}>
+              {STATUS_LABEL[s]}
+            </button>
+          ))}
+          {!active &&
+            shelves.map((s) => (
+              <button key={s} role="menuitem" type="button" className={menuItem} onClick={() => run(() => shelf.mutateAsync(s), `Moved to ${statusLabel(item.kind, s).toLowerCase()}`)}>
+                {s === "not_interested" ? "Not interested" : `Move to ${SHELF_LABEL[item.kind][s] ?? STATUS_LABEL[s]}`}
+              </button>
+            ))}
+          {item.shelf && !active && (
+            <button role="menuitem" type="button" className={menuItem} onClick={() => run(() => shelf.mutateAsync(""), "Removed from the shelf")}>
+              Take off {statusLabel(item.kind, item.shelf).toLowerCase()}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function providerLinks(item: ItemDetail): [string, string][] {
+  const x = item.external_ids;
+  const out: [string, string | null][] =
+    item.kind === "show"
+      ? [["TMDB", x.tmdb_tv && `https://www.themoviedb.org/tv/${x.tmdb_tv}`], ["IMDb", x.imdb && `https://www.imdb.com/title/${x.imdb}/`], ["TVmaze", x.tvmaze && `https://www.tvmaze.com/shows/${x.tvmaze}`]]
+      : item.kind === "book"
+        ? [["Open Library", x.openlibrary && `https://openlibrary.org/works/${x.openlibrary}`], ["Hardcover", x.hardcover && `https://hardcover.app/books/${x.hardcover}`]]
+        : [["RAWG", x.rawg_slug && `https://rawg.io/games/${x.rawg_slug}`], ["Website", item.details.website ?? null]];
+  return out.filter(([, v]) => v) as [string, string][];
+}
+
+function MoreMenu({ item }: { item: ItemDetail }) {
+  const [open, setOpen] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const ref = useOutside(open, () => setOpen(false));
+  const nav = useNavigate();
+  const toast = useToast();
+  const refresh = useMediaMut(() => mediaApi.refresh(item.id));
+  const endless = useMediaMut(() => mediaApi.patch(item.id, { endless: !item.endless }));
+  const remove = useMediaMut(() => mediaApi.remove(item.id));
+  useEffect(() => setConfirm(false), [open]);
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button" aria-label="More actions" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}
+        className="size-[46px] grid place-items-center rounded-[14px] bg-white/8 border border-(--line-5) text-ink cursor-pointer backdrop-blur-[16px] hover:bg-white/10"
+      >
+        <IconMore size={18} />
+      </button>
+      {open && (
+        <div role="menu" className={menuBox}>
+          <button
+            role="menuitem" type="button" className={menuItem} disabled={refresh.isPending}
+            onClick={async () => {
+              await refresh.mutateAsync(undefined);
+              setOpen(false);
+              toast({ text: "Data refreshed" });
+            }}
+          >
+            {refresh.isPending ? "Refreshing…" : "Refresh data"}
+          </button>
+          {item.kind === "game" && (
+            <button role="menuitem" type="button" className={menuItem} onClick={() => { endless.mutate(undefined); setOpen(false); }}>
+              {item.endless ? "Has an ending" : "Endless game (no ending)"}
+            </button>
+          )}
+          {providerLinks(item).map(([label, href]) => (
+            <a key={label} role="menuitem" className={menuItem} href={href} target="_blank" rel="noreferrer">Open on {label}</a>
+          ))}
+          {item.in_library &&
+            (confirm ? (
+              <div className="flex items-center gap-2 px-3 h-11 text-[13px]">
+                Remove it and its history?
+                <button
+                  type="button" className="ml-auto h-11 px-1 bg-transparent border-0 text-wild font-medium cursor-pointer"
+                  onClick={async () => {
+                    await remove.mutateAsync(undefined);
+                    toast({ text: <>Removed <em>{item.title}</em> from your library</> });
+                    nav(MODES[item.kind].base);
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <button role="menuitem" type="button" className={cx(menuItem, "text-wild hover:text-wild")} onClick={() => setConfirm(true)}>
+                Remove from library…
+              </button>
+            ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- shows: seasons and the episode grid ----
+
+function airLabel(e: Episode): string {
+  if (!e.airstamp) return "TBA";
+  const d = e.airstamp.slice(0, 10);
+  return e.aired ? formatWatchDate(d, "day") : `Airs ${formatFullDate(d)}`;
+}
+
+function Episodes({ item }: { item: ItemDetail }) {
+  const seasons = useMemo(() => {
+    const s = item.seasons ?? [];
+    return [...s.filter((x) => x.number > 0), ...s.filter((x) => x.number === 0)].filter((x) => x.episodes.length);
+  }, [item.seasons]);
+  const current = item.next_episode?.season ?? seasons.find((s) => s.number > 0)?.number ?? 0;
+  const [pick, setPick] = useState<number | null>(null);
+  const shown = seasons.find((s) => s.number === (pick ?? current)) ?? seasons[0];
+  const tick = useMediaMut((b: { episode_ids?: number[]; season?: number; watched: boolean }) => mediaApi.episodes(item.id, b));
+  if (!shown) return null;
+  const aired = shown.episodes.filter((e) => e.aired);
+  const done = aired.filter((e) => e.watched).length;
+  const all = aired.length > 0 && done === aired.length;
+
+  const toggle = (e: Episode, ev: MouseEvent) => {
+    if (ev.shiftKey && !e.watched) {
+      // shift-click: everything aired up to here
+      const ids = shown.episodes.filter((x) => x.aired && !x.watched && x.number <= e.number).map((x) => x.id);
+      tick.mutate({ episode_ids: ids, watched: true });
+    } else tick.mutate({ episode_ids: [e.id], watched: !e.watched });
+  };
+
+  return (
+    <section className="flex flex-col gap-4" aria-label="Episodes">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <SectionTitle>Episodes</SectionTitle>
+        {seasons.length > 1 && (
+          <Segmented
+            label="Season"
+            value={String(shown.number)}
+            options={seasons.map((s) => ({ id: String(s.number), label: s.number === 0 ? "Specials" : `S${s.number}` }))}
+            onChange={(v) => setPick(Number(v))}
+            className="max-w-full overflow-x-auto scroll-quiet"
+          />
+        )}
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="font-mono text-[12px] text-ink-3">
+          {shown.number === 0 ? "Specials don't count toward your progress" : `${shown.name ?? `Season ${shown.number}`} · ${done} of ${aired.length} aired watched`}
+          {shown.episodes.length > aired.length && ` · ${shown.episodes.length - aired.length} still to air`}
+        </span>
+        {aired.length > 0 && (
+          <Button onClick={() => tick.mutate({ season: shown.number, watched: !all })} disabled={tick.isPending}>
+            {all ? "Unmark season" : <><IconCheck size={15} /> Mark season watched</>}
+          </Button>
+        )}
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-3">
+        {shown.episodes.map((e) => {
+          const code = `${e.special ? "SP" : "E"}${String(e.number).padStart(2, "0")}`;
+          return (
+            <button
+              key={e.id}
+              type="button"
+              aria-pressed={e.watched}
+              aria-label={`${e.watched ? "Unmark" : "Mark"} S${e.season} ${code}${e.title ? ` ${e.title}` : ""} watched`}
+              disabled={!e.aired && !e.watched}
+              title={e.aired && !e.watched ? "Shift-click marks everything up to here" : undefined}
+              onClick={(ev) => toggle(e, ev)}
+              className={cx(
+                "group min-h-[68px] flex items-center gap-3 px-[14px] py-[10px] rounded-[14px] border text-left",
+                e.watched
+                  ? "border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_8%,transparent)]"
+                  : "border-(--line-2) bg-(--fill-card) hover:border-(--line-5)",
+                !e.aired && "opacity-45",
+              )}
+            >
+              <span className={cx("font-mono text-[13px] tabular-nums shrink-0", e.watched ? "text-accent" : "text-ink-3")}>{code}</span>
+              <span className="flex-1 min-w-0 flex flex-col gap-[3px]">
+                <span className="text-[14px] truncate">{e.title ?? "Untitled episode"}</span>
+                <span className="font-mono text-[11px] text-ink-4">{airLabel(e)}{e.runtime ? ` · ${e.runtime} min` : ""}</span>
+              </span>
+              <span
+                aria-hidden
+                className={cx(
+                  "size-6 rounded-full grid place-items-center shrink-0 border",
+                  e.watched ? "bg-accent border-accent text-on-accent shadow-[0_0_12px_-2px_var(--color-accent)]" : "border-(--line-5) text-transparent group-hover:text-ink-4",
+                )}
+              >
+                <IconCheck size={13} />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ---- your run: rating, progress, goal ----
+
+function BookProgress({ item, run }: { item: ItemDetail; run: RunOut }) {
+  const p = run.progress;
+  const [unit, setUnit] = useState<"page" | "percent" | "minutes">(p.unit ?? "page");
+  const [current, setCurrent] = useState(String(p.current ?? ""));
+  const [total, setTotal] = useState(String(p.total ?? (unit === "percent" ? 100 : item.details.pages ?? "")));
+  const save = useMediaMut(() => mediaApi.progress(run.id, { unit, current: Number(current), ...(total ? { total: Number(total) } : {}) }));
+  const toast = useToast();
+  const input = "h-11 w-full px-[14px] rounded-[12px] border border-(--line-4) bg-(--fill-input) text-ink-hi text-[14px] tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-accent";
+  return (
+    <form
+      className="flex flex-col gap-3"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const d = await save.mutateAsync(undefined);
+        toast({ text: d.status === "finished" && run.status !== "finished" ? <>Finished <em>{item.title}</em></> : "Progress saved" });
+      }}
+    >
+      <Segmented
+        label="Progress unit" variant="form" value={unit}
+        options={[{ id: "page", label: "Pages" }, { id: "percent", label: "Percent" }, { id: "minutes", label: "Audio min" }]}
+        onChange={(u) => { setUnit(u); if (u === "percent") setTotal("100"); }}
+      />
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+        <label className="flex flex-col gap-[6px] text-[12px] text-ink-3">
+          {unit === "page" ? "Page" : unit === "percent" ? "Percent" : "Minute"}
+          <input className={input} inputMode="decimal" value={current} onChange={(e) => setCurrent(e.target.value.replace(/[^\d.]/g, ""))} />
+        </label>
+        <label className="flex flex-col gap-[6px] text-[12px] text-ink-3">
+          of
+          <input className={input} inputMode="decimal" value={total} disabled={unit === "percent"} onChange={(e) => setTotal(e.target.value.replace(/[^\d.]/g, ""))} />
+        </label>
+        <Button variant="primary" type="submit" disabled={!current || save.isPending}>Save</Button>
+      </div>
+    </form>
+  );
+}
+
+function GameProgress({ item, run }: { item: ItemDetail; run: RunOut }) {
+  const [hours, setHours] = useState(String(run.progress.hours ?? ""));
+  const [percent, setPercent] = useState(String(run.progress.percent ?? ""));
+  const save = useMediaMut(() => mediaApi.progress(run.id, { ...(hours ? { hours: Number(hours) } : {}), ...(percent ? { percent: Number(percent) } : {}) }));
+  const goal = useMediaMut((g: Goal) => mediaApi.patchRun(run.id, { goal: g }));
+  const toast = useToast();
+  const input = "h-11 w-full px-[14px] rounded-[12px] border border-(--line-4) bg-(--fill-input) text-ink-hi text-[14px] tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-accent";
+  return (
+    <div className="flex flex-col gap-3">
+      {!item.endless && (
+        <Segmented label="Goal" variant="form" value={run.goal ?? "main"} options={GOALS} onChange={(g) => goal.mutate(g)} />
+      )}
+      <form
+        className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await save.mutateAsync(undefined);
+          toast({ text: "Session logged" });
+        }}
+      >
+        <label className="flex flex-col gap-[6px] text-[12px] text-ink-3">
+          Hours played
+          <input className={input} inputMode="decimal" value={hours} onChange={(e) => setHours(e.target.value.replace(/[^\d.]/g, ""))} />
+        </label>
+        <label className="flex flex-col gap-[6px] text-[12px] text-ink-3">
+          Completion %
+          <input className={input} inputMode="decimal" value={percent} onChange={(e) => setPercent(e.target.value.replace(/[^\d.]/g, ""))} />
+        </label>
+        <Button variant="primary" type="submit" disabled={(!hours && !percent) || save.isPending}>Log</Button>
+      </form>
+      {item.time_left != null && (
+        <span className="font-mono text-[12px] text-ink-3">~{item.time_left} h left for {GOALS.find((g) => g.id === (run.goal ?? "main"))!.label.toLowerCase()} (RAWG average)</span>
+      )}
+    </div>
+  );
+}
+
+function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: string }) {
+  const rate = useMediaMut((v: number | null) => mediaApi.patchRun(run.id, v == null ? { clear_rating: true } : { rating: v }));
+  const f = fraction(item.kind, run.progress);
+  const text = progressText(item.kind, run.progress);
+  const dates = [run.started_on && `started ${formatWatchDate(run.started_on, run.date_precision === "unknown" ? "year" : run.date_precision)}`,
+    run.finished_on && `finished ${formatWatchDate(run.finished_on, run.date_precision === "unknown" ? "year" : run.date_precision)}`].filter(Boolean).join(" · ");
+  return (
+    <section className="p-6 rounded-[22px] bg-(--fill-glass) border border-(--line-2) backdrop-blur-[24px] flex flex-col gap-5" aria-label="Your run">
+      <div className="flex justify-between items-baseline gap-3">
+        <SectionTitle>{run.run_no > 1 ? `Your ${ordinal(run.run_no)} time` : "Your run"}</SectionTitle>
+        <span className="font-mono text-[12px] text-ink-3">{statusLabel(item.kind, run.status)}</span>
+      </div>
+      {(f != null || text) && (
+        <div className="flex flex-col gap-2">
+          {f != null && <Meter value={f} />}
+          <span className="font-mono text-[12px] text-ink-3">{text}</span>
+        </div>
+      )}
+      {dates && <span className="text-[13px] text-ink-3 -mt-2">{dates}</span>}
+      {item.kind === "book" && run.status && !FINAL.has(run.status) && <BookProgress item={item} run={run} />}
+      {item.kind === "game" && run.status && !["abandoned", "retired"].includes(run.status) && <GameProgress item={item} run={run} />}
+      <div className="flex flex-col gap-2">
+        <Eyebrow className="text-[10.5px]" style={{ color: glow }}>Your rating</Eyebrow>
+        <RatingInput value={run.rating} onChange={(v) => rate.mutate(v)} hideLabel label={`Rate ${item.title}`} />
+      </div>
+    </section>
+  );
+}
+
+const ordinal = (n: number) => `${n}${["th", "st", "nd", "rd"][n % 100 > 10 && n % 100 < 14 ? 0 : n % 10] ?? "th"}`;
+
+function Runs({ item, glow, glow2 }: { item: ItemDetail; glow: string; glow2: string }) {
+  const dots = [glow, glow2, "#8E95A3"];
+  const del = useMediaMut((id: number) => mediaApi.deleteRun(id));
+  const [confirm, setConfirm] = useState<number | null>(null);
+  if (item.runs.length < 2) return null;
+  return (
+    <section className="p-6 rounded-[22px] bg-(--fill-glass) border border-(--line-2) backdrop-blur-[24px] flex flex-col gap-[22px]">
+      <div className="flex justify-between items-baseline">
+        <SectionTitle>Your history</SectionTitle>
+        <span className="font-mono text-[12px] text-ink-3">{item.runs.length} runs</span>
+      </div>
+      <ol className="list-none m-0 p-0 flex flex-col">
+        {[...item.runs].reverse().map((r, i) => (
+          <li key={r.id} className="flex gap-4">
+            <div className="flex flex-col items-center pt-1 self-stretch">
+              <span className="size-3 rounded-full shrink-0" style={{ background: dots[i % 3], boxShadow: `0 0 14px ${dots[i % 3]}` }} />
+              <span className="flex-1 w-px bg-(--line-4) my-[6px]" />
+            </div>
+            <div className="flex-1 flex flex-col gap-[6px] pb-[22px] min-w-0">
+              <div className="flex justify-between items-baseline gap-[10px]">
+                <span className="text-[15px] font-medium">{statusLabel(item.kind, r.status)}</span>
+                {r.rating != null && <span className="font-mono text-[14px]" style={{ color: glow }}>★ {rating(r.rating)}</span>}
+              </div>
+              <div className="flex flex-wrap gap-[6px]">
+                <MonoTag>{ordinal(r.run_no)} time</MonoTag>
+                {r.finished_on && <MonoTag>{formatWatchDate(r.finished_on, r.date_precision === "unknown" ? "year" : r.date_precision)}</MonoTag>}
+                {r.goal && <MonoTag>{GOALS.find((g) => g.id === r.goal)?.label}</MonoTag>}
+              </div>
+              {confirm === r.id ? (
+                <span className="flex items-center gap-3 text-[13px]">
+                  Delete this run?
+                  <button type="button" className="h-11 px-1 bg-transparent border-0 text-wild font-medium cursor-pointer" onClick={() => del.mutate(r.id)}>Delete</button>
+                  <button type="button" className="h-11 px-1 bg-transparent border-0 text-ink-3 cursor-pointer" onClick={() => setConfirm(null)}>Keep it</button>
+                </span>
+              ) : (
+                <button type="button" onClick={() => setConfirm(r.id)} className="self-start h-11 px-0 bg-transparent border-0 text-[13px] text-ink-4 hover:text-wild cursor-pointer">Delete run</button>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function Details({ item }: { item: ItemDetail }) {
+  const d = item.details;
+  const join = (v: unknown) => (Array.isArray(v) ? v.join(", ") : (v as string | null));
+  const series = (d.series as { name: string; position: number | null }[] | undefined)?.map((s) => (s.position ? `${s.name} #${s.position}` : s.name)).join(", ");
+  const eps = item.seasons?.filter((s) => s.number > 0) ?? [];
+  const rows = [
+    ["Released", item.release_date ? formatFullDate(item.release_date) : item.year ? String(item.year) : null],
+    ["Status", item.item_status !== "released" ? ITEM_STATUS[item.item_status] : null],
+    ["Network", item.kind === "show" ? join(d.networks) : null],
+    ["Seasons", eps.length ? `${eps.length} · ${eps.reduce((a, s) => a + s.episodes.length, 0)} episodes` : null],
+    ["Rated", d.certification ?? d.esrb ?? null],
+    ["Authors", item.kind === "book" ? join(d.authors) : null],
+    ["Series", series || null],
+    ["Pages", d.pages ? String(d.pages) : null],
+    ["ISBN", d.isbn13 ?? null],
+    ["Platforms", item.kind === "game" ? join(d.platforms) : null],
+    ["Developer", item.kind === "game" ? item.people.filter((p) => p.role === "developer").map((p) => p.name).join(", ") || null : null],
+    ["Publisher", item.kind === "game" ? item.people.filter((p) => p.role === "publisher").map((p) => p.name).join(", ") || null : null],
+    ["Time to beat", item.kind === "game" && d.playtime_hours && !item.endless ? `~${d.playtime_hours} h (average)` : item.endless ? "Endless" : null],
+    ["Metacritic", d.metacritic ? String(d.metacritic) : null],
+    ["Original title", item.original_title && item.original_title !== item.title ? item.original_title : null],
+  ].filter(([, v]) => v) as [string, string][];
+  const links = providerLinks(item);
+  return (
+    <section aria-label="Details" className="rounded-[22px] border border-(--line-2) overflow-hidden">
+      <dl className="m-0 px-5 py-1">
+        {rows.map(([k, v]) => (
+          <div key={k} className="grid grid-cols-[112px_1fr] gap-4 py-[11px] border-b border-(--divider) last:border-0">
+            <dt className="text-[13px] text-ink-4">{k}</dt>
+            <dd className="m-0 text-[13px] text-ink leading-[1.45]">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      {links.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-(--line-2) bg-white/[0.015]">
+          {links.map(([label, href]) => (
+            <a key={label} href={href} target="_blank" rel="noreferrer" className="press h-8 px-3 grid place-items-center rounded-[9px] border border-(--line-4) text-[12px] text-ink-2 no-underline hover:bg-(--fill-ctl) hover:text-ink-hi">
+              {label} ↗
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function People({ item }: { item: ItemDetail }) {
+  const cast = item.people.filter((p) => p.role === "cast").slice(0, 12);
+  const creators = item.people.filter((p) => p.role === "creator" || p.role === "author");
+  if (!cast.length && !creators.length) return null;
+  return (
+    <section className="flex flex-col gap-4">
+      <SectionTitle>{item.kind === "book" ? "Written by" : "People"}</SectionTitle>
+      <dl className="m-0 grid grid-cols-[repeat(auto-fill,minmax(min(190px,100%),1fr))] gap-x-6 gap-y-5">
+        {[...creators.map((p) => ({ ...p, character: p.role === "creator" ? "Creator" : "Author" })), ...cast].map((p) => (
+          <div key={`${p.name}-${p.character}`} className="flex flex-col gap-[6px] pl-[14px] border-l border-(--line-3)">
+            <dt className="text-[14px] leading-[1.45]">{p.name}</dt>
+            {p.character && <dd className="m-0"><Eyebrow className="text-[10.5px] text-ink-4 normal-case tracking-normal">{p.character}</Eyebrow></dd>}
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+export default function MediaDetail({ kind }: { kind: Kind }) {
+  const id = Number(useParams().id);
+  const loc = useLocation();
+  const nav = useNavigate();
+  const toast = useToast();
+  const { data: item, isLoading, error } = useItem(id);
+  const back = useMemo(() => backTarget(loc.pathname), [loc.pathname]);
+  const start = useMediaMut((b: { status: string; again: boolean }) => (b.again ? mediaApi.startRun(id, { status: b.status }) : mediaApi.setStatus(id, b.status)));
+  const tickNext = useMediaMut((epId: number) => mediaApi.episodes(id, { episode_ids: [epId], watched: true }));
+  const suggest = useMediaMut((s: string) => mediaApi.setStatus(id, s));
+  const [dismissed, setDismissed] = useState(false);
+
+  const backPill = (
+    <button
+      type="button"
+      onClick={() => (back.back ? nav(-1) : nav(MODES[kind].base))}
+      className="flex items-center gap-2 h-11 box-content pl-3 pr-4 rounded-[12px] bg-[rgba(7,8,12,0.45)] border border-(--line-4) backdrop-blur-[16px] text-[14px] text-ink cursor-pointer"
+    >
+      <IconChevronLeft size={16} />
+      {back.back ? back.label : MODES[kind].label}
+    </button>
+  );
+
+  if (isLoading || !item || item.kind !== kind)
+    return (
+      <main className={cx("flex flex-col gap-6 pt-8 pb-[72px]", pagePad)}>
+        <div className="flex">{backPill}</div>
+        {error ? <ErrorLine error={error} onSettings /> : item ? <ErrorLine error={new Error("Not found")} /> : <div className="skeleton h-[480px] rounded-[22px]" />}
+      </main>
+    );
+
+  const glow = item.palette[0] ?? posterBg(asFilm(item));
+  const glow2 = item.palette[1] ?? glow;
+  const style = { "--glow": glow, "--glow2": glow2 } as CSSProperties;
+  const run = item.runs.find((r) => r.run_no === item.run_no) ?? null;
+  const active = run && run.status && !FINAL.has(run.status);
+  const startVerb = item.runs.length && !active ? START[kind].again : START[kind].verb;
+  const meta = [
+    item.year,
+    item.subtitle,
+    item.item_status !== "released" ? ITEM_STATUS[item.item_status] : null,
+    kind === "book" && item.details.pages ? `${item.details.pages} pages` : null,
+    kind === "game" && item.details.playtime_hours && !item.endless ? `~${item.details.playtime_hours} h to beat` : null,
+  ].filter(Boolean).join(" · ");
+  const next = item.next_episode;
+
+  const primary =
+    kind === "show" && active && next ? (
+      <button
+        type="button" disabled={tickNext.isPending}
+        onClick={async () => {
+          await tickNext.mutateAsync(next.id);
+          toast({ text: <>Watched S{next.season} · E{next.number}</> });
+        }}
+        className="flex items-center gap-2 h-[46px] px-5 rounded-[14px] font-semibold text-[14px] border-0 cursor-pointer"
+        style={{ background: glow, color: onColor(glow), boxShadow: `0 10px 30px -10px ${glow}` }}
+      >
+        <IconCheck size={16} />
+        Watched S{next.season} · E{next.number}
+      </button>
+    ) : !active || (kind === "show" && !next && run?.status !== "watching") ? (
+      kind === "show" && run?.status === "caught_up" ? null : (
+        <button
+          type="button" disabled={start.isPending}
+          onClick={async () => {
+            try {
+              await start.mutateAsync({ status: START[kind].status, again: item.runs.length > 0 && !active });
+            } catch (e) {
+              toast({ text: e instanceof Error ? e.message : "Couldn't start it" });
+            }
+          }}
+          className="flex items-center gap-2 h-[46px] px-5 rounded-[14px] font-semibold text-[14px] border-0 cursor-pointer"
+          style={{ background: glow, color: onColor(glow), boxShadow: `0 10px 30px -10px ${glow}` }}
+        >
+          <IconPlus size={16} />
+          {startVerb}
+        </button>
+      )
+    ) : null;
+
+  return (
+    <main style={style} className="flex flex-col gap-12 pb-[72px] max-[639px]:pb-24 min-w-0">
+      <section aria-label={MODES[kind].noun[0]} className={cx("relative min-h-[560px] max-[639px]:min-h-0 -mt-(--tb) pt-[calc(32px+var(--tb))] pb-11 box-border flex flex-col justify-between gap-10", pagePad)}>
+        <div aria-hidden className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 bg-bg-hero" />
+          {item.backdrop && (
+            <>
+              <img src={item.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
+              <div aria-hidden className="absolute inset-0 bg-[rgba(7,8,12,0.35)]" />
+            </>
+          )}
+          <div aria-hidden className="absolute left-[30%] top-[-18%] w-[900px] h-[700px]" style={{ background: `radial-gradient(closest-side, ${mix(glow, 70)}, transparent)` }} />
+          <div aria-hidden className="absolute right-[-10%] top-[10%] w-[700px] h-[600px]" style={{ background: `radial-gradient(closest-side, ${mix(glow2, 45)}, transparent)` }} />
+          <div aria-hidden className="absolute left-0 right-0 bottom-0 h-[60%] bg-linear-to-b from-[rgba(7,8,12,0)] to-bg" />
+        </div>
+
+        <div className="relative flex justify-between items-center gap-4 flex-wrap">{backPill}</div>
+
+        <div className="relative flex flex-wrap items-end gap-9 max-[639px]:gap-6">
+          <Poster film={asFilm(item)} size="detail" eager className="w-[200px] max-[639px]:w-[120px]" shadow={`0 40px 80px -30px ${glow}, 0 0 0 1px rgba(255,255,255,0.08)`} />
+          <div className="flex-[1_1_360px] flex flex-col gap-[14px] min-w-0">
+            {item.genres.length > 0 && (
+              <span className="font-mono text-[12px] tracking-[0.12em] uppercase" style={{ color: glow }}>
+                {item.genres.slice(0, 3).join(" · ")}
+              </span>
+            )}
+            <h1 className="m-0 font-display font-semibold text-[56px] max-[639px]:text-[34px] leading-[1.02] tracking-[-0.02em] [text-wrap:balance]">{item.title}</h1>
+            {item.tagline && <p className="m-0 -mt-1 max-w-[56ch] text-[17px] italic text-ink-2 [text-wrap:balance]">{item.tagline}</p>}
+            <p className="m-0 flex flex-wrap items-center gap-x-[10px] gap-y-1 text-[15px] text-ink-2b">
+              {item.details.certification && (
+                <span className="font-mono text-[11px] leading-none px-[6px] py-[4px] rounded-[5px] border border-white/30 text-ink-2">{item.details.certification}</span>
+              )}
+              {meta}
+            </p>
+            <div className="flex flex-wrap gap-[10px] mt-2">
+              {primary}
+              <StatusMenu item={item} />
+              <MoreMenu item={item} />
+            </div>
+          </div>
+          {item.my_rating != null && (
+            <div className="flex flex-col items-end gap-1 max-[639px]:items-start">
+              <Eyebrow className="tracking-[0.12em]">YOUR RATING</Eyebrow>
+              <span className="font-display font-medium text-[64px] leading-none" style={{ color: glow }}>{rating(item.my_rating)}</span>
+              {item.runs.length > 1 && <span className="text-[13px] text-ink-3">across {item.runs.length} runs</span>}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {item.suggest && !dismissed && (
+        <div role="status" className={cx("flex flex-wrap items-center gap-4 mx-12 max-[1023px]:mx-6 max-[639px]:mx-4 p-5 rounded-[20px] border bg-(--fill-glass) border-[color-mix(in_oklch,var(--color-accent)_40%,transparent)]")}>
+          <span className="flex-1 min-w-[240px] text-[14px] text-ink-2">
+            No activity for six weeks. Put <em>{item.title}</em> {item.suggest === "on_hold" ? "on hold" : "on the shelf"}? Nothing changes unless you say so.
+          </span>
+          <Button onClick={() => setDismissed(true)}>Keep {statusLabel(kind, item.status).toLowerCase()}</Button>
+          <Button variant="primary" onClick={() => suggest.mutate(item.suggest!)}>{STATUS_LABEL[item.suggest]}</Button>
+        </div>
+      )}
+
+      <div className={cx("flex flex-wrap gap-10", pagePad)}>
+        <div className="flex-[1_1_520px] min-w-0 flex flex-col gap-9">
+          <section className="flex flex-col gap-[14px]">
+            <SectionTitle>Overview</SectionTitle>
+            <p className="m-0 max-w-[64ch] text-[16px] leading-[1.65] text-ink-2 [text-wrap:pretty] whitespace-pre-line">{item.overview || "No overview yet."}</p>
+            {item.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {item.tags.slice(0, 8).map((k) => <TagChip key={k}>{k}</TagChip>)}
+              </div>
+            )}
+          </section>
+          {kind === "show" && <Episodes item={item} />}
+          {kind === "game" && Array.isArray(item.details.screenshots) && item.details.screenshots.length > 0 && (
+            <section className="flex flex-col gap-4" aria-label="Screenshots">
+              <SectionTitle>Screenshots</SectionTitle>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(min(260px,100%),1fr))] gap-3">
+                {(item.details.screenshots as string[]).slice(0, 6).map((s) => (
+                  <img key={s} src={s} alt="" loading="lazy" className="aspect-video w-full object-cover rounded-[14px] border border-(--line-1)" />
+                ))}
+              </div>
+            </section>
+          )}
+          <People item={item} />
+        </div>
+        <aside className="flex-[1_1_340px] min-w-0 flex flex-col gap-5">
+          {run && run.status && <YourRun item={item} run={run} glow={glow} />}
+          <Runs item={item} glow={glow} glow2={glow2} />
+          <Details item={item} />
+          <span className="font-mono text-[11px] text-ink-4 px-1">{item.added_at ? `added ${relativeTime(item.added_at)}` : "not in your library yet"}</span>
+        </aside>
+      </div>
+    </main>
+  );
+}
