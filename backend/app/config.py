@@ -16,6 +16,10 @@ class Settings:
     def reload(self) -> None:
         self.tmdb_token = os.getenv("TMDB_TOKEN", "").strip()
         self.omdb_key = os.getenv("OMDB_KEY", "").strip()
+        self.rawg_key = os.getenv("RAWG_KEY", "").strip()
+        self.google_books_key = os.getenv("GOOGLE_BOOKS_KEY", "").strip()
+        self.hardcover_token = os.getenv("HARDCOVER_TOKEN", "").strip().removeprefix("Bearer ").strip()
+        self.contact_email = os.getenv("CONTACT_EMAIL", "").strip()  # sent in the User-Agent to Open Library/TVmaze
         data = Path(os.getenv("DATA_DIR") or "data")
         self.data_dir = data if data.is_absolute() else (ROOT / data).resolve()
         self.media_dir = self.data_dir / "media"

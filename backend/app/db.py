@@ -4,6 +4,7 @@ from sqlalchemy import event, inspect
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from .config import settings
+from . import models_media  # noqa: F401  (registers the media tables with migrate())
 from .models import Setting
 
 
