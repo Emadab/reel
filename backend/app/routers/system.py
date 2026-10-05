@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from .. import db, jobs, omdb, tmdb
+from .. import db, flags, jobs, omdb, tmdb
 from ..config import set_env, settings
 from ..db import get_session, get_setting, put_setting
 
@@ -34,6 +34,7 @@ class SettingsIn(BaseModel):
     tmdb_token: str | None = None
     omdb_key: str | None = None
     data_dir: str | None = None
+    flags: dict[str, bool] | None = None
 
 
 async def _check_tmdb(token: str) -> bool:
@@ -53,6 +54,7 @@ def _out(s: Session, tmdb_ok: bool | None = None) -> dict:
         "tmdb_configured": bool(settings.tmdb_token),
         "tmdb_connected": tmdb_ok,
         "omdb_configured": bool(settings.omdb_key),
+        "flags": flags.all_flags(s),
     }
 
 
@@ -71,6 +73,8 @@ async def test_tmdb(s: Session = Depends(get_session)):
 async def put_settings(body: SettingsIn, s: Session = Depends(get_session)):
     restart = False
     ok = None
+    for name, on in (body.flags or {}).items():
+        flags.set_flag(s, name, on)
     if body.accent is not None:
         if body.accent.upper() not in ACCENTS:
             raise HTTPException(422, "Unknown accent")

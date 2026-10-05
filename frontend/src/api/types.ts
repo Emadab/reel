@@ -171,6 +171,8 @@ export type Explain = {
   note: string;
 };
 
+export type Flag = "media.shows" | "media.books" | "media.games" | "announcements";
+
 export type SettingsOut = {
   accent: string;
   accents: string[];
@@ -178,6 +180,7 @@ export type SettingsOut = {
   tmdb_configured: boolean;
   tmdb_connected: boolean | null;
   omdb_configured: boolean;
+  flags: Record<Flag, boolean>;
   restart_required?: boolean;
 };
 
