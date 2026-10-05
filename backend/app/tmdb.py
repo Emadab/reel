@@ -67,6 +67,73 @@ def _year(d: str | None) -> int | None:
     return int(d[:4]) if d else None
 
 
+def _certification(d: dict) -> str | None:
+    """The theatrical age rating: the US one when there is one, else the film's home country's."""
+    by_country = {r.get("iso_3166_1"): r.get("release_dates", []) for r in d.get("release_dates", {}).get("results", [])}
+    for c in ["US", *d.get("origin_country", [])]:
+        dates = sorted(by_country.get(c, []), key=lambda x: x.get("type") != 3)  # 3 = theatrical first
+        if cert := next((x["certification"].strip() for x in dates if (x.get("certification") or "").strip()), None):
+            return cert
+    return None
+
+
+def _extra(d: dict) -> dict:
+    col = d.get("belongs_to_collection")
+    return {
+        "certification": _certification(d),
+        "budget": d.get("budget") or None,
+        "revenue": d.get("revenue") or None,
+        "countries": [c["name"] for c in d.get("production_countries", [])],
+        "languages": [x.get("english_name") or x.get("name") for x in d.get("spoken_languages", [])],
+        "studios": [c["name"] for c in d.get("production_companies", [])][:3],
+        "status": d.get("status"),
+        "homepage": d.get("homepage") or None,
+        "collection": {"id": col["id"], "name": col["name"]} if col else None,
+    }
+
+
+async def add_collection_parts(m: Movie) -> None:
+    """The other films in its series (one extra request, only for films in a collection)."""
+    col = (m.extra or {}).get("collection")
+    if not col or "parts" in col:
+        return
+    try:
+        c = await get(f"/collection/{col['id']}")
+    except (TMDBUnavailable, HTTPException):
+        return
+    parts = sorted(c.get("parts", []), key=lambda p: p.get("release_date") or "9999")
+    m.extra = {**m.extra, "collection": {**col, "parts": [
+        {"id": p["id"], "title": p.get("title"), "year": _year(p.get("release_date")), "poster_path": p.get("poster_path")}
+        for p in parts]}}
+
+
+def needs_extra(m: Movie) -> bool:
+    """Films cached before these fields existed, or whose series hasn't been looked up yet."""
+    col = (m.extra or {}).get("collection")
+    return m.extra is None or bool(col and "parts" not in col)
+
+
+async def extra_job(tmdb_id: int) -> None:
+    """Backfill details for an already-cached film without touching its images."""
+    from . import db  # late import: db imports models only
+
+    with Session(db.engine) as s:
+        m = s.get(Movie, tmdb_id)
+        if not m:
+            return
+        if m.extra is None:
+            try:
+                d = await get(f"/movie/{tmdb_id}", append_to_response=DETAILS)
+            except (TMDBUnavailable, HTTPException):
+                return
+            fields = parse_details(d)
+            fields.pop("poster_path"), fields.pop("backdrop_path")
+            m.sqlmodel_update(fields)
+        await add_collection_parts(m)
+        s.add(m)
+        s.commit()
+
+
 def parse_details(d: dict) -> dict:
     crew = d.get("credits", {}).get("crew", [])
 
@@ -97,7 +164,10 @@ def parse_details(d: dict) -> dict:
             "cinematography": jobs("Director of Photography"),
             "music": jobs("Original Music Composer", "Music"),
             "writer": jobs("Screenplay", "Writer"),
+            "editing": jobs("Editor"),
+            "producer": jobs("Producer")[:3],
         },
+        extra=_extra(d),
         cast=[
             {"id": c["id"], "name": c["name"], "character": c.get("character"), "order": c.get("order", i),
              "profile_path": c.get("profile_path")}
@@ -162,6 +232,7 @@ async def get_movie(s: Session, tmdb_id: int, force: bool = False, images: str =
             else:
                 m = Movie(tmdb_id=tmdb_id, **fields)
             m.fetched_at = now()
+            await add_collection_parts(m)
             s.add(m)
     assert m is not None
     if not m.palette:

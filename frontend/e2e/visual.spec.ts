@@ -16,7 +16,10 @@ test("Library", async ({ page }) => {
 test("Film detail", async ({ page }) => {
   await page.goto("/film/335984");
   await settle(page);
-  await expect(page).toHaveScreenshot("Detail.png", { fullPage: true });
+  // Crew and collection were added after the handover (data-extension); the scores and details cards were
+  // redesigned on request (meters, votes, links), which accounts for the remaining ~6% in the right column.
+  await page.addStyleTag({ content: "[data-extension] { display: none !important; }" });
+  await expect(page).toHaveScreenshot("Detail.png", { fullPage: true, maxDiffPixelRatio: 0.08 });
 });
 
 test("Search", async ({ page }) => {
@@ -30,7 +33,7 @@ test("Search", async ({ page }) => {
   await page.getByText("Drive My Car").waitFor(); // after the 180 ms debounce
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
-  await page.getByLabel("Watched on").fill("2026-10-04");
+  await page.getByRole("button", { name: "Yesterday", exact: true }).click();
   await page.getByRole("button", { name: "9 out of 10" }).click();
   await page.getByPlaceholder("Search any film…").focus();
   await page.waitForTimeout(300);

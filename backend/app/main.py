@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import db, jobs
+from . import db, jobs, omdb
 from .config import settings
 from .recommender import service
 from .routers import history, imports, library, movies, recs, search, system, watches
@@ -19,6 +19,7 @@ async def lifespan(_: FastAPI):
     db.migrate()
     worker = jobs.start()
     service.on_startup()
+    jobs.enqueue("scores:library", omdb.fill_scores)  # IMDb / RT / Metacritic for films that have none yet
     yield
     worker.cancel()
 

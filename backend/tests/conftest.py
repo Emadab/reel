@@ -1,4 +1,5 @@
 """Test setup: a throwaway data dir, a fake TMDB (respx) and a deterministic fake embedder."""
+import gzip
 import hashlib
 import io
 import os
@@ -50,6 +51,10 @@ def details(tmdb_id: int) -> dict:
                     "cast": [{"id": tmdb_id * 10 + k, "name": f"Actor {tmdb_id}-{k}", "character": "X", "order": k, "profile_path": None} for k in range(3)]},
         "keywords": {"keywords": [{"id": abs(hash(k)) % 100000, "name": k} for k in kws]},
         "videos": {"results": [{"site": "YouTube", "type": "Trailer", "official": True, "key": f"yt{tmdb_id}", "published_at": "2020"}]},
+        "release_dates": {"results": [{"iso_3166_1": "US", "release_dates": [{"type": 1, "certification": ""}, {"type": 3, "certification": "PG-13"}]}]},
+        "budget": 47_000_000, "revenue": 203_000_000, "production_countries": [{"name": "United States of America"}],
+        "production_companies": [{"name": "Lava Bear"}], "spoken_languages": [{"english_name": "English"}], "status": "Released",
+        "belongs_to_collection": {"id": 77, "name": "Villeneuve Collection"} if tmdb_id in (329865, 335984) else None,
     }
 
 
@@ -93,6 +98,14 @@ def tmdb_router() -> respx.MockRouter:
     r.get(host="api.themoviedb.org", path__regex=r"^/3/movie/(top_rated|popular)$").mock(return_value=Response(200, json={"results": [summary(i) for i in list(FILMS)[:8]]}))
     r.get(host="api.themoviedb.org", path__regex=r"^/3/find/tt\d+$").mock(side_effect=lambda req: Response(200, json={"movie_results": [summary(int(req.url.path.split("tt")[-1]))]}))
     r.get(f"{api}/configuration").mock(return_value=Response(200, json={}))
+    r.get(f"{api}/collection/77").mock(return_value=Response(200, json={"parts": [summary(i) for i in (593, 335984, 329865)]}))
+    imdb_tsv = gzip.compress(b"tconst\taverageRating\tnumVotes\ntt329865\t7.9\t800000\n")
+    r.get("https://datasets.imdbws.com/title.ratings.tsv.gz").mock(return_value=Response(200, content=imdb_tsv))
+    wd = lambda by, score, method, when: {"imdb": {"value": "tt329865"}, "by": {"value": f"http://www.wikidata.org/entity/{by}"},  # noqa: E731
+                                          "score": {"value": score}, "method": {"value": f"http://www.wikidata.org/entity/{method}"}, "when": {"value": when}}
+    r.get(host="query.wikidata.org").mock(return_value=Response(200, json={"results": {"bindings": [
+        wd("Q105584", "90%", "Q108403393", "2020-01-01"), wd("Q105584", "94%", "Q108403393", "2024-01-01"),
+        wd("Q105584", "8.4/10", "Q108403540", "2024-01-01"), wd("Q150248", "81/100", "Q106515043", "2024-01-01")]}}))
     r.get(host="www.omdbapi.com").mock(side_effect=lambda req: Response(200, json=(
         {"Response": "True", "imdbRating": "7.9", "Metascore": "81", "Ratings": [{"Source": "Rotten Tomatoes", "Value": "94%"}]}
         if req.url.params.get("apikey") == "good" else {"Response": "False", "Error": "Invalid API key!"})))

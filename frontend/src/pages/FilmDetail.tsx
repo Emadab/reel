@@ -151,6 +151,166 @@ function History({ film, glow, glow2 }: { film: MovieDetail; glow: string; glow2
   );
 }
 
+const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+const money = (n: number | null | undefined) => (n ? `$${compact.format(n)}` : null);
+
+/** A cast photo that falls back to initials if it's missing or fails to load. */
+function CastPhoto({ name, src }: { name: string; src?: string | null }) {
+  const [failed, setFailed] = useState(false);
+  const box = "size-[72px] box-content rounded-full border border-(--line-3)";
+  return src && !failed ? (
+    <img src={src} alt="" loading="lazy" onError={() => setFailed(true)} className={cx(box, "object-cover bg-(--color-bg-avatar)")} />
+  ) : (
+    <div className={cx(box, "bg-(--color-bg-avatar) grid place-items-center font-display text-[18px] text-ink-4")}>{initials(name)}</div>
+  );
+}
+
+function Crew({ film }: { film: MovieDetail }) {
+  const c = film.crew_highlights;
+  const roles = [
+    ["Directed by", film.director ? [film.director] : []],
+    ["Written by", c.writer],
+    ["Cinematography", c.cinematography],
+    ["Music", c.music],
+    ["Editing", c.editing],
+    ["Produced by", c.producer],
+  ].filter(([, v]) => v?.length) as [string, string[]][];
+  if (roles.length < 2) return null;
+  return (
+    <section data-extension className="flex flex-col gap-4">
+      <SectionTitle>Crew</SectionTitle>
+      <dl className="m-0 grid grid-cols-[repeat(auto-fill,minmax(min(190px,100%),1fr))] gap-x-6 gap-y-5">
+        {roles.map(([role, names]) => (
+          <div key={role} className="flex flex-col gap-[6px] pl-[14px] border-l border-(--line-3)">
+            <dt><Eyebrow className="text-[10.5px] text-ink-4">{role}</Eyebrow></dt>
+            <dd className="m-0 text-[14px] leading-[1.45]">{names.slice(0, 3).join(", ")}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/** Four scores, each with a meter on a shared 0–100 scale, plus the awards line. */
+function Scores({ film, glow }: { film: MovieDetail; glow: string }) {
+  const num = (v: string | null) => (v == null ? null : parseFloat(v));
+  const rows: { label: string; value: string | null; of: number; sub: string }[] = [
+    { label: "TMDB", value: film.scores.tmdb, of: 10, sub: film.votes?.tmdb ? `${compact.format(film.votes.tmdb)} votes` : "users" },
+    { label: "IMDb", value: film.scores.imdb, of: 10, sub: film.votes?.imdb ? `${compact.format(film.votes.imdb)} votes` : "users" },
+    { label: "Rotten Tomatoes", value: film.scores.rt, of: 100, sub: "Tomatometer" },
+    { label: "Metacritic", value: film.scores.metacritic, of: 100, sub: "Metascore" },
+  ];
+  return (
+    <section aria-label="Scores" className="rounded-[22px] bg-(--fill-glass) border border-(--line-2) overflow-hidden">
+      <div className="grid grid-cols-2">
+        {rows.map((r, i) => {
+          const n = num(r.value);
+          const fill = n == null ? 0 : Math.min(100, (n / r.of) * 100);
+          return (
+            <div key={r.label} className={cx("flex flex-col gap-[10px] p-5", i % 2 === 0 && "border-r border-(--line-2)", i < 2 && "border-b border-(--line-2)")}>
+              <Eyebrow className="text-[10.5px]">{r.label}</Eyebrow>
+              <span className={cx("font-display text-[26px] font-medium leading-none tabular-nums", n == null && "text-ink-4")}>
+                {r.value ?? "–"}
+                {n != null && r.of === 10 && <span className="font-sans text-[13px] text-ink-4 font-normal"> / 10</span>}
+              </span>
+              <span className="h-[3px] rounded-full bg-white/[0.07] overflow-hidden">
+                <span className="block h-full rounded-full transition-[width] duration-700 ease-out" style={{ width: `${fill}%`, background: glow, boxShadow: `0 0 10px ${glow}` }} />
+              </span>
+              <span className="font-mono text-[11px] text-ink-4">{n == null ? "not rated yet" : r.sub}</span>
+            </div>
+          );
+        })}
+      </div>
+      {film.awards && (
+        <div className="flex flex-col gap-[6px] px-5 py-4 border-t border-(--line-2)">
+          <Eyebrow className="text-[10.5px]">Awards</Eyebrow>
+          <p className="m-0 text-[14px] leading-[1.5] text-ink-2">{film.awards}</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Details({ film }: { film: MovieDetail }) {
+  const f = film.facts ?? {};
+  const langs = [language(film.language), ...(f.languages ?? [])].filter((x, i, a) => x && a.indexOf(x) === i);
+  const rows = [
+    ["Released", film.release_date ? formatFullDate(film.release_date) : null],
+    ["Rated", f.certification],
+    ["Original title", film.original_title],
+    [langs.length > 1 ? "Languages" : "Language", langs.join(", ")],
+    [f.countries && f.countries.length > 1 ? "Countries" : "Country", f.countries?.join(", ")],
+    ["Studios", f.studios?.join(", ")],
+    ["Budget", money(f.budget)],
+    ["Box office", money(f.revenue) ?? f.box_office],
+    ["Status", f.status && f.status !== "Released" ? f.status : null],
+  ].filter(([, v]) => v) as [string, string][];
+  const links = [
+    ["TMDB", `https://www.themoviedb.org/movie/${film.tmdb_id}`],
+    ["IMDb", film.imdb_id ? `https://www.imdb.com/title/${film.imdb_id}/` : null],
+    ["Website", f.homepage],
+  ].filter(([, v]) => v) as [string, string][];
+  return (
+    <section aria-label="Details" className="rounded-[22px] border border-(--line-2) overflow-hidden">
+      <dl className="m-0 px-5 py-1">
+        {rows.map(([k, v]) => (
+          <div key={k} className="grid grid-cols-[112px_1fr] gap-4 py-[11px] border-b border-(--divider) last:border-0">
+            <dt className="text-[13px] text-ink-4">{k}</dt>
+            <dd className="m-0 text-[13px] text-ink leading-[1.45]">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="flex flex-wrap items-center gap-2 px-5 py-3 border-t border-(--line-2) bg-white/[0.015]">
+        {links.map(([label, href]) => (
+          <a key={label} href={href} target="_blank" rel="noreferrer" className="press h-8 px-3 grid place-items-center rounded-[9px] border border-(--line-4) text-[12px] text-ink-2 no-underline hover:bg-(--fill-ctl) hover:text-ink-hi">
+            {label} ↗
+          </a>
+        ))}
+        <span className="ml-auto font-mono text-[11px] text-ink-4">updated {relativeTime(film.fetched_at)}</span>
+      </div>
+    </section>
+  );
+}
+
+function Collection({ film }: { film: MovieDetail }) {
+  const c = film.collection;
+  if (!c) return null;
+  const seen = c.films.filter((f) => f.watch_count > 0).length;
+  return (
+    <section data-extension className="px-12 max-[1023px]:px-6 max-[639px]:px-4 flex flex-col gap-[18px]">
+      <div className="flex justify-between items-baseline gap-4 flex-wrap">
+        <SectionTitle>{c.name}</SectionTitle>
+        <span className="font-mono text-[12px] text-ink-3">seen {seen} of {c.films.length}</span>
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(130px,100%),1fr))] gap-[18px]">
+        {c.films.map((f) => {
+          const here = f.tmdb_id === film.tmdb_id;
+          const meta = here
+            ? "This film"
+            : f.watch_count > 0
+              ? `Watched${f.my_rating != null ? ` · ★ ${rating(f.my_rating)}` : ""}`
+              : f.on_watchlist
+                ? "On your watchlist"
+                : f.year
+                  ? `${f.year} · not seen`
+                  : "Not seen";
+          return (
+            <Link
+              key={f.tmdb_id}
+              to={`/film/${f.tmdb_id}`}
+              aria-current={here ? "page" : undefined}
+              className={cx("mini-poster flex flex-col gap-2 no-underline text-inherit hover:text-inherit", !here && f.watch_count === 0 && "opacity-60 hover:opacity-100 transition-opacity")}
+            >
+              <Poster film={f} size="mini" shadow={here ? `0 0 0 2px ${"var(--glow)"}, 0 20px 40px -20px var(--glow)` : false} layout={false} />
+              <span className={cx("text-[12px]", here ? "text-ink" : "text-ink-3")}>{meta}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function NeighbourTile({ n }: { n: Neighbor }) {
   const meta = n.kind === "watched" ? `Watched${n.film.my_rating != null ? ` · ★ ${rating(n.film.my_rating)}` : ""}` : `Suggested · ${pct(n.score)}`;
   return (
@@ -169,6 +329,7 @@ export default function FilmDetail() {
   const { data: film, isLoading, error } = useMovie(id);
   const { openPalette } = usePalette();
   const [trailer, setTrailer] = useState(false);
+  const [allCast, setAllCast] = useState(false);
   const back = useMemo(() => backTarget(loc.pathname), [loc.pathname]);
 
   useEffect(() => {
@@ -199,19 +360,6 @@ export default function FilmDetail() {
   const glow2 = film.palette[1] ?? glow;
   const seen = film.watch_count > 0;
   const onGlow = film.on_glow ?? onColor(glow);
-  const facts = [
-    ["Released", film.release_date ? formatFullDate(film.release_date) : null],
-    ["Director", film.director],
-    ["Cinematography", film.crew_highlights.cinematography?.join(", ")],
-    ["Music", film.crew_highlights.music?.join(", ")],
-    ["Data refreshed", relativeTime(film.fetched_at)],
-  ].filter(([, v]) => v) as [string, string][];
-  const scores = [
-    ["TMDB", film.scores.tmdb],
-    ["IMDB", film.scores.imdb],
-    ["ROTTEN TOMATOES", film.scores.rt],
-    ["METACRITIC", film.scores.metacritic],
-  ];
   const style = { "--glow": glow, "--glow2": glow2 } as CSSProperties;
 
   return (
@@ -242,7 +390,11 @@ export default function FilmDetail() {
               </span>
             )}
             <h1 className="m-0 font-display font-semibold text-[56px] max-[639px]:text-[34px] leading-[1.02] tracking-[-0.02em] [text-wrap:balance]">{film.title}</h1>
-            <p className="m-0 text-[15px] text-ink-2b">
+            {film.tagline && <p className="m-0 -mt-1 max-w-[56ch] text-[17px] italic text-ink-2 [text-wrap:balance]">{film.tagline}</p>}
+            <p className="m-0 flex flex-wrap items-center gap-x-[10px] gap-y-1 text-[15px] text-ink-2b">
+              {film.facts?.certification && (
+                <span className="font-mono text-[11px] leading-none px-[6px] py-[4px] rounded-[5px] border border-white/30 text-ink-2">{film.facts.certification}</span>
+              )}
               {[film.year, runtime(film.runtime), film.director, language(film.language)].filter(Boolean).join(" · ")}
             </p>
             <div className="flex flex-wrap gap-[10px] mt-2">
@@ -303,13 +455,9 @@ export default function FilmDetail() {
             <section className="flex flex-col gap-4">
               <SectionTitle>Cast</SectionTitle>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(min(120px,100%),1fr))] gap-5">
-                {film.cast.slice(0, 12).map((p) => (
+                {film.cast.slice(0, allCast ? undefined : 12).map((p) => (
                   <div key={`${p.name}-${p.character}`} className="flex flex-col items-start gap-[10px]">
-                    {p.photo ? (
-                      <img src={p.photo} alt="" loading="lazy" className="size-[72px] box-content rounded-full object-cover border border-(--line-3)" />
-                    ) : (
-                      <div className="size-[72px] box-content rounded-full bg-(--color-bg-avatar) border border-(--line-3) grid place-items-center font-display text-[18px] text-ink-4">{initials(p.name)}</div>
-                    )}
+                    <CastPhoto name={p.name} src={p.photo} />
                     <div className="flex flex-col gap-[2px]">
                       <span className="text-[14px] font-medium">{p.name}</span>
                       {p.character && <span className="text-[13px] text-ink-4">{p.character}</span>}
@@ -317,32 +465,25 @@ export default function FilmDetail() {
                   </div>
                 ))}
               </div>
+              {film.cast.length > 12 && (
+                <button type="button" onClick={() => setAllCast((v) => !v)} className="self-start h-9 px-4 rounded-[10px] bg-transparent border border-(--line-4) text-[13px] text-ink-2 cursor-pointer hover:bg-(--fill-ctl) hover:text-ink-hi">
+                  {allCast ? "Show fewer" : `Show all ${film.cast.length}`}
+                </button>
+              )}
             </section>
           )}
+
+          <Crew film={film} />
         </div>
 
         <aside className="flex-[1_1_340px] min-w-0 flex flex-col gap-5">
           {seen && <History film={film} glow={glow} glow2={glow2} />}
-          <section className="p-6 rounded-[22px] bg-(--fill-glass) border border-(--line-2) grid grid-cols-2 gap-[18px]">
-            {scores.map(([label, value]) => (
-              <div key={label} className="flex flex-col gap-1">
-                <Eyebrow>{label}</Eyebrow>
-                <span className="font-display text-[24px] font-medium">{value ?? "–"}</span>
-              </div>
-            ))}
-          </section>
-          <section className="py-2 px-6 rounded-[22px] border border-(--line-2)">
-            <dl className="m-0 flex flex-col">
-              {facts.map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4 py-3 border-b border-(--divider)">
-                  <dt className="text-[13px] text-ink-3">{k}</dt>
-                  <dd className="m-0 text-[13px] text-right">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
+          <Scores film={film} glow={glow} />
+          <Details film={film} />
         </aside>
       </div>
+
+      <Collection film={film} />
 
       {film.neighbors.length > 0 && (
         <section className="px-12 max-[1023px]:px-6 max-[639px]:px-4 flex flex-col gap-[18px]">

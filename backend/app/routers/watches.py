@@ -22,6 +22,7 @@ async def log_watch(body: WatchIn, s: Session = Depends(get_session)):
     await tmdb.get_movie(s, body.tmdb_id)
     w = Watch.model_validate(body)
     w.watched_on = normalize(w.watched_on, w.date_precision)
+    w.rating = round(w.rating, 1) if w.rating is not None else None
     s.add(w)
     if wl := s.get(WatchlistItem, body.tmdb_id):
         s.delete(wl)
@@ -38,6 +39,7 @@ def edit_watch(watch_id: int, body: WatchPatch, s: Session = Depends(get_session
     w = _get(s, watch_id)
     w.sqlmodel_update(body.model_dump(exclude_unset=True))
     w.watched_on = normalize(w.watched_on, w.date_precision)
+    w.rating = round(w.rating, 1) if w.rating is not None else None
     s.add(w)
     s.commit()
     fix_rewatches(s, w.tmdb_id)

@@ -183,11 +183,23 @@ def setup_native(window: webview.Window, maximized: bool) -> None:
                 window.native.WindowState = window.native.WindowState.Maximized
 
         on_ui(window, native)
+
+        def no_status_bar() -> None:
+            # pywebview shows WebView2's link-URL bubble (bottom corner) in debug mode; an app never does
+            core = window.native.browser.webview.CoreWebView2
+            if core is not None:
+                core.Settings.IsStatusBarEnabled = False
+
+        window.events.loaded += lambda *_: on_ui(window, no_status_bar)
     except Exception:
         pass  # cosmetic only
 
 
 def main() -> None:
+    if user32:
+        # Per-monitor DPI awareness (v2), before any window exists. pywebview only declares system awareness, so on a
+        # monitor whose scaling differs from the main one Windows stretched the whole window, cursor included.
+        user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
     if not single_instance():
         return
     if not (FRONTEND / "index.html").exists():

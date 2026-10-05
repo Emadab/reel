@@ -44,6 +44,7 @@ class Movie(SQLModel, table=True):
     tmdb_votes: int | None = None
     popularity: float | None = None
     omdb: dict | None = Field(default=None, sa_column=Column(JSON))
+    extra: dict | None = Field(default=None, sa_column=Column(JSON))  # certification, money, countries, studios, collection
     fetched_at: datetime = Field(default_factory=now)
     omdb_fetched_at: datetime | None = None
     embedding: bytes | None = Field(default=None, sa_column=Column(LargeBinary))

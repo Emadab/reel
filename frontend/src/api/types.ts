@@ -57,7 +57,15 @@ export type MovieDetail = FilmCard & {
   tagline?: string | null;
   keywords: string[];
   cast: CastMember[];
-  crew_highlights: { cinematography?: string[]; music?: string[]; writer?: string[] };
+  crew_highlights: { cinematography?: string[]; music?: string[]; writer?: string[]; editing?: string[]; producer?: string[] };
+  votes?: { tmdb: number | null; imdb: number | null };
+  awards?: string | null;
+  original_title?: string | null;
+  facts?: {
+    certification?: string | null; budget?: number | null; revenue?: number | null; box_office?: string | null;
+    countries?: string[]; languages?: string[]; studios?: string[]; status?: string | null; homepage?: string | null;
+  };
+  collection?: { name: string; films: FilmCard[] } | null;
   language: string | null;
   release_date: string | null;
   backdrop: string | null;

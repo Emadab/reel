@@ -94,3 +94,14 @@ The frontend must support `VITE_FIXTURES=1`. In that mode the API layer returns 
 - Work phase by phase from `docs/BUILD_PLAN.md`. At the end of each phase: all tests pass, the visual test passes for the screens built so far, and you write a short summary of what changed and any deviations.
 - Prefer small, typed, well-named modules over clever abstractions. Type-check (`tsc --noEmit`, `pyright` or `mypy`) before declaring done.
 - Ask before adding a dependency that isn't listed above.
+
+## Expansion work (TV, books, games)
+
+- The plan is in docs/expansion/REEL_EXPANSION.md. Read it fully before any expansion work.
+- Work only on the phase you were asked for. Stop at its gate and write the phase report.
+- Movies must keep working at every commit. Run the characterization tests before every commit.
+- Migrations are additive until Phase 9. Run scripts/backup before applying any migration.
+- New media stay behind their feature flags.
+- Reuse Reel's existing design system and components; do not restyle existing pages.
+- External APIs only from the backend; keys only in .env.
+- If the plan conflicts with the code, stop and ask.

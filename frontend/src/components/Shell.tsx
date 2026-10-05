@@ -9,6 +9,7 @@ import { GlowProvider, alpha } from "./Glow";
 import { IconForYou, IconLibrary, IconSearch, IconSettings, IconStats, IconTasteMap, IconTimeline } from "./Icons";
 import { ScrollRail } from "./ScrollRail";
 import { TitleBar } from "./TitleBar";
+import { Tooltips } from "./Tooltips";
 import { Kbd, cx } from "./ui";
 
 const NAV: { to: string; label: string; icon: ComponentType<{ size?: number; strokeWidth?: number }>; end?: boolean }[] = [
@@ -189,6 +190,7 @@ export function Shell() {
             </motion.div>
           </AnimatePresence>
           <CommandPalette />
+          <Tooltips />
           <EditWatchDialog />
         </div>
       )}

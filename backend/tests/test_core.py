@@ -127,6 +127,25 @@ def test_omdb_key_is_checked_then_fills_library_scores(client, monkeypatch, tmp_
         assert client.put("/api/settings", json={"omdb_key": "good"}).status_code == 200
         drain(client)
         with Session(db.engine) as s:  # filled by the background job, before any detail page opens
-            assert s.get(Movie, 329865).omdb == {"imdb": "7.9", "rt": "94%", "metacritic": "81"}
+            assert s.get(Movie, 329865).omdb.items() >= {"imdb": "7.9", "rt": "94%", "metacritic": "81"}.items()
     finally:
         config.settings.omdb_key = ""
+
+
+def test_scores_without_an_omdb_key_come_from_imdb_and_wikidata(client, monkeypatch):
+    monkeypatch.setattr(config.settings, "omdb_key", "")
+    log(client, 329865, "2026-08-23", 9)
+    client.get("/api/movies/329865")  # queues the lookup
+    drain(client)
+    with Session(db.engine) as s:  # the latest Tomatometer wins; the RT average and older values are ignored
+        assert s.get(Movie, 329865).omdb == {"imdb": "7.9", "rt": "94%", "metacritic": "81"}
+
+
+def test_detail_is_complete_and_ratings_keep_one_decimal(client):
+    w = log(client, 329865, "2026-08-23", 7.44)
+    assert w["rating"] == 7.4
+    d = client.get("/api/movies/329865").json()
+    assert d["facts"]["certification"] == "PG-13" and d["facts"]["budget"] == 47_000_000 and d["facts"]["studios"] == ["Lava Bear"]
+    col = d["collection"]
+    assert col["name"] == "Villeneuve Collection" and [f["tmdb_id"] for f in col["films"]] == [593, 329865, 335984]
+    assert col["films"][1]["watch_count"] == 1 and col["films"][0]["poster"] == "/api/img/w342/p593.jpg"

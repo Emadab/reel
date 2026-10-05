@@ -1,5 +1,6 @@
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import type { DatePrecision, WatchOut } from "../../api/types";
+import { DateField } from "../../components/DateField";
 import { RatingInput } from "../../components/Rating";
 import { Segmented, cx } from "../../components/ui";
 import { iso, today } from "../../lib/format";
@@ -27,6 +28,7 @@ export function LogWatchForm({
 }) {
   const [v, setV] = useState<LogValues>(initial);
   const set = <K extends keyof LogValues>(k: K, val: LogValues[K]) => setV((o) => ({ ...o, [k]: val }));
+  const decimalFor = useRef<number | null>(null); // after ".", the next digit is tenths
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
     onSubmit({ ...v, with_whom: v.with_whom?.trim() || null, location: v.location?.trim() || null, notes: v.notes?.trim() || null });
@@ -34,17 +36,28 @@ export function LogWatchForm({
   const onTextareaKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submit();
   };
-  const year = Number(v.watched_on.slice(0, 4));
   const day = (offset: number) => {
     const d = today();
     d.setDate(d.getDate() - offset);
     return iso(d);
   };
-  /** Keys 1–9 rate, 0 is 10 (same key again → half a point less), Backspace clears, Enter saves, unless you're typing in a field. */
+  /**
+   * Keys 1–9 rate, 0 is 10 (same key again → half a point less); "." then a digit adds tenths (7 . 4 → 7.4);
+   * Backspace clears, Enter saves. Not while typing in a field.
+   */
   const onFormKey = (e: KeyboardEvent<HTMLFormElement>) => {
     const t = e.target as HTMLElement;
     const typing = t.matches("input:not([type='checkbox']), textarea");
-    if (!typing && /^[0-9]$/.test(e.key)) {
+    const base = decimalFor.current;
+    decimalFor.current = null;
+    if (!typing && (e.key === "." || e.key === ",") && v.rating != null && v.rating < 10) {
+      decimalFor.current = Math.floor(v.rating);
+      set("rating", decimalFor.current);
+      e.preventDefault();
+    } else if (!typing && base != null && /^[0-9]$/.test(e.key)) {
+      set("rating", Math.max(0.1, base + Number(e.key) / 10));
+      e.preventDefault();
+    } else if (!typing && /^[0-9]$/.test(e.key)) {
       const n = Number(e.key) || 10;
       set("rating", v.rating === n ? n - 0.5 : n);
       e.preventDefault();
@@ -90,19 +103,13 @@ export function LogWatchForm({
               </span>
             )}
           </div>
-          {v.date_precision === "day" && (
-            <input id={`${id}-d`} type="date" required value={v.watched_on} max={iso(today())} onChange={(e) => e.target.value && set("watched_on", e.target.value)} className={cx(input, "px-3 border-(--line-5)")} />
-          )}
-          {v.date_precision === "month" && (
-            <input id={`${id}-d`} type="month" required value={v.watched_on.slice(0, 7)} onChange={(e) => e.target.value && set("watched_on", `${e.target.value}-01`)} className={cx(input, "px-3 border-(--line-5)")} />
-          )}
-          {v.date_precision === "year" && (
-            <input
-              id={`${id}-d`} type="number" required min={1900} max={today().getFullYear()} value={year}
-              onChange={(e) => e.target.value.length === 4 && set("watched_on", `${e.target.value}-01-01`)}
-              className={cx(input, "px-3 border-(--line-5) w-[120px]")}
-            />
-          )}
+          <DateField
+            id={`${id}-d`}
+            value={v.watched_on}
+            precision={v.date_precision}
+            onChange={(d) => set("watched_on", d)}
+            className={cx(input, "px-3 border-(--line-5)", v.date_precision === "year" ? "w-[140px]" : "w-[220px]")}
+          />
         </div>
         <div className="flex flex-col gap-2">
           <span id={`${id}-p`} className="text-[12px] text-ink-3">I remember the</span>

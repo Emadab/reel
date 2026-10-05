@@ -87,7 +87,7 @@ async def put_settings(body: SettingsIn, s: Session = Depends(get_session)):
             raise HTTPException(422, "OMDb rejected that key. Use the key from the activation email.")
         set_env("OMDB_KEY", key)
         if key:
-            jobs.enqueue("omdb:library", omdb.fill_library)
+            jobs.enqueue("omdb:library", omdb.fill_library)  # OMDb replaces the keyless scores
     if body.data_dir and Path(body.data_dir).resolve() != settings.data_dir:
         Path(body.data_dir).mkdir(parents=True, exist_ok=True)
         set_env("DATA_DIR", body.data_dir)

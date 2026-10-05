@@ -10,6 +10,9 @@
   /* in the desktop window, controls aren't selectable text */
   [data-desktop] :is(nav, button, label, [role="tab"], header h1, kbd) { user-select: none; }
   [data-desktop] :is(a, img) { -webkit-user-drag: none; }
+  /* cursors: a hand on anything clickable (Tailwind v4 resets buttons to the arrow), not-allowed when disabled */
+  :is(button, [role="button"], [role="tab"], [role="radio"], [role="menuitem"], summary, select, label[for], input[type="checkbox"], input[type="radio"]):not(:disabled) { cursor: pointer; }
+  :is(button, input, select, textarea):disabled { cursor: not-allowed; }
   /* the desktop window draws its own title bar (TitleBar), floating over the page; the body scrolls beneath it */
   :root { --tb: 0px; }
   [data-desktop] { --tb: 40px; height: 100%; overflow: hidden; }

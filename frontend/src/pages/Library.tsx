@@ -12,9 +12,9 @@ import { Poster, posterBg } from "../components/Poster";
 import { Button, PageHeader, PillTab, Segmented, cx } from "../components/ui";
 import { usePalette } from "../features/search/palette";
 import { lightest } from "../lib/color";
-import { formatLongDate, formatWatchDate, num, rating, runtime } from "../lib/format";
+import { formatLongDate, formatWatchDate, num, rating, runtime, today } from "../lib/format";
 
-const Carousel3D = lazy(() => import("../components/Carousel3D"));
+const Corridor3D = lazy(() => import("../components/Corridor3D"));
 
 type Tab = NonNullable<LibraryParams["tab"]>;
 type Sort = NonNullable<LibraryParams["sort"]>;
@@ -32,30 +32,64 @@ function chipLabel(name: string, values: string[], fmt: (v: string) => string = 
   return values.length === 1 ? `${name}: ${fmt(values[0])}` : `${name} · ${values.length}`;
 }
 
+function ago(watched: string, precision: string): string | null {
+  if (precision !== "day") return null;
+  const days = Math.round((today().getTime() - new Date(`${watched}T00:00:00`).getTime()) / 86_400_000);
+  return days === 0 ? "today" : days === 1 ? "yesterday" : days < 7 ? `${days} days ago` : null;
+}
+
 function LastWatched({ film }: { film: CardWithWatch }) {
   const glow = film.palette[0] ?? posterBg(film);
   const light = lightest(film.palette, film.poster_art.fg);
   const w = film.watch;
   const where = w.location ? (/^home$/i.test(w.location) ? "at home" : w.location) : null;
+  const bg = film.poster_sm ?? film.poster;
+  const when = ago(w.watched_on, w.date_precision);
   return (
     <Link
       to={`/film/${film.tmdb_id}`}
       aria-label={`Last watched: ${film.title}`}
-      className="relative flex flex-wrap items-center gap-7 p-[22px] rounded-[22px] bg-(--fill-glass) border border-(--line-2) backdrop-blur-[24px] overflow-hidden no-underline text-ink hover:text-ink"
+      className="group relative isolate flex flex-wrap items-center gap-7 p-[22px] rounded-[22px] bg-(--fill-glass) border border-(--line-2) overflow-hidden no-underline text-ink hover:text-ink hover:border-(--line-4) transition-[border-color] duration-200"
     >
-      <div aria-hidden className="absolute left-[-80px] top-[-120px] w-[520px] h-[380px] pointer-events-none" style={{ background: `radial-gradient(closest-side, ${alpha(glow, 0.55)}, ${alpha(glow, 0)})` }} />
-      <Poster film={film} size="last" className="w-24" shadow={`0 18px 40px -16px ${alpha(posterBg(film), 0.9)}`} />
+      {/* the film's own poster, blown up and blurred, is the card's backdrop */}
+      {bg && <img src={bg} alt="" aria-hidden className="absolute inset-0 -z-10 size-full object-cover scale-[1.6] blur-[48px] saturate-[1.35] opacity-50" />}
+      <div aria-hidden className="absolute inset-0 -z-10 bg-linear-to-r from-[rgba(7,8,12,0.35)] via-[rgba(7,8,12,0.62)] to-[rgba(7,8,12,0.85)]" />
+      <div aria-hidden className="absolute left-[-80px] top-[-120px] -z-10 w-[520px] h-[380px] pointer-events-none" style={{ background: `radial-gradient(closest-side, ${alpha(glow, 0.45)}, ${alpha(glow, 0)})` }} />
+      <Poster
+        film={film}
+        size="last"
+        layout={false}
+        eager
+        className="w-24 transition-transform duration-300 ease-[cubic-bezier(.2,.7,.2,1)] group-hover:-translate-y-[3px] group-hover:scale-[1.03]"
+        shadow={`0 18px 40px -16px ${alpha(glow, 0.9)}, 0 0 0 1px rgba(255,255,255,0.08)`}
+      />
       <div className="relative flex-[1_1_280px] flex flex-col gap-2 min-w-0">
-        <span className="font-mono text-[12px] tracking-[0.08em] uppercase" style={{ color: `color-mix(in oklch, ${light} 62%, ${glow})` }}>
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[12px] tracking-[0.08em] uppercase" style={{ color: `color-mix(in oklch, ${light} 62%, ${glow})` }}>
           LAST WATCHED · {formatLongDate(w.watched_on, w.date_precision)}
+          {when && <span className="px-2 py-[2px] rounded-full text-[10.5px] tracking-[0.06em] bg-white/8 text-ink-2">{when}</span>}
         </span>
-        <h2 className="m-0 font-display font-semibold text-[28px]">{film.title}</h2>
+        <h2 className="m-0 font-display font-semibold text-[28px] [text-wrap:balance]">{film.title}</h2>
         <p className="m-0 text-[14px] text-ink-3">
           {[film.director, film.year, runtime(film.runtime), where].filter(Boolean).join(" · ")}
         </p>
+        {(w.is_rewatch || film.watch_count > 1) && (
+          <span className="self-start mt-1 font-mono text-[11px] px-2 py-[3px] rounded-[6px] bg-(--fill-tag) text-ink-2b">
+            {w.is_rewatch ? "rewatch" : "first watch"} · seen {film.watch_count}×
+          </span>
+        )}
       </div>
-      <div className="relative flex flex-col items-end gap-3 max-[639px]:items-start">
-        {w.rating != null && <span className="font-mono text-[26px]" style={{ color: light }}>★ {rating(w.rating)}</span>}
+      <div className="relative flex flex-col items-end gap-1 max-[639px]:items-start">
+        {w.rating != null ? (
+          <>
+            <span className="font-mono text-[10.5px] tracking-[0.12em] text-ink-3 uppercase">Your rating</span>
+            <span className="font-display font-medium text-[40px] leading-none tabular-nums" style={{ color: light, textShadow: `0 0 28px ${alpha(glow, 0.55)}` }}>
+              {rating(w.rating)}
+              <span className="font-sans text-[14px] text-ink-4 font-normal"> / 10</span>
+            </span>
+          </>
+        ) : (
+          <span className="font-mono text-[12px] text-ink-4">not rated</span>
+        )}
       </div>
     </Link>
   );
@@ -133,7 +167,7 @@ export function Library() {
     setSp(next, { replace: true });
   };
 
-  // the carousel shows up to 72 posters (three rings): load enough pages to fill them
+  // the corridor shows up to 72 posters: load enough pages to fill it
   useEffect(() => {
     if (view === "carousel" && items.length < 72 && lib.hasNextPage && !lib.isFetchingNextPage) void lib.fetchNextPage();
   }, [view, items.length, lib]);
@@ -160,7 +194,7 @@ export function Library() {
           label="View"
           value={view}
           onChange={(v) => update("view", v === "carousel" ? ["carousel"] : [])}
-          options={[{ id: "grid", label: "Poster wall" }, { id: "carousel", label: "3D carousel" }]}
+          options={[{ id: "grid", label: "Poster wall" }, { id: "carousel", label: "Neon corridor" }]}
         />
         <Button variant="primary" onClick={() => openPalette()}>
           <IconPlus size={16} />
@@ -241,7 +275,7 @@ export function Library() {
         </div>
       ) : view === "carousel" ? (
         <Suspense fallback={<div className="skeleton h-[640px] rounded-[22px]" />}>
-          <Carousel3D films={items} />
+          <Corridor3D films={items} />
         </Suspense>
       ) : (
         <div className={cx(grid, lib.isPlaceholderData && "opacity-60 transition-opacity")}>

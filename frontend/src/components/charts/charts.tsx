@@ -89,9 +89,7 @@ export function Radar({ genres }: { genres: { name: string; value: number }[] })
       {genres.map((g, i) => {
         const [x, y] = pt(i, g.value);
         return (
-          <circle key={g.name} cx={x.toFixed(1)} cy={y.toFixed(1)} r={4} fill={accent} stroke="#101218" strokeWidth={2}>
-            <title>{`${g.name}: ${Math.round(g.value * 100)}% of your top genre`}</title>
-          </circle>
+          <circle key={g.name} cx={x.toFixed(1)} cy={y.toFixed(1)} r={4} fill={accent} stroke="#101218" strokeWidth={2} data-tip={`${g.name}: ${Math.round(g.value * 100)}% of your top genre`} />
         );
       })}
       {genres.map((g, i) => {
