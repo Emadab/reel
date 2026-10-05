@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from . import db, jobs, omdb, scheduler
 from .config import settings
 from .recommender import service
-from .routers import announcements, history, imports, library, media, movies, recs, search, system, watches
+from .routers import announcements, history, imports, library, media, media_imports, media_stats, movies, recs, search, system, watches
 
 FRONTEND = Path(__file__).parent.parent.parent / "frontend" / "dist"
 
@@ -28,7 +28,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Reel", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"], allow_headers=["*"])
-for r in (system, search, movies, watches, library, history, recs, imports, media, announcements):
+for r in (system, search, movies, watches, library, history, recs, imports, media_imports, media_stats, media, announcements):
     app.include_router(r.router, prefix="/api")
 app.mount("/media", StaticFiles(directory=settings.media_dir, check_dir=False), name="media")
 
