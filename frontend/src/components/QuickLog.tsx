@@ -4,9 +4,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useDeleteWatch } from "../api/hooks";
 import { usePalette } from "../features/search/palette";
-import { iso, today } from "../lib/format";
+import { iso, rating as fmt, today } from "../lib/format";
 import { IconCheck, IconClose } from "./Icons";
-import { StarRating } from "./StarRating";
+import { RatingInput } from "./Rating";
 import { useToast } from "./Toasts";
 import { cx } from "./ui";
 
@@ -32,7 +32,7 @@ export function QuickLog({ film, onClose, className }: { film: QuickFilm; onClos
   close.current = onClose;
 
   useEffect(() => {
-    ref.current?.querySelector<HTMLButtonElement>("[data-star='4']")?.focus();
+    ref.current?.querySelector<HTMLButtonElement>("[data-score='8']")?.focus();
     const onDown = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && close.current();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
     document.addEventListener("mousedown", onDown);
@@ -59,7 +59,7 @@ export function QuickLog({ film, onClose, className }: { film: QuickFilm; onClos
       saved.current = true;
       setDone(true);
       toast({
-        text: <>Logged <em>{film.title}</em>{r != null && <span className="font-mono text-ink-star"> ★ {r.toFixed(1)}</span>}</>,
+        text: <>Logged <em>{film.title}</em>{r != null && <span className="font-mono text-ink-star"> ★ {fmt(r)}</span>}</>,
         undo: () => del.mutate(w.id),
       });
       timer.current = setTimeout(() => close.current(), 900); // let the check land first
@@ -112,8 +112,8 @@ export function QuickLog({ film, onClose, className }: { film: QuickFilm; onClos
                 <IconClose size={14} />
               </button>
             </div>
-            <div className="flex justify-center -my-1">
-              <StarRating compact hideLabel label={`Rate ${film.title}`} value={rating} onChange={(r) => r != null && !saving && save(r)} />
+            <div className="-my-1">
+              <RatingInput compact hideLabel label={`Rate ${film.title}`} value={rating} onChange={(r) => r != null && !saving && save(r)} />
             </div>
             <div className="flex justify-between text-[11px]">
               <button type="button" disabled={saving} onClick={() => save(null)} className="h-7 bg-transparent border-0 p-0 text-ink-3 cursor-pointer underline-offset-2 hover:underline hover:text-ink">

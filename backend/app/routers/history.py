@@ -121,7 +121,7 @@ def stats(range_: str = Query("all", alias="range"), s: Session = Depends(get_se
         "genres": [{"name": g, "value": round(n / gmax, 3), "count": n} for g, n in top],
         "directors": [{"name": n, "count": c} for n, c in directors.most_common(5)],
         "actors": [{"name": n, "count": c} for n, c in actors.most_common(5)],
-        "ratings": [{"bin": b / 2, "count": sum(1 for r in ratings if r == b / 2)} for b in range(1, 11)],
+        "ratings": [{"bin": b, "count": sum(1 for r in ratings if max(1, min(10, int(r))) == b)} for b in range(1, 11)],  # 8.5 → bin 8
         "mean": avg,
         "heatmap": heatmap(s),
     }

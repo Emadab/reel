@@ -6,7 +6,17 @@ import type {
 } from "./types";
 
 type Any = any; // eslint-disable-line @typescript-eslint/no-explicit-any
-const d = data as Any;
+
+// the design's sample data rates 0.5–5 stars; Reel rates 0–10
+const TEN = new Set(["rating", "my_rating", "avg_rating", "mean", "bin"]);
+function toTen(o: Any): Any {
+  if (Array.isArray(o)) return o.map(toTen);
+  if (!o || typeof o !== "object") return o;
+  return Object.fromEntries(
+    Object.entries(o).map(([k, v]) => [k, typeof v === "number" && TEN.has(k) ? v * 2 : k === "because_ratings" ? (v as number[]).map((x) => x * 2) : toTen(v)]),
+  );
+}
+const d = toTen(data);
 
 const lib = d.library as Library & { items: FilmCard[] };
 const allCards: FilmCard[] = [

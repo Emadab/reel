@@ -54,7 +54,7 @@ class Movie(SQLModel, table=True):
 class WatchFields(SQLModel):
     watched_on: date
     date_precision: Precision = Field(default="day", sa_type=String)
-    rating: float | None = Field(default=None, ge=0.5, le=5, multiple_of=0.5)
+    rating: float | None = Field(default=None, gt=0, le=10)  # 0–10, one decimal
     is_rewatch: bool = False
     location: str | None = None
     with_whom: str | None = None
@@ -77,7 +77,7 @@ class WatchIn(WatchFields):
 class WatchPatch(SQLModel):
     watched_on: date | None = None
     date_precision: Precision | None = None
-    rating: float | None = Field(default=None, ge=0.5, le=5, multiple_of=0.5)
+    rating: float | None = Field(default=None, gt=0, le=10)  # 0–10, one decimal
     is_rewatch: bool | None = None
     location: str | None = None
     with_whom: str | None = None

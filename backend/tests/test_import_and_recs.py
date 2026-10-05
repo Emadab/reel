@@ -28,8 +28,9 @@ def test_parse_letterboxd_zip_and_imdb():
     assert [(r["title"], r["date_precision"]) for r in rows] == [
         ("Arrival", "day"), ("Stalker", "day"), ("Unknown Film Nobody Made", "day"), ("Solaris", "year")]
     assert rows[1]["is_rewatch"] and rows[3]["watched_on"] == "2019-01-01"
+    assert [r["rating"] for r in rows] == [9, 10, 6, 8]  # Letterboxd stars doubled to 0–10
     imdb = importers.parse_imdb(IMDB.encode())
-    assert len(imdb) == 1 and imdb[0]["rating"] == 4.5 and imdb[0]["imdb_id"] == "tt843"
+    assert len(imdb) == 1 and imdb[0]["rating"] == 9 and imdb[0]["imdb_id"] == "tt843"
 
 
 def test_letterboxd_import_review_and_commit_is_idempotent(client):
@@ -59,17 +60,17 @@ def test_imdb_import(client):
     drain(client)
     assert client.post(f"/api/import/{job_id}/commit").json()["created"] == 1
     w = client.get("/api/movies/843").json()["watches"][0]
-    assert w["rating"] == 4.5 and w["date_precision"] == "year"
+    assert w["rating"] == 9 and w["date_precision"] == "year"
 
 
 def _history(client):
     """25 rated films: high ratings for the Villeneuve/Tarkovsky sci-fi side, low for the comedy fillers."""
-    log(client, 329865, "2026-08-23", 5)
-    log(client, 335984, "2026-07-01", 5)
-    log(client, 1398, "2026-06-01", 4.5)
-    log(client, 843, "2026-05-01", 4)
+    log(client, 329865, "2026-08-23", 10)
+    log(client, 335984, "2026-07-01", 10)
+    log(client, 1398, "2026-06-01", 9)
+    log(client, 843, "2026-05-01", 8)
     for i in range(20):
-        log(client, 900000 + i, f"2025-{(i % 12) + 1:02d}-10", 2 if i % 2 == 0 else 3.5)
+        log(client, 900000 + i, f"2025-{(i % 12) + 1:02d}-10", 4 if i % 2 == 0 else 7)
     drain(client)
 
 

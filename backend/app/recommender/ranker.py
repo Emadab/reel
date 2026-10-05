@@ -1,4 +1,4 @@
-"""Scoring (ARCHITECTURE §5). v1 is a taste vector + MMR; v2 is a classifier for P(rating >= 4)."""
+"""Scoring (ARCHITECTURE §5). v1 is a taste vector + MMR; v2 is a classifier for P(rating >= 8 of 10)."""
 import math
 import random
 from collections import Counter
@@ -26,7 +26,7 @@ class Profile:
     mu: float
     t: np.ndarray
     E: np.ndarray  # embeddings of `films`, row-aligned
-    liked: list[Movie] = field(default_factory=list)  # rated >= 4 (or above mean if none are)
+    liked: list[Movie] = field(default_factory=list)  # rated >= 8 (or above mean if none are)
     liked_dirs: dict[int, Movie] = field(default_factory=dict)  # director id -> highest-rated film by them
     liked_cast: set[int] = field(default_factory=set)
     kw_freq: Counter = field(default_factory=Counter)
@@ -51,7 +51,7 @@ def build_profile(s: Session, exclude: set[int] = frozenset(), today: date | Non
     if not films:
         return None
     rated = [r for r in ratings.values() if r is not None]
-    mu = sum(rated) / len(rated) if rated else 3.5
+    mu = sum(rated) / len(rated) if rated else 7
     weights = {}
     for m in films:
         decay = math.exp(-max(ages[m.tmdb_id], 0) / 730)
@@ -64,7 +64,7 @@ def build_profile(s: Session, exclude: set[int] = frozenset(), today: date | Non
         t = E.mean(axis=0)
     t = t / (np.linalg.norm(t) or 1)
 
-    liked = [m for m in films if (ratings[m.tmdb_id] or 0) >= 4] or [m for m in films if (ratings[m.tmdb_id] or 0) > mu]
+    liked = [m for m in films if (ratings[m.tmdb_id] or 0) >= 8] or [m for m in films if (ratings[m.tmdb_id] or 0) > mu]
     liked.sort(key=lambda m: ratings[m.tmdb_id] or 0, reverse=True)
     p = Profile(films, ratings, weights, mu, t, E, liked)
     for m in liked:
@@ -90,7 +90,7 @@ def v1_scores(p: Profile, cands: list[Movie]) -> tuple[np.ndarray, np.ndarray]:
 
 
 def calibrator(s: Session, p: Profile):
-    """Maps a v1 score onto P(rating >= 4): a Platt fit on my own ratings once there are 30, else a fixed curve."""
+    """Maps a v1 score onto P(rating >= 8): a Platt fit on my own ratings once there are 30, else a fixed curve."""
     rated = [m for m in p.films if p.rating(m) is not None]
     if len(rated) >= 30:
         xs, ys = [], []
@@ -101,7 +101,7 @@ def calibrator(s: Session, p: Profile):
             loo = loo - p.weights[m.tmdb_id] * p.E[i]
             loo /= np.linalg.norm(loo) or 1
             xs.append(float(p.E[i] @ loo))
-            ys.append(int(p.rating(m) >= 4))  # type: ignore[operator]
+            ys.append(int(p.rating(m) >= 8))  # type: ignore[operator]
         if 0 < sum(ys) < len(ys):
             from sklearn.linear_model import LogisticRegression
 
@@ -137,10 +137,10 @@ def _context(p: Profile) -> tuple[np.ndarray, float]:
 
 def labels(s: Session, p: Profile, exclude: set[int] = frozenset()) -> list[tuple[Movie, int]]:  # type: ignore[assignment]
     out: dict[int, tuple[Movie, int]] = {}
-    for m in p.films:  # the target is exactly what the UI shows: P(my rating >= 4)
+    for m in p.films:  # the target is exactly what the UI shows: P(my rating >= 8)
         r = p.rating(m)
         if r is not None:
-            out[m.tmdb_id] = (m, int(r >= 4))
+            out[m.tmdb_id] = (m, int(r >= 8))
     for f in s.exec(select(Feedback).order_by(Feedback.created_at)):
         if f.tmdb_id in exclude or f.tmdb_id in out and f.tmdb_id in p.ratings:
             continue

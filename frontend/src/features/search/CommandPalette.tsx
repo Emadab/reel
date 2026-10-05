@@ -119,7 +119,7 @@ function PaletteBody({ initialFor, initialQuery }: { initialFor?: PaletteFilm; i
 
   const openForm = (r: Row) => {
     setFormFor(r);
-    // focus the form itself: 1–5 rate and Enter saves straight away
+    // focus the form itself: 0–9 rate and Enter saves straight away
     setTimeout(() => formRef.current?.querySelector<HTMLFormElement>("form")?.focus(), 0);
   };
 

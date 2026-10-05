@@ -128,7 +128,7 @@ export function RatingHistogram({ bins }: { bins: { bin: number; count: number }
     <>
       <div className="flex-1 grid grid-cols-10 gap-[6px] items-end min-h-[220px]">
         {bins.map((b) => (
-          <div key={b.bin} title={`${b.bin.toFixed(1)} stars: ${b.count} films`} className="group flex flex-col justify-end items-stretch gap-[6px] h-full">
+          <div key={b.bin} title={`${b.bin} out of 10: ${b.count} films`} className="group flex flex-col justify-end items-stretch gap-[6px] h-full">
             <span className="font-mono text-[11px] text-center text-ink-2b">{b.count}</span>
             <span
               className="rounded-[4px_4px_0_0] group-hover:brightness-125"

@@ -93,6 +93,9 @@ def tmdb_router() -> respx.MockRouter:
     r.get(host="api.themoviedb.org", path__regex=r"^/3/movie/(top_rated|popular)$").mock(return_value=Response(200, json={"results": [summary(i) for i in list(FILMS)[:8]]}))
     r.get(host="api.themoviedb.org", path__regex=r"^/3/find/tt\d+$").mock(side_effect=lambda req: Response(200, json={"movie_results": [summary(int(req.url.path.split("tt")[-1]))]}))
     r.get(f"{api}/configuration").mock(return_value=Response(200, json={}))
+    r.get(host="www.omdbapi.com").mock(side_effect=lambda req: Response(200, json=(
+        {"Response": "True", "imdbRating": "7.9", "Metascore": "81", "Ratings": [{"Source": "Rotten Tomatoes", "Value": "94%"}]}
+        if req.url.params.get("apikey") == "good" else {"Response": "False", "Error": "Invalid API key!"})))
     r.get(url__regex=r"https://image\.tmdb\.org/.*").mock(return_value=Response(200, content=png()))
     return r
 

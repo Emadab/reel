@@ -31,8 +31,7 @@ test("Search", async ({ page }) => {
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
   await page.getByLabel("Watched on").fill("2026-10-04");
-  await page.getByRole("button", { name: "5 stars" }).click();
-  await page.getByRole("button", { name: "5 stars" }).click();
+  await page.getByRole("button", { name: "9 out of 10" }).click();
   await page.getByPlaceholder("Search any film…").focus();
   await page.waitForTimeout(300);
   // The mock fakes a blurred poster wall behind the scrim; the app blurs the real Library (SCREENS.md),

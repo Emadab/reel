@@ -7,6 +7,8 @@ import { usePalette } from "../features/search/palette";
 import { trackPath } from "../lib/history";
 import { GlowProvider, alpha } from "./Glow";
 import { IconForYou, IconLibrary, IconSearch, IconSettings, IconStats, IconTasteMap, IconTimeline } from "./Icons";
+import { ScrollRail } from "./ScrollRail";
+import { TitleBar } from "./TitleBar";
 import { Kbd, cx } from "./ui";
 
 const NAV: { to: string; label: string; icon: ComponentType<{ size?: number; strokeWidth?: number }>; end?: boolean }[] = [
@@ -41,7 +43,7 @@ function Sidebar() {
       <div className="max-[639px]:hidden flex-[1_1_220px] max-[1023px]:flex-[0_0_72px] max-w-full border-r border-(--line-nav) relative z-[1] bg-bg">
       <nav
         aria-label="Primary"
-        className="sticky top-0 h-screen min-h-[560px] flex flex-col gap-7 py-7 px-[18px] max-[1023px]:px-[14px] box-border"
+        className="sticky top-0 h-screen min-h-[560px] flex flex-col gap-7 pb-7 pt-[calc(28px+var(--tb))] px-[18px] max-[1023px]:px-[14px] box-border"
       >
         <Logo compact />
         <button
@@ -91,7 +93,7 @@ function Sidebar() {
           >
             <IconSettings size={18} />
           </NavLink>
-          <p className="m-0 px-[10px] text-[11px] leading-[1.5] text-ink-4 max-[1023px]:hidden">
+          <p className="m-0 px-[10px] text-[10px] leading-[1.45] text-ink-4 opacity-45 max-[1023px]:hidden">
             This product uses the TMDB API but is not endorsed or certified by TMDB.
           </p>
         </div>
@@ -141,6 +143,7 @@ export function Shell() {
   useEffect(() => trackPath(loc.pathname), [loc.pathname]);
   useEffect(() => {
     window.scrollTo(0, 0); // a block body: scrollTo() returns a Promise in newer Chromium
+    document.body.scrollTo(0, 0); // the desktop window scrolls the body (under the title bar)
   }, [loc.pathname]);
 
   useEffect(() => {
@@ -163,7 +166,7 @@ export function Shell() {
   return (
     <GlowProvider>
       {(glow) => (
-        <div className="min-h-screen bg-bg text-ink font-sans flex lg:flex-wrap relative overflow-hidden">
+        <div className="min-h-screen bg-bg text-ink font-sans flex lg:flex-wrap relative overflow-clip">
           {glow && (
             <div
               aria-hidden
@@ -171,11 +174,13 @@ export function Shell() {
               style={{ background: `radial-gradient(closest-side, ${alpha(glow, 0.42)}, ${alpha(glow, 0)})` }}
             />
           )}
+          <TitleBar />
+          <ScrollRail />
           <Sidebar />
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={loc.pathname.split("/").slice(0, 2).join("/") + (loc.pathname.startsWith("/film/") ? loc.pathname : "")}
-              className="flex-[999_1_560px] max-[1023px]:flex-1 min-w-0 flex flex-col relative"
+              className="flex-[999_1_560px] max-[1023px]:flex-1 min-w-0 flex flex-col relative pt-(--tb)"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.2, 0.7, 0.2, 1] } }}
               exit={{ opacity: 0, transition: { duration: 0.12 } }}

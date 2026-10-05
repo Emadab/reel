@@ -9,7 +9,7 @@ import { alpha } from "../components/Glow";
 import { IconBookmark, IconNotInterested, IconThumbUp } from "../components/Icons";
 import { Poster, posterBg } from "../components/Poster";
 import { QuickLog } from "../components/QuickLog";
-import { StarRating } from "../components/StarRating";
+import { RatingInput } from "../components/Rating";
 import { useToast } from "../components/Toasts";
 import { Button, ButtonLink, ErrorLine, IconButton, PageHeader, Segmented, TagChip } from "../components/ui";
 import { pct, rating, relativeTime, runtime, today } from "../lib/format";
@@ -202,7 +202,7 @@ function Onboarding() {
             <div key={f.tmdb_id} className="flex flex-col gap-2 min-w-0">
               <Poster film={f} size="wall" layout={false} />
               <span className="text-[14px] font-medium truncate">{f.title} <span className="font-mono text-[12px] text-ink-3">{f.year}</span></span>
-              <StarRating label="Your rating" value={ratings[f.tmdb_id] ?? null} onChange={(r) => rate(f, r)} />
+              <RatingInput label="Your rating" value={ratings[f.tmdb_id] ?? null} onChange={(r) => rate(f, r)} />
               {ratings[f.tmdb_id] == null && (
                 <button type="button" onClick={() => skip(f)} className="self-start h-11 bg-transparent border-0 p-0 text-[13px] text-ink-3 underline underline-offset-2 cursor-pointer hover:text-ink">
                   Haven't seen it

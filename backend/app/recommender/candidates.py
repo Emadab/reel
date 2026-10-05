@@ -50,7 +50,7 @@ async def generate(s: Session) -> dict[int, list[str]]:
     kw_w: Counter[int] = Counter()
     dir_w: Counter[int] = Counter()
     for m, r in liked:
-        if not m or r is None or r < 3.5:
+        if not m or r is None or r < 7:
             continue
         genre_w.update({g: r for g in m.genre_ids})
         kw_w.update({k: r for k in m.keyword_ids[:15]})

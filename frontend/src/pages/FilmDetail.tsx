@@ -216,17 +216,20 @@ export default function FilmDetail() {
 
   return (
     <main style={style} className="flex flex-col gap-12 pb-[72px] max-[639px]:pb-24 min-w-0">
-      <section aria-label="Film" className="relative min-h-[600px] max-[639px]:min-h-0 pt-8 px-12 pb-11 max-[1023px]:px-6 max-[639px]:px-4 box-border flex flex-col justify-between gap-10 overflow-hidden">
-        <div aria-hidden className="absolute inset-0 bg-bg-hero" />
-        {film.backdrop && (
-          <>
-            <img src={film.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
-            <div aria-hidden className="absolute inset-0 bg-[rgba(7,8,12,0.35)]" />
-          </>
-        )}
-        <div aria-hidden className="absolute left-[30%] top-[-18%] w-[900px] h-[700px]" style={{ background: `radial-gradient(closest-side, ${mix(glow, 70)}, transparent)` }} />
-        <div aria-hidden className="absolute right-[-10%] top-[10%] w-[700px] h-[600px]" style={{ background: `radial-gradient(closest-side, ${mix(glow2, 45)}, transparent)` }} />
-        <div aria-hidden className="absolute left-0 right-0 bottom-0 h-[60%] bg-linear-to-b from-[rgba(7,8,12,0)] to-bg" />
+      <section aria-label="Film" className="relative min-h-[600px] max-[639px]:min-h-0 -mt-(--tb) pt-[calc(32px+var(--tb))] px-12 pb-11 max-[1023px]:px-6 max-[639px]:px-4 box-border flex flex-col justify-between gap-10">
+        {/* only the backdrop layers are clipped, so the More menu can open past the hero */}
+        <div aria-hidden className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 bg-bg-hero" />
+          {film.backdrop && (
+            <>
+              <img src={film.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
+              <div aria-hidden className="absolute inset-0 bg-[rgba(7,8,12,0.35)]" />
+            </>
+          )}
+          <div aria-hidden className="absolute left-[30%] top-[-18%] w-[900px] h-[700px]" style={{ background: `radial-gradient(closest-side, ${mix(glow, 70)}, transparent)` }} />
+          <div aria-hidden className="absolute right-[-10%] top-[10%] w-[700px] h-[600px]" style={{ background: `radial-gradient(closest-side, ${mix(glow2, 45)}, transparent)` }} />
+          <div aria-hidden className="absolute left-0 right-0 bottom-0 h-[60%] bg-linear-to-b from-[rgba(7,8,12,0)] to-bg" />
+        </div>
 
         <div className="relative flex justify-between items-center gap-4 flex-wrap">{backPill}</div>
 
@@ -267,16 +270,6 @@ export default function FilmDetail() {
                 <Eyebrow className="tracking-[0.12em]">YOUR RATING</Eyebrow>
                 <span className="font-display font-medium text-[64px] leading-none" style={{ color: glow }}>{rating(film.my_rating)}</span>
                 <span className="text-[13px] text-ink-3">across {film.watch_count} watch{film.watch_count === 1 ? "" : "es"}</span>
-              </div>
-            )}
-            {film.palette.length > 0 && (
-              <div className="flex flex-col items-end gap-2 max-[639px]:items-start">
-                <Eyebrow className="tracking-[0.12em]">PALETTE FROM POSTER</Eyebrow>
-                <div className="flex gap-[6px]">
-                  {film.palette.map((c, i) => (
-                    <span key={i} title={c} aria-label={c} className="size-[26px] rounded-[8px] border border-[rgba(255,255,255,0.18)] box-content" style={{ background: c }} />
-                  ))}
-                </div>
               </div>
             )}
           </div>

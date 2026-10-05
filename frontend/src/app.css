@@ -10,6 +10,11 @@
   /* in the desktop window, controls aren't selectable text */
   [data-desktop] :is(nav, button, label, [role="tab"], header h1, kbd) { user-select: none; }
   [data-desktop] :is(a, img) { -webkit-user-drag: none; }
+  /* the desktop window draws its own title bar (TitleBar), floating over the page; the body scrolls beneath it */
+  :root { --tb: 0px; }
+  [data-desktop] { --tb: 40px; height: 100%; overflow: hidden; }
+  /* the page scrolls in the body; its scrollbar is drawn by ScrollRail as an overlay */
+  [data-desktop] body { height: 100%; min-height: 0; overflow-y: auto; scrollbar-width: none; }
 }
 
 /* Native <dialog> reset + the command-palette scrim (DESIGN_SYSTEM: blur 10 px + rgba(4,5,8,.62)). */

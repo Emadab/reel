@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from .. import db, jobs, tmdb
+from .. import db, jobs, omdb, tmdb
 from ..config import set_env, settings
 from ..db import get_session, get_setting, put_setting
 
@@ -82,7 +82,12 @@ async def put_settings(body: SettingsIn, s: Session = Depends(get_session)):
         set_env("TMDB_TOKEN", token)
         ok = True
     if body.omdb_key is not None:
-        set_env("OMDB_KEY", body.omdb_key.strip())
+        key = body.omdb_key.strip()
+        if key and not await omdb.check_key(key):
+            raise HTTPException(422, "OMDb rejected that key. Use the key from the activation email.")
+        set_env("OMDB_KEY", key)
+        if key:
+            jobs.enqueue("omdb:library", omdb.fill_library)
     if body.data_dir and Path(body.data_dir).resolve() != settings.data_dir:
         Path(body.data_dir).mkdir(parents=True, exist_ok=True)
         set_env("DATA_DIR", body.data_dir)

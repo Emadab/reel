@@ -268,7 +268,7 @@ def explain(s: Session, tmdb_id: int) -> dict:
     nearest: list[dict] = []
     if p and e is not None:
         rated = [x for x in p.films if p.rating(x) is not None and x.tmdb_id != tmdb_id]
-        pool = [x for x in rated if (p.rating(x) or 0) >= 4] or rated
+        pool = [x for x in rated if (p.rating(x) or 0) >= 8] or rated
         if pool:
             sims = F.matrix(pool) @ e
             for i in np.argsort(-sims)[:3]:
@@ -296,6 +296,6 @@ def _note(s: Session, m: Movie, c: Candidate | None, p, nearest: list[dict]) -> 
         return f"Sits between your {a} films and your {b} ones."
     if nearest:
         n = nearest[0]["film"]
-        rating = f" ★ {n['my_rating']:.1f}" if n.get("my_rating") else ""
+        rating = f" ★ {n['my_rating']:g}" if n.get("my_rating") else ""
         return f"Closest to {n['title']}{rating} in story and themes."
     return "Not enough rated films nearby to explain this one yet."

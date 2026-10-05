@@ -32,6 +32,10 @@ def migrate() -> None:
                 if col.name not in existing:
                     ddl = col.type.compile(engine.dialect)
                     conn.exec_driver_sql(f'ALTER TABLE "{table.name}" ADD COLUMN "{col.name}" {ddl}')
+        # ratings moved from 0.5–5 stars to a 0–10 scale (once per database, including restored backups)
+        if conn.exec_driver_sql("SELECT 1 FROM setting WHERE key = 'rating_scale'").first() is None:
+            conn.exec_driver_sql("UPDATE watch SET rating = rating * 2 WHERE rating IS NOT NULL")
+            conn.exec_driver_sql("INSERT INTO setting (key, value) VALUES ('rating_scale', '10')")
 
 
 def reconnect() -> None:

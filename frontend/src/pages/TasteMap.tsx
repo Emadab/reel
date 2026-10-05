@@ -98,7 +98,7 @@ function placeLabels(points: MapPoint[], view: View, size: { w: number; h: numbe
   // every marker is an obstacle for every other film's label
   const markers: Rect[] = visible.map((p) => {
     const [cx, cy] = at(p);
-    const half = p.kind === "suggested" ? 9 : Math.max(6, 12 + ((p.rating ?? 3) - 3) * 6) / 2 + 1;
+    const half = p.kind === "suggested" ? 9 : Math.max(6, 12 + ((p.rating ?? 6) / 2 - 3) * 6) / 2 + 1;
     return { x0: cx - half, y0: cy - half * (p.kind === "suggested" ? 1 : 1.5), x1: cx + half, y1: cy + half * (p.kind === "suggested" ? 1 : 1.5), id: p.tmdb_id };
   });
   const placed: Rect[] = [{ x0: 0, y0: size.h - 34, x1: 300, y1: size.h }]; // the "drag to pan" hint
@@ -260,7 +260,7 @@ export default function TasteMap() {
             </svg>
 
             {watched.map((p) => {
-              const w = Math.round(12 + ((p.rating ?? 3) - 3) * 6);
+              const w = Math.round(12 + ((p.rating ?? 6) / 2 - 3) * 6);
               const tip = `${p.title}${p.rating != null ? ` · ★ ${rating(p.rating)}` : ""}`;
               return (
                 <Link

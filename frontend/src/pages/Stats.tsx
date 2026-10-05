@@ -24,7 +24,7 @@ function kpis(s: StatsT, all: boolean, year: number) {
       value: num(k.viewing_days),
       sub: all ? (k.first_year ? `since ${k.first_year}` : "no exact dates yet") : `one film a ${gap <= 10 ? "week" : gap <= 21 ? "fortnight" : "month"}`,
     },
-    { label: "AVERAGE RATING", value: k.avg_rating != null ? k.avg_rating.toFixed(1) : "–", sub: "out of 5" },
+    { label: "AVERAGE RATING", value: k.avg_rating != null ? k.avg_rating.toFixed(1) : "–", sub: "out of 10" },
   ];
 }
 
@@ -112,7 +112,7 @@ export default function Stats() {
               title="Your ratings"
               className="gap-4"
               right={<span className="font-mono text-[12px] text-ink-3">mean {s.mean != null ? s.mean.toFixed(1) : "–"}</span>}
-              table={<DataTable head={["RATING", "FILMS"]} rows={s.ratings.map((b) => [b.bin.toFixed(1), b.count])} />}
+              table={<DataTable head={["RATING", "FILMS"]} rows={s.ratings.map((b) => [String(b.bin), b.count])} />}
             >
               <RatingHistogram bins={s.ratings} />
             </ChartPanel>

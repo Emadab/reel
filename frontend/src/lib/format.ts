@@ -70,8 +70,9 @@ export function runtime(min: number | null | undefined): string {
   return h ? `${h}h ${m}m` : `${m}m`;
 }
 
+/** A 0–10 rating: "9", "8.5", "7.7". */
 export function rating(r: number | null | undefined): string {
-  return r == null ? "" : r.toFixed(1);
+  return r == null ? "" : String(Math.round(r * 10) / 10);
 }
 
 export function num(n: number): string {

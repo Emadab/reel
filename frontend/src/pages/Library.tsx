@@ -11,7 +11,7 @@ import { QuickLog } from "../components/QuickLog";
 import { Poster, posterBg } from "../components/Poster";
 import { Button, PageHeader, PillTab, Segmented, cx } from "../components/ui";
 import { usePalette } from "../features/search/palette";
-import { isDark, lightest } from "../lib/color";
+import { lightest } from "../lib/color";
 import { formatLongDate, formatWatchDate, num, rating, runtime } from "../lib/format";
 
 const Carousel3D = lazy(() => import("../components/Carousel3D"));
@@ -25,7 +25,7 @@ const SORTS: { value: Sort; label: string }[] = [
   { value: "title", label: "title" },
   { value: "runtime", label: "runtime" },
 ];
-const RATINGS = ["5", "4.5", "4", "3.5", "3", "2"];
+const RATINGS = ["9", "8", "7", "6", "5", "4"];
 
 function chipLabel(name: string, values: string[], fmt: (v: string) => string = (v) => v) {
   if (!values.length) return name;
@@ -56,11 +56,6 @@ function LastWatched({ film }: { film: CardWithWatch }) {
       </div>
       <div className="relative flex flex-col items-end gap-3 max-[639px]:items-start">
         {w.rating != null && <span className="font-mono text-[26px]" style={{ color: light }}>★ {rating(w.rating)}</span>}
-        <div className="flex gap-[6px]" aria-label="Poster palette">
-          {film.palette.slice(0, 4).map((c, i) => (
-            <span key={i} className="size-[22px] rounded-full box-content" style={{ background: c, border: isDark(c) ? "1px solid rgba(255,255,255,0.2)" : undefined }} />
-          ))}
-        </div>
       </div>
     </Link>
   );
@@ -192,7 +187,7 @@ export function Library() {
           />
           <FilterChip
             label={params.min_rating ? `Rating: ${rating(params.min_rating)}+` : "Rating"}
-            options={RATINGS.map((r) => ({ value: r, label: `★ ${Number(r).toFixed(1)} and up` }))}
+            options={RATINGS.map((r) => ({ value: r, label: `★ ${r} and up` }))}
             selected={params.min_rating ? [String(params.min_rating)] : []}
             onChange={(v) => update("min_rating", v)}
           />

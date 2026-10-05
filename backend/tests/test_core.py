@@ -1,6 +1,9 @@
 from datetime import date
 
-from app import media
+from sqlmodel import Session
+
+from app import config, db, media
+from app.models import Movie
 from app.cards import normalize
 from conftest import drain, log
 
@@ -103,7 +106,7 @@ def test_stats_maths(client):
 
 def test_errors_are_friendly(client):
     assert client.get("/api/movies/1").status_code == 404
-    assert client.post("/api/watches", json={"tmdb_id": 329865, "watched_on": "2026-01-01", "rating": 4.3}).status_code == 422
+    assert client.post("/api/watches", json={"tmdb_id": 329865, "watched_on": "2026-01-01", "rating": 10.5}).status_code == 422
     assert client.get("/api/stats", params={"range": "nope"}).status_code == 422
 
 
@@ -113,3 +116,17 @@ def test_delete_and_edit_watch(client):
     assert client.delete(f"/api/watches/{w['id']}").status_code == 204
     assert client.get("/api/library").json()["counts"]["watched"] == 0
     drain(client)
+
+
+def test_omdb_key_is_checked_then_fills_library_scores(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "ENV_FILE", tmp_path / ".env")
+    monkeypatch.setenv("OMDB_KEY", "")
+    log(client, 329865, "2026-08-23", 9)
+    try:
+        assert client.put("/api/settings", json={"omdb_key": "bad"}).status_code == 422
+        assert client.put("/api/settings", json={"omdb_key": "good"}).status_code == 200
+        drain(client)
+        with Session(db.engine) as s:  # filled by the background job, before any detail page opens
+            assert s.get(Movie, 329865).omdb == {"imdb": "7.9", "rt": "94%", "metacritic": "81"}
+    finally:
+        config.settings.omdb_key = ""

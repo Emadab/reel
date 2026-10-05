@@ -26,6 +26,12 @@ def _float(v: str) -> float | None:
         return None
 
 
+def _stars(v: str) -> float | None:
+    """Letterboxd rates 0.5–5 stars; Reel rates 0–10."""
+    r = _float(v)
+    return r * 2 if r else None
+
+
 def _date(v: str) -> date | None:
     try:
         return date.fromisoformat(v[:10]) if v else None
@@ -60,14 +66,14 @@ def parse_letterboxd(files: dict[str, bytes]) -> list[dict]:
             continue
         in_diary.add((r["Name"], r.get("Year", "")))
         rows.append({"title": r["Name"], "year": r.get("Year") or None, "watched_on": d.isoformat(),
-                     "date_precision": "day", "rating": _float(r.get("Rating", "")),
+                     "date_precision": "day", "rating": _stars(r.get("Rating", "")),
                      "is_rewatch": r.get("Rewatch", "").lower() == "yes"})
     for r in _csv(f.get("ratings.csv", b"")):
         d = _date(r.get("Date", ""))
         if not r.get("Name") or not d or (r["Name"], r.get("Year", "")) in in_diary:
             continue
         rows.append({"title": r["Name"], "year": r.get("Year") or None, "watched_on": date(d.year, 1, 1).isoformat(),
-                     "date_precision": "year", "rating": _float(r.get("Rating", "")), "is_rewatch": False})
+                     "date_precision": "year", "rating": _stars(r.get("Rating", "")), "is_rewatch": False})
     return rows
 
 
@@ -83,7 +89,7 @@ def parse_imdb(data: bytes) -> list[dict]:
             continue
         rows.append({"title": r.get("Title", ""), "year": r.get("Year") or None, "imdb_id": r["Const"],
                      "watched_on": date(d.year, 1, 1).isoformat(), "date_precision": "year",
-                     "rating": round(score) / 2 if score else None, "is_rewatch": False})
+                     "rating": score or None, "is_rewatch": False})
     return rows
 
 

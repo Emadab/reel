@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import type { DatePrecision, WatchOut } from "../../api/types";
-import { StarRating } from "../../components/StarRating";
+import { RatingInput } from "../../components/Rating";
 import { Segmented, cx } from "../../components/ui";
 import { iso, today } from "../../lib/format";
 
@@ -40,15 +40,18 @@ export function LogWatchForm({
     d.setDate(d.getDate() - offset);
     return iso(d);
   };
-  /** Keys 1–5 rate (again → half a star less), 0 clears, Enter saves, unless you're typing in a field. */
+  /** Keys 1–9 rate, 0 is 10 (same key again → half a point less), Backspace clears, Enter saves, unless you're typing in a field. */
   const onFormKey = (e: KeyboardEvent<HTMLFormElement>) => {
     const t = e.target as HTMLElement;
     const typing = t.matches("input:not([type='checkbox']), textarea");
-    if (!typing && /^[0-5]$/.test(e.key)) {
-      const n = Number(e.key);
-      set("rating", n === 0 ? null : v.rating === n ? n - 0.5 : n);
+    if (!typing && /^[0-9]$/.test(e.key)) {
+      const n = Number(e.key) || 10;
+      set("rating", v.rating === n ? n - 0.5 : n);
       e.preventDefault();
-    } else if (e.key === "Enter" && (t === e.currentTarget || t.closest("[data-star]"))) {
+    } else if (!typing && (e.key === "Backspace" || e.key === "Delete") && !t.closest("[data-score]")) {
+      set("rating", null);
+      e.preventDefault();
+    } else if (e.key === "Enter" && (t === e.currentTarget || t.closest("[data-score]"))) {
       e.preventDefault();
       submit();
     }
@@ -111,7 +114,7 @@ export function LogWatchForm({
             options={[{ id: "day", label: "Day" }, { id: "month", label: "Month" }, { id: "year", label: "Year" }]}
           />
         </div>
-        <StarRating value={v.rating} onChange={(r) => set("rating", r)} />
+        <RatingInput value={v.rating} onChange={(r) => set("rating", r)} />
       </div>
 
       <div className="flex flex-wrap gap-[14px]">
