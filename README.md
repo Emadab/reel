@@ -31,6 +31,10 @@ Open **Reel** from the Start menu. On first run it asks for your **TMDB API Read
 
 The first recommendation pass downloads a small text-embedding model (~130 MB) once.
 
+## Shows, books and games
+
+Settings → *Shows, books and games* turns on TV series, books and games. Each one gets its own **mode** in the sidebar (Ctrl 1–4): the library, timeline, stats, suggestions, taste map and search then show only that medium. Movies stay exactly as they are. *Announcements* adds a notification bell, a calendar, and optional desktop and phone (ntfy) alerts for new episodes and releases. Data comes from TMDB and TVmaze (shows), Open Library (books, plus Hardcover and Google Books with keys) and RAWG (games, needs a free key). The plan and per-phase reports are in `docs/expansion/`.
+
 ## Keyboard
 
 | Keys | Action |
