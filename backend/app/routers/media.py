@@ -147,6 +147,8 @@ def up_next(s: Session = Depends(get_session)):
 @router.get("/items/{item_id}")
 async def detail(item_id: int, s: Session = Depends(get_session)):
     item = _item(s, item_id)
+    if item.details.get("light"):  # a recommendation cached from a list: fetch its full record on first open
+        item = await items.refresh(s, item)
     return _detail(s, item)
 
 

@@ -159,3 +159,16 @@ class SyncState(SQLModel, table=True):
     job: str = Field(primary_key=True)
     last_run_at: datetime | None = None
     cursor: dict = _json(dict)
+
+
+class MediaCandidate(SQLModel, table=True):
+    """The current recommendation slate per medium (shows, books, games)."""
+    item_id: int = Field(primary_key=True, foreign_key="item.id")
+    kind: str = Field(index=True)
+    score: float
+    rank: int
+    because: list[int] = _json()
+    reasons: list[str] = _json()
+    sources: list[str] = _json()
+    model: str = "cosine"
+    computed_at: datetime = Field(default_factory=now)
