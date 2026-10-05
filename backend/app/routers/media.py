@@ -2,14 +2,18 @@
 from datetime import UTC, date, datetime, timedelta
 from typing import Literal
 
+from urllib.parse import quote, urlparse
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlmodel import Session, col, delete, select
 
-from .. import books, games, items, shows
+from .. import books, games, items, media, shows
+from ..config import settings
 from ..db import get_session
 from ..flags import require_kind
-from ..models_media import Event, Item, ItemPerson, LibraryEntry, Person, Run, Season
+from ..models_media import Event, ExternalId, Item, ItemPerson, LibraryEntry, Person, Run, Season
 from ..providers import PRIMARY
 from ..status import STICKY, allowed, transition
 
@@ -48,8 +52,23 @@ async def search(kind: Kind, q: str, s: Session = Depends(get_session)):
     out = []
     for h in hits:
         known = items.find(s, h.source, h.ext_id)
-        out.append({**h.__dict__, "item_id": known.id if known else None})
+        thumb = f"/api/media/thumb?u={quote(h.cover_url, safe='')}" if h.cover_url else None
+        out.append({**h.__dict__, "cover_url": thumb, "item_id": known.id if known else None})
     return {"local": [items.card(s, i) for i in local], "results": out}
+
+
+THUMB_HOSTS = {"image.tmdb.org", "covers.openlibrary.org", "media.rawg.io"}
+
+
+@router.get("/thumb", include_in_schema=False)
+async def thumb(u: str):
+    """Search-result covers, downloaded once into data/media/thumb so the UI never hot-links a provider."""
+    if urlparse(u).scheme != "https" or urlparse(u).hostname not in THUMB_HOSTS:
+        raise HTTPException(404, "Not found")
+    path = await media.store_image("thumb", u)
+    if not path:
+        raise HTTPException(404, "Not found")
+    return FileResponse(settings.media_dir / path.removeprefix("/media/"), headers={"Cache-Control": "max-age=604800"})
 
 
 class AddIn(BaseModel):
@@ -63,9 +82,9 @@ class AddIn(BaseModel):
 @router.post("/{kind}/items")
 async def add(kind: Kind, body: AddIn, s: Session = Depends(get_session)):
     require_kind(s, kind)
-    item = await items.ensure(s, kind, body.ext_id)
-    entry = items.library_entry(s, item)
+    item = await items.ensure(s, kind, body.ext_id)  # opening a search result caches it without adding it to your library
     if body.shelf:
+        entry = items.library_entry(s, item)
         entry.shelf = body.shelf
         s.add(entry)
     if body.status:
@@ -155,6 +174,7 @@ def _detail(s: Session, item: Item) -> dict:
         "runs": [_run_out(r) for r in items.runs(s, item.id)],  # type: ignore[arg-type]
         "allowed": allowed(item.kind, run.status if run else None, item.endless),
         "suggest": _suggest(s, run),
+        "external_ids": {e.source: e.ext_id for e in s.exec(select(ExternalId).where(ExternalId.item_id == item.id))},
     }
     if item.kind == "show":
         seen = shows.watched_ids(s, run)
@@ -350,3 +370,33 @@ def tick(item_id: int, body: EpisodesIn, s: Session = Depends(get_session)):
         ids += [e.id for e in shows.episodes(s, item.id) if e.season == body.season and (shows.aired(e) or not body.watched)]  # type: ignore[arg-type, misc]
     shows.set_watched(s, item, ids, body.watched)
     return _detail(s, item)
+
+
+# ---- backlog planner ----
+
+MIN_PER_PAGE = 1.5  # ponytail: a flat reading pace; learn it from progress events if estimates feel off
+
+
+def _hours_left(item: Item, run: Run | None) -> float | None:
+    if item.kind == "game":
+        return games.time_left(item, run)
+    pages = item.details.get("pages")
+    if not pages:
+        return None
+    done = (run.progress.get("current") or 0) if run and run.progress.get("unit", "page") == "page" else 0
+    return round(max(pages - done, 0) * MIN_PER_PAGE / 60, 1)
+
+
+@router.get("/backlog")
+def backlog(s: Session = Depends(get_session)):
+    """Backlog books and games (whichever are enabled), shortest estimated time left first."""
+    from ..flags import enabled
+
+    kinds = [k for k, f in (("book", "media.books"), ("game", "media.games")) if enabled(s, f)]
+    if not kinds:
+        raise HTTPException(404, "Not found")
+    rows = s.exec(select(Item, LibraryEntry).join(LibraryEntry, col(LibraryEntry.item_id) == col(Item.id))
+                  .where(col(Item.kind).in_(kinds), LibraryEntry.shelf == "backlog")).all()
+    out = [{**items.card(s, i, e), "hours_left": _hours_left(i, items.current_run(s, i.id))} for i, e in rows]  # type: ignore[arg-type]
+    out.sort(key=lambda c: (c["hours_left"] is None, c["hours_left"] or 0))
+    return out

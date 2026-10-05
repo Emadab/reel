@@ -81,6 +81,8 @@ async def upsert(s: Session, d: ItemData, item: Item | None = None) -> Item:
         setattr(item, f, getattr(d, f))
     item.endless = item.endless or d.endless  # the user may have set it; a refresh never unsets it
     item.details = {**item.details, **d.details}
+    if shots := d.details.get("screenshots"):  # stored locally: the UI never hot-links provider images
+        item.details["screenshots"] = [u for u in [await media.store_image(f"{d.kind}-shot", s) for s in shots[:6]] if u]
     cover = await media.store_image(d.kind, d.cover_url)
     if cover and cover != item.cover_path:
         item.cover_path = cover

@@ -23,7 +23,20 @@ def _work_id(key: str) -> str:
 
 
 def _text(v) -> str | None:
-    return (v.get("value") if isinstance(v, dict) else v) or None
+    s = (v.get("value") if isinstance(v, dict) else v) or None
+    return s.replace("*", "").strip() if s else None  # descriptions carry markdown emphasis
+
+
+def _subjects(raw: list[str]) -> list[str]:
+    """'genre:fantasy' -> 'Fantasy'; other 'key:value' tags (form, nyt lists) and noise are dropped."""
+    out: list[str] = []
+    for s in raw:
+        key, _, val = s.partition(":")
+        name = val if key.lower() == "genre" and val else s if not val else ""
+        name = name.strip().replace("_", " ")
+        if name and len(name) <= 40 and name.lower() not in {x.lower() for x in out} and not name.lower().startswith(("accessible", "protected", "in library", "nyt:")):
+            out.append(name[0].upper() + name[1:])
+    return out
 
 
 def _hit(d: dict) -> SearchHit:
@@ -62,7 +75,7 @@ async def fetch(work_id: str, kind="book") -> ItemData | None:
     return ItemData(
         kind="book", title=w.get("title") or "?", external_ids=ids,
         year=year_of(first) or (min(d.year for d in dates if d) if any(dates) else None),
-        overview=_text(w.get("description")), genres=[s for s in w.get("subjects", [])[:8]], tags=w.get("subjects", [])[8:30],
+        overview=_text(w.get("description")), genres=_subjects(w.get("subjects", []))[:6], tags=_subjects(w.get("subjects", []))[6:24],
         cover_url=cover(covers[0]) if covers else None, people=authors,
         details={"pages": int(median(pages)) if pages else None, "isbn13": isbn13,
                  "authors": [a.name for a in authors], "author_ids": [a.ext_id for a in authors]},
