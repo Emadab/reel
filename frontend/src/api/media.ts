@@ -97,7 +97,7 @@ export const mediaApi = {
   setStatus: (id: number, status: string) => request<ItemDetail>("POST", `/media/items/${id}/status`, { body: { status } }),
   startRun: (id: number, body: { status: string; goal?: Goal | null; started_on?: string | null; finished_on?: string | null; date_precision?: RunPrecision; rating?: number | null }) =>
     request<ItemDetail>("POST", `/media/items/${id}/runs`, { body }),
-  patchRun: (runId: number, body: Partial<{ rating: number; clear_rating: boolean; review: string; goal: Goal; started_on: string; finished_on: string; date_precision: RunPrecision }>) =>
+  patchRun: (runId: number, body: Partial<{ rating: number; clear_rating: boolean; review: string; goal: Goal; variant: Record<string, string>; started_on: string; finished_on: string; date_precision: RunPrecision }>) =>
     request<ItemDetail>("PATCH", `/media/runs/${runId}`, { body }),
   deleteRun: (runId: number) => request<void>("DELETE", `/media/runs/${runId}`),
   progress: (runId: number, body: Partial<{ unit: string; current: number; total: number; hours: number; percent: number }>) =>

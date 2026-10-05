@@ -374,6 +374,30 @@ function GameProgress({ item, run }: { item: ItemDetail; run: RunOut }) {
   );
 }
 
+const FORMATS = [{ id: "print", label: "Print" }, { id: "ebook", label: "Ebook" }, { id: "audio", label: "Audiobook" }];
+
+/** Which edition (books) or platform (games) this run is on. */
+function Variant({ item, run }: { item: ItemDetail; run: RunOut }) {
+  const set = useMediaMut((v: Record<string, string>) => mediaApi.patchRun(run.id, { variant: { ...run.variant, ...v } }));
+  if (item.kind === "book")
+    return <Segmented label="Format" variant="form" value={run.variant.format ?? "print"} options={FORMATS} onChange={(f) => set.mutate({ format: f })} />;
+  const platforms: string[] = item.details.platforms ?? [];
+  if (item.kind !== "game" || platforms.length < 2) return null;
+  return (
+    <label className="flex flex-col gap-[6px] text-[12px] text-ink-3">
+      Platform
+      <select
+        value={run.variant.platform ?? ""}
+        onChange={(e) => set.mutate({ platform: e.target.value })}
+        className="h-11 px-3 rounded-[12px] border border-(--line-4) bg-(--fill-input) text-ink-hi text-[14px] [color-scheme:dark] outline-none focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        <option value="">Choose a platform</option>
+        {platforms.map((p) => <option key={p} value={p}>{p}</option>)}
+      </select>
+    </label>
+  );
+}
+
 function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: string }) {
   const rate = useMediaMut((v: number | null) => mediaApi.patchRun(run.id, v == null ? { clear_rating: true } : { rating: v }));
   const f = fraction(item.kind, run.progress);
@@ -393,6 +417,7 @@ function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: str
         </div>
       )}
       {dates && <span className="text-[13px] text-ink-3 -mt-2">{dates}</span>}
+      <Variant item={item} run={run} />
       {item.kind === "book" && run.status && !FINAL.has(run.status) && <BookProgress item={item} run={run} />}
       {item.kind === "game" && run.status && !["abandoned", "retired"].includes(run.status) && <GameProgress item={item} run={run} />}
       <div className="flex flex-col gap-2">
@@ -432,6 +457,8 @@ function Runs({ item, glow, glow2 }: { item: ItemDetail; glow: string; glow2: st
                 <MonoTag>{ordinal(r.run_no)} time</MonoTag>
                 {r.finished_on && <MonoTag>{formatWatchDate(r.finished_on, r.date_precision === "unknown" ? "year" : r.date_precision)}</MonoTag>}
                 {r.goal && <MonoTag>{GOALS.find((g) => g.id === r.goal)?.label}</MonoTag>}
+                {r.variant.format && <MonoTag>{FORMATS.find((f) => f.id === r.variant.format)?.label}</MonoTag>}
+                {r.variant.platform && <MonoTag>{r.variant.platform}</MonoTag>}
               </div>
               {confirm === r.id ? (
                 <span className="flex items-center gap-3 text-[13px]">

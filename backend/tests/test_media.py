@@ -231,3 +231,12 @@ def test_game_time_left_estimate_unit():
     assert games.estimate(item, "main_extras") == 16.0
     assert games.time_left(item, Run(item_id=1, progress={"hours": 4})) == 6.0
     assert date.today()  # keeps the import used
+
+
+def test_run_variant_format_and_platform(media):
+    item_id = media.post("/api/media/book/items", json={"ext_id": "OL3W", "status": "reading"}).json()["id"]
+    run_id = media.get(f"/api/media/items/{item_id}").json()["runs"][0]["id"]
+    d = media.patch(f"/api/media/runs/{run_id}", json={"variant": {"format": "audio"}}).json()
+    assert d["runs"][0]["variant"] == {"format": "audio"}
+    d = media.post(f"/api/media/runs/{run_id}/progress", json={"unit": "minutes", "current": 30, "total": 600}).json()
+    assert d["progress"]["unit"] == "minutes" and d["status"] == "reading"
