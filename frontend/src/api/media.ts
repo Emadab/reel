@@ -65,7 +65,7 @@ export type ItemDetail = ItemCard & {
   next_episode?: Episode | null;
   upcoming_episode?: Episode | null;
   time_left?: number | null;
-  following?: boolean;
+  follow?: FollowState;
   external_ids: Record<string, string>;
 };
 
@@ -76,6 +76,11 @@ export type Hit = {
 };
 export type MediaSearch = { local: ItemCard[]; results: Hit[] };
 export type UpNext = { item: ItemCard; episode: Episode; progress: Progress; last: string };
+
+export type Note = { id: number; type: string; title: string; text: string; path: string | null; item_id: number | null; created_at: string; seen: boolean };
+export type CalendarEntry = { at: string; day: string; item: ItemCard; label: string; title: string | null; aired: boolean };
+export type FollowState = { notify: boolean; priority: boolean };
+export type FollowRow = { id: number; target_kind: "author" | "series"; target_id: string; name: string };
 
 export type MediaSort = "recent" | "rating" | "year" | "title";
 
@@ -100,6 +105,13 @@ export const mediaApi = {
   episodes: (id: number, body: { episode_ids?: number[]; season?: number; watched: boolean }) =>
     request<ItemDetail>("POST", `/media/items/${id}/episodes`, { body }),
   upNext: () => request<UpNext[]>("GET", "/media/shows/up-next"),
+  notifications: () => request<{ unseen: number; items: Note[] }>("GET", "/notifications"),
+  seen: (ids?: number[]) => request<void>("POST", "/notifications/seen", { body: { ids: ids ?? null } }),
+  calendar: (kind: Kind) => request<CalendarEntry[]>("GET", `/media/${kind}/calendar`),
+  follow: (id: number, body: { notify?: boolean; priority?: boolean }) => request<FollowState>("POST", `/media/items/${id}/follow`, { body }),
+  follows: () => request<FollowRow[]>("GET", "/follows"),
+  addFollow: (body: { target_kind: "author" | "series"; target_id: string; name: string }) => request<FollowRow[]>("POST", "/follows", { body }),
+  removeFollow: (id: number) => request<void>("DELETE", `/follows/${id}`),
   backlog: () => request<(ItemCard & { hours_left: number | null })[]>("GET", "/media/backlog"),
 };
 
@@ -108,6 +120,10 @@ export const useMediaLibrary = (kind: Kind, p: { status?: string[]; genre?: stri
 export const useMediaSearch = (kind: Kind, q: string) =>
   useQuery({ queryKey: ["media", kind, "search", q], queryFn: () => mediaApi.search(kind, q), enabled: q.trim().length >= 2, placeholderData: keepPreviousData, retry: false });
 export const useItem = (id: number) => useQuery({ queryKey: ["media", "item", id], queryFn: () => mediaApi.item(id), enabled: id > 0 });
+export const useNotifications = (enabled: boolean) =>
+  useQuery({ queryKey: ["media", "notifications"], queryFn: mediaApi.notifications, enabled, refetchInterval: 60_000 });
+export const useCalendar = (kind: Kind) => useQuery({ queryKey: ["media", kind, "calendar"], queryFn: () => mediaApi.calendar(kind) });
+export const useFollows = (enabled: boolean) => useQuery({ queryKey: ["media", "follows"], queryFn: mediaApi.follows, enabled });
 export const useBacklog = () => useQuery({ queryKey: ["media", "backlog"], queryFn: mediaApi.backlog });
 export const useUpNext = (enabled: boolean) => useQuery({ queryKey: ["media", "show", "up-next"], queryFn: mediaApi.upNext, enabled });
 

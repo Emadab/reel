@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
-import { mediaApi, useItem, useMediaMut, type Episode, type Goal, type ItemDetail, type Kind, type RunOut } from "../../api/media";
+import { mediaApi, useFollows, useItem, useMediaMut, type Episode, type Goal, type ItemDetail, type Kind, type RunOut } from "../../api/media";
 import { mix } from "../../components/Glow";
 import { IconCheck, IconChevronDown, IconChevronLeft, IconMore, IconPlus } from "../../components/Icons";
 import { Poster, posterBg } from "../../components/Poster";
@@ -113,6 +113,15 @@ function MoreMenu({ item }: { item: ItemDetail }) {
   const refresh = useMediaMut(() => mediaApi.refresh(item.id));
   const endless = useMediaMut(() => mediaApi.patch(item.id, { endless: !item.endless }));
   const remove = useMediaMut(() => mediaApi.remove(item.id));
+  const follow = useMediaMut((b: { notify?: boolean; priority?: boolean }) => mediaApi.follow(item.id, b));
+  const follows = useFollows(!!item.follow && item.kind === "book");
+  const followTarget = useMediaMut(async (b: { on: boolean; kind: "author" | "series"; id: string; name: string }): Promise<unknown> => {
+    const row = follows.data?.find((f) => f.target_kind === b.kind && f.target_id === b.id);
+    return b.on ? mediaApi.addFollow({ target_kind: b.kind, target_id: b.id, name: b.name }) : row ? mediaApi.removeFollow(row.id) : Promise.resolve();
+  });
+  const authors: [string, string][] = (item.details.author_ids ?? []).map((id: string, i: number) => [id, item.details.authors?.[i] ?? "author"]);
+  const series: { id: string; name: string }[] = item.details.series ?? [];
+  const isFollowed = (kind: string, id: string) => !!follows.data?.some((f) => f.target_kind === kind && f.target_id === id);
   useEffect(() => setConfirm(false), [open]);
   return (
     <div ref={ref} className="relative">
@@ -134,6 +143,30 @@ function MoreMenu({ item }: { item: ItemDetail }) {
           >
             {refresh.isPending ? "Refreshing…" : "Refresh data"}
           </button>
+          {item.follow && item.kind === "show" && (
+            <button role="menuitemcheckbox" aria-checked={item.follow.priority} type="button" className={menuItem} onClick={() => follow.mutate({ priority: !item.follow!.priority })}>
+              {item.follow.priority ? "Stop air-time alerts" : "Alert me at air time"}
+            </button>
+          )}
+          {item.follow && (
+            <button role="menuitemcheckbox" aria-checked={!item.follow.notify} type="button" className={menuItem} onClick={() => follow.mutate({ notify: !item.follow!.notify })}>
+              {item.follow.notify ? "Mute news about this" : "Unmute news"}
+            </button>
+          )}
+          {item.follow &&
+            authors.map(([id, name]) => (
+              <button key={id} role="menuitemcheckbox" aria-checked={isFollowed("author", id)} type="button" className={menuItem}
+                onClick={() => followTarget.mutate({ on: !isFollowed("author", id), kind: "author", id, name })}>
+                {isFollowed("author", id) ? `Unfollow ${name}` : `Follow ${name}`}
+              </button>
+            ))}
+          {item.follow &&
+            series.map((x) => (
+              <button key={x.id} role="menuitemcheckbox" aria-checked={isFollowed("series", x.id)} type="button" className={menuItem}
+                onClick={() => followTarget.mutate({ on: !isFollowed("series", x.id), kind: "series", id: x.id, name: x.name })}>
+                {isFollowed("series", x.id) ? `Unfollow ${x.name}` : `Follow the ${x.name} series`}
+              </button>
+            ))}
           {item.kind === "game" && (
             <button role="menuitem" type="button" className={menuItem} onClick={() => { endless.mutate(undefined); setOpen(false); }}>
               {item.endless ? "Has an ending" : "Endless game (no ending)"}

@@ -22,6 +22,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Import = lazy(() => import("./pages/Import"));
 const MediaLibrary = lazy(() => import("./pages/media/MediaLibrary"));
 const MediaDetail = lazy(() => import("./pages/media/MediaDetail"));
+const MediaCalendar = lazy(() => import("./pages/media/MediaCalendar"));
 
 installDesktopBehaviour();
 
@@ -32,6 +33,7 @@ const page = (el: React.ReactNode) => <Suspense fallback={null}>{el}</Suspense>;
 // shows, books and games: the same sections as movies under their own prefix, each behind its flag
 const media = (kind: Kind, base: string) => [
   { path: base, element: page(<MediaGate kind={kind}><MediaLibrary kind={kind} /></MediaGate>) },
+  { path: `${base}/calendar`, element: page(<MediaGate kind={kind}><MediaCalendar kind={kind} /></MediaGate>) },
   { path: `${base}/:id`, element: page(<MediaGate kind={kind}><MediaDetail kind={kind} /></MediaGate>) },
 ];
 

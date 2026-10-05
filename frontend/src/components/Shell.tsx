@@ -6,26 +6,29 @@ import { usePalette } from "../features/search/palette";
 import { trackPath } from "../lib/history";
 import { MODES, useMode, type Mode } from "../lib/mode";
 import { GlowProvider, alpha } from "./Glow";
-import { IconForYou, IconLibrary, IconSearch, IconSettings, IconStats, IconTasteMap, IconTimeline } from "./Icons";
+import { useSettings } from "../api/hooks";
+import { IconCalendar, IconForYou, IconLibrary, IconSearch, IconSettings, IconStats, IconTasteMap, IconTimeline } from "./Icons";
+import { NotificationBell } from "./NotificationBell";
 import { ModeSwitcher, useModeAccent } from "./ModeSwitcher";
 import { ScrollRail } from "./ScrollRail";
 import { TitleBar } from "./TitleBar";
 import { Tooltips } from "./Tooltips";
 import { Kbd, cx } from "./ui";
 
-type NavItem = { to: string; label: string; icon: ComponentType<{ size?: number; strokeWidth?: number }>; end?: boolean; media?: boolean };
+type NavItem = { to: string; label: string; icon: ComponentType<{ size?: number; strokeWidth?: number }>; end?: boolean; media?: boolean; announcements?: boolean };
 const NAV_ALL: NavItem[] = [
   { to: "/", label: "Library", icon: IconLibrary, end: true, media: true },
   { to: "/timeline", label: "Timeline", icon: IconTimeline },
   { to: "/stats", label: "Stats", icon: IconStats },
   { to: "/for-you", label: "For you", icon: IconForYou },
   { to: "/map", label: "Taste map", icon: IconTasteMap },
+  { to: "/calendar", label: "Calendar", icon: IconCalendar, media: true, announcements: true },
 ];
 /** The same sections in every mode, under the mode's prefix (movies keep the original routes). */
-function navFor(mode: Mode): NavItem[] {
-  if (mode === "movie") return NAV_ALL;
+function navFor(mode: Mode, announcements: boolean): NavItem[] {
+  if (mode === "movie") return NAV_ALL.filter((n) => !n.announcements);
   const base = MODES[mode].base;
-  return NAV_ALL.filter((n) => n.media).map((n) => ({ ...n, to: n.to === "/" ? base : base + n.to }));
+  return NAV_ALL.filter((n) => n.media && (!n.announcements || announcements)).map((n) => ({ ...n, to: n.to === "/" ? base : base + n.to }));
 }
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
@@ -45,7 +48,8 @@ function Sidebar() {
   const { openPalette } = usePalette();
   const loc = useLocation();
   const mode = useMode();
-  const NAV = navFor(mode);
+  const { data: settings } = useSettings();
+  const NAV = navFor(mode, !!settings?.flags?.announcements);
   const home = mode === "movie" ? "/" : MODES[mode].base;
   // the film detail page belongs to the Library section (and an item's page to its mode's library)
   const libraryish = mode === "movie" ? loc.pathname === "/" || loc.pathname.startsWith("/film/") : loc.pathname === home || /^\/\w+\/\d+$/.test(loc.pathname);
@@ -96,16 +100,19 @@ function Sidebar() {
         </div>
         <div className="mt-auto flex flex-col gap-4">
           <ModeSwitcher />
+          <div className="flex gap-2 ml-[10px] max-[1023px]:ml-0 max-[1023px]:flex-col max-[1023px]:items-center">
           <NavLink
             to="/settings"
             aria-label="Settings"
             className={({ isActive }) =>
-              cx("size-11 rounded-[12px] border grid place-items-center ml-[10px] max-[1023px]:ml-0 no-underline",
+              cx("size-11 rounded-[12px] border grid place-items-center no-underline",
                 isActive ? "bg-(--fill-nav-active) border-(--line-4) text-ink-hi" : "border-(--line-1) text-ink-3 hover:bg-(--fill-ctl)")
             }
           >
             <IconSettings size={18} />
           </NavLink>
+          <NotificationBell />
+          </div>
           <p className="m-0 px-[10px] text-[10px] leading-[1.45] text-ink-4 opacity-45 max-[1023px]:hidden">
             This product uses the TMDB API but is not endorsed or certified by TMDB.
           </p>
