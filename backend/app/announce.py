@@ -98,6 +98,7 @@ async def show_updates(s: Session) -> int:
         except ProviderUnavailable:
             continue
         made += diff_show(s, item, before, snapshot(s, item))
+        s.commit()  # one writer at a time in SQLite: release before the next provider call caches
     shows.rederive_all(s)
     st.last_run_at = now()
     s.add(st)
@@ -143,6 +144,7 @@ async def movie_releases(s: Session, today: date | None = None) -> int:
             m = s.get(Movie, w.tmdb_id)
             made += bool(notify.add(s, f"movie:{w.tmdb_id}:digital_release", "digital_release", m.title if m else "A film on your watchlist",
                                     "Now available to stream or buy", f"/film/{w.tmdb_id}"))
+            s.commit()
     state(s, "tmdb", "movie_releases").last_run_at = now()
     s.commit()
     return made
@@ -173,7 +175,7 @@ async def book_follows(s: Session) -> int:
         st.cursor = {"seen": sorted(seen), "released": sorted(released)}
         st.last_run_at = now()
         s.add(st)
-    s.commit()
+        s.commit()
     return made
 
 
@@ -204,6 +206,7 @@ async def game_releases(s: Session, today: date | None = None) -> int:
             for d in item.details.get("dlc", []):
                 if d["rawg"] not in before_dlc:
                     made += bool(notify.add(s, f"dlc:{d['rawg']}:announced", "dlc", item.title, f"New expansion: {d['name']}", path, item.id))
+        s.commit()
     state(s, "rawg", "game_releases").last_run_at = now()
     s.commit()
     return made

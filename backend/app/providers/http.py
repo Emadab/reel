@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import httpx
+from sqlalchemy.exc import OperationalError
 from fastapi import HTTPException
 from sqlmodel import Session, col, select
 
@@ -112,7 +113,10 @@ class Client:
             if r.status_code == 304 and row:
                 row.fetched_at = datetime.now(UTC)
                 s.add(row)
-                s.commit()
+                try:
+                    s.commit()
+                except OperationalError:
+                    s.rollback()
                 return _parse(row)
             if r.status_code == 404:
                 return None
@@ -124,7 +128,10 @@ class Client:
             row.status, row.etag, row.body, row.ttl_s = r.status_code, r.headers.get("etag"), r.content, ttl
             row.fetched_at = datetime.now(UTC)
             s.add(row)
-            s.commit()
+            try:
+                s.commit()
+            except OperationalError:  # the database is busy with a caller's write: skip caching, never fail the request
+                s.rollback()
             return r.json()
 
     async def _send(self, method, path, params, body, headers, stale) -> httpx.Response | None:

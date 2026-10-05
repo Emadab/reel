@@ -115,6 +115,7 @@ async def _light(s: Session, kind: str, h: SearchHit, overview: str | None = Non
     s.add(item)
     s.flush()
     s.add(ExternalId(source=h.source, ext_id=h.ext_id, item_id=item.id))  # type: ignore[arg-type]
+    s.commit()  # release SQLite's write lock before the next provider call writes its cache
     return item
 
 
@@ -143,8 +144,10 @@ async def candidates(s: Session, kind: str, seeds: list[Item]) -> dict[int, list
                 h = SearchHit("book", "openlibrary", w["key"].rsplit("/", 1)[-1], w.get("title") or "?", w.get("first_publish_year"),
                               ", ".join(a["name"] for a in w.get("authors", [])[:2]) or None, openlibrary.cover(w.get("cover_id"), "M"))
                 item = await _light(s, kind, h, None, [subject])
-                if item and h.subtitle:
+                if item and h.subtitle and "authors" not in item.details:
                     item.details = {**item.details, "authors": h.subtitle.split(", ")}
+                    s.add(item)
+                    s.commit()
                 note(item, f"subject:{subject}")
     else:
         slugs = list(dict.fromkeys(g.lower().replace(" ", "-") for seed in seeds[:8] for g in seed.genres[:2]))[:3]

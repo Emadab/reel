@@ -181,3 +181,19 @@ def test_rawg_fetch_endless_and_dlc():
     assert d.status == "released" and not d.endless and d.details["playtime_hours"] == 74
     assert d.details["dlc"][0]["name"] == "Online" and d.recommendations[0].title == "GTA IV"
     assert d.details["platforms"] == ["PC"] and d.people[0].role == "developer"
+
+
+@respx.mock
+def test_cache_write_never_fails_a_request_while_the_caller_holds_the_write_lock():
+    """Regression: a job holding an open write transaction used to make the cache write raise 'database is locked'."""
+    from sqlmodel import Session
+
+    from app.models_media import Item
+
+    respx.get("https://x.test/busy").mock(return_value=Response(200, json={"ok": 1}))
+    c = Client("X", "https://x.test", rate=100)
+    with Session(db.engine) as s:
+        s.add(Item(kind="book", title="held"))
+        s.flush()  # the caller's write transaction is open
+        assert run(c.get("/busy")) == {"ok": 1}
+        s.rollback()
