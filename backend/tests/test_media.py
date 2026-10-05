@@ -35,7 +35,7 @@ def media(client, monkeypatch):
         return show_data(ext_id)
 
     async def fake_book(work_id):
-        return ItemData(kind="book", title="Piranesi", external_ids={"openlibrary": work_id, "isbn13": "9781635575637"},
+        return ItemData(kind="book", title="Piranesi", external_ids={"openlibrary": work_id, "isbn13": f"isbn-{work_id}"},
                         year=2020, genres=["Fantasy"], details={"pages": 272, "authors": ["Susanna Clarke"]})
 
     async def fake_game(ext_id, kind="game"):
