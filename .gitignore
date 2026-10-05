@@ -3,3 +3,10 @@ backend/data/
 backend/.venv/
 __pycache__/
 node_modules/
+# personal exports (viewing history) never go to the public repo
+/*.csv
+/*.zip
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+/Reel.lnk

@@ -6,6 +6,23 @@ dependencies = [
     "colorthief>=0.2.1",
     "fastapi[standard]>=0.142.2",
     "httpx>=0.28.1",
+    "lightgbm>=4.7.0",
+    "numpy>=2.5.3",
     "python-dotenv>=1.2.4",
+    "python-multipart>=0.0.32",
+    "pywebview>=6.2.1",
+    "scikit-learn>=1.9.1",
+    "sentence-transformers>=6.1.0",
     "sqlmodel>=0.0.47",
+    "umap-learn>=0.5.12",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "respx>=0.23.1",
+]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests", "."]
+filterwarnings = ["ignore::DeprecationWarning"]

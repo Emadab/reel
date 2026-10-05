@@ -1,0 +1,70 @@
+/* App-level rules that aren't part of the delivered theme. */
+@reference "./theme.css";
+
+@layer base {
+  html { line-height: normal; } /* the reference renders at the browser default, not preflight's 1.5 */
+  body { min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  /* dark scrollbars: the default light ones look like a web page */
+  html { scrollbar-color: rgba(255,255,255,0.16) var(--color-bg); }
+  /* in the desktop window, controls aren't selectable text */
+  [data-desktop] :is(nav, button, label, [role="tab"], header h1, kbd) { user-select: none; }
+  [data-desktop] :is(a, img) { -webkit-user-drag: none; }
+}
+
+/* Native <dialog> reset + the command-palette scrim (DESIGN_SYSTEM: blur 10 px + rgba(4,5,8,.62)). */
+@layer components {
+.reel-dialog {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  overflow: visible;
+  margin-left: auto;
+  margin-right: auto;
+  max-height: calc(100vh - 96px);
+}
+.reel-dialog::backdrop {
+  background: var(--color-scrim);
+  backdrop-filter: blur(10px);
+  animation: scrim-in 160ms ease-out;
+}
+}
+.palette-in { animation: palette-in 180ms var(--ease-out-soft); }
+@keyframes scrim-in { from { opacity: 0; } }
+@keyframes palette-in { from { opacity: 0; transform: scale(.98); } }
+
+/* cmdk: the group heading is rendered by cmdk; keep it unstyled */
+[cmdk-group-heading] { all: unset; display: block; }
+[cmdk-item] { outline: none; }
+
+/* Loading skeletons: fill-ctl, 1.2 s opacity pulse */
+.skeleton { background: var(--fill-ctl); animation: skeleton 1.2s ease-in-out infinite; }
+@keyframes skeleton { 50% { opacity: .45; } }
+
+/* Hide scrollbars on horizontal strips but keep them scrollable */
+.scroll-quiet { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.12) transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .palette-in, .reel-dialog::backdrop, .skeleton { animation: none; }
+}
+
+/* Quick-log button on posters: appears on hover/focus, always visible on touch screens */
+.quick-card .quick-btn { opacity: 0; transform: scale(.85); transition: opacity .18s, transform .22s var(--ease-out-soft), background-color .15s, color .15s; }
+.quick-card:hover .quick-btn, .quick-card:focus-within .quick-btn { opacity: 1; transform: scale(1); }
+@media (hover: none) { .quick-card .quick-btn { opacity: 1; transform: none; } }
+
+/* Tactile press feedback on every control */
+@layer base {
+  button, [role="button"], a.press { transition: transform .12s var(--ease-out-soft), background-color .15s, border-color .15s, color .15s, box-shadow .2s; }
+  button:active:not(:disabled), a.press:active { transform: scale(.97); }
+}
+
+/* Posters fade in when their image arrives */
+.poster-img { opacity: 0; transition: opacity .35s ease-out; }
+.poster-img[data-loaded] { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  button:active:not(:disabled) { transform: none; }
+  .quick-card .quick-btn, .poster-img { transition: none; }
+}
