@@ -58,4 +58,13 @@ The project brief, architecture and design system are in `CLAUDE.md`, `docs/` an
 
 Your library lives in `backend/data/` (database, posters, models) and never leaves your machine; only film lookups go to TMDB. `backend/.env`, `backend/data/` and any CSV exports in the repo root are git-ignored.
 
+### Backups
+
+```bash
+uv run --project backend python scripts/backup.py            # snapshot → backend/data/backups/<timestamp>-manual/
+uv run --project backend python scripts/restore.py [<dir>]   # close Reel first; default is the newest snapshot
+```
+
+Reel also snapshots the database and images automatically (`<timestamp>-pre-migration`) whenever a new version is about to change the database schema.
+
 This product uses the TMDB API but is not endorsed or certified by TMDB.

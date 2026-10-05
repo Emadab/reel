@@ -22,7 +22,17 @@ engine = make_engine()
 
 
 def migrate() -> None:
-    """Create missing tables, then add any column a model has that its table lacks. Idempotent, never drops."""
+    """Create missing tables, then add any column a model has that its table lacks. Idempotent, never drops.
+    An existing database is snapshotted first whenever the schema is about to change."""
+    have = inspect(engine)
+    tables = set(have.get_table_names())
+    if "movie" in tables and any(
+        t.name not in tables or {c.name for c in t.columns} - {c["name"] for c in have.get_columns(t.name)}
+        for t in SQLModel.metadata.sorted_tables
+    ):
+        from .backup import snapshot
+
+        snapshot("pre-migration")
     SQLModel.metadata.create_all(engine)
     have = inspect(engine)
     with engine.begin() as conn:
