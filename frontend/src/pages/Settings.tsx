@@ -5,6 +5,7 @@ import { useSettings } from "../api/hooks";
 import type { SettingsOut } from "../api/types";
 import { useToast } from "../components/Toasts";
 import { Button, ButtonLink, PageHeader, Panel, SectionTitle, cx } from "../components/ui";
+import { MediaSettings } from "./settings/MediaSettings";
 
 const ACCENT_NAMES: Record<string, string> = { "#7FDBFF": "Ice", "#C6F36B": "Lime", "#FFB86B": "Amber", "#C9A7FF": "Violet" };
 const input = "h-11 px-[14px] rounded-[12px] border border-(--line-4) bg-(--fill-input) text-ink-hi text-[14px] min-w-0 flex-1 placeholder:text-ink-4";
@@ -89,6 +90,8 @@ export default function Settings() {
               }}
             />
           </Panel>
+
+          <MediaSettings s={s} />
 
           <Panel className="flex flex-col gap-4">
             <SectionTitle>Accent</SectionTitle>
