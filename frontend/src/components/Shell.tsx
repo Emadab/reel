@@ -1,24 +1,32 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, type ComponentType } from "react";
 import { NavLink, useLocation, useOutlet } from "react-router";
-import { useSettings } from "../api/hooks";
 import { CommandPalette, EditWatchDialog } from "../features/search/CommandPalette";
 import { usePalette } from "../features/search/palette";
 import { trackPath } from "../lib/history";
+import { MODES, useMode, type Mode } from "../lib/mode";
 import { GlowProvider, alpha } from "./Glow";
 import { IconForYou, IconLibrary, IconSearch, IconSettings, IconStats, IconTasteMap, IconTimeline } from "./Icons";
+import { ModeSwitcher, useModeAccent } from "./ModeSwitcher";
 import { ScrollRail } from "./ScrollRail";
 import { TitleBar } from "./TitleBar";
 import { Tooltips } from "./Tooltips";
 import { Kbd, cx } from "./ui";
 
-const NAV: { to: string; label: string; icon: ComponentType<{ size?: number; strokeWidth?: number }>; end?: boolean }[] = [
-  { to: "/", label: "Library", icon: IconLibrary, end: true },
+type NavItem = { to: string; label: string; icon: ComponentType<{ size?: number; strokeWidth?: number }>; end?: boolean; media?: boolean };
+const NAV_ALL: NavItem[] = [
+  { to: "/", label: "Library", icon: IconLibrary, end: true, media: true },
   { to: "/timeline", label: "Timeline", icon: IconTimeline },
   { to: "/stats", label: "Stats", icon: IconStats },
   { to: "/for-you", label: "For you", icon: IconForYou },
   { to: "/map", label: "Taste map", icon: IconTasteMap },
 ];
+/** The same sections in every mode, under the mode's prefix (movies keep the original routes). */
+function navFor(mode: Mode): NavItem[] {
+  if (mode === "movie") return NAV_ALL;
+  const base = MODES[mode].base;
+  return NAV_ALL.filter((n) => n.media).map((n) => ({ ...n, to: n.to === "/" ? base : base + n.to }));
+}
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
 function Logo({ compact }: { compact?: boolean }) {
@@ -36,8 +44,11 @@ function Logo({ compact }: { compact?: boolean }) {
 function Sidebar() {
   const { openPalette } = usePalette();
   const loc = useLocation();
-  // the film detail page belongs to the Library section
-  const libraryish = loc.pathname === "/" || loc.pathname.startsWith("/film/");
+  const mode = useMode();
+  const NAV = navFor(mode);
+  const home = mode === "movie" ? "/" : MODES[mode].base;
+  // the film detail page belongs to the Library section (and an item's page to its mode's library)
+  const libraryish = mode === "movie" ? loc.pathname === "/" || loc.pathname.startsWith("/film/") : loc.pathname === home || /^\/\w+\/\d+$/.test(loc.pathname);
   return (
     <>
       {/* the wrapper carries the full-height border; the nav inside is sticky */}
@@ -65,25 +76,26 @@ function Sidebar() {
               end={end}
               aria-label={label}
               className={({ isActive }) => {
-                const active = isActive || (to === "/" && libraryish);
+                const active = isActive || (to === home && libraryish);
                 return cx(
                   "flex items-center gap-3 h-11 px-3 rounded-[12px] no-underline text-[14px] max-[1023px]:justify-center max-[1023px]:px-0",
                   active ? "bg-(--fill-nav-active) text-ink-hi font-medium hover:text-ink-hi" : "text-ink-3 hover:bg-(--fill-ctl) hover:text-ink-3",
                 );
               }}
-              {...(to === "/" && libraryish ? { "aria-current": "page" as const } : {})}
+              {...(to === home && libraryish ? { "aria-current": "page" as const } : {})}
             >
               {({ isActive }) => (
                 <>
                   <Icon size={18} />
                   <span className="flex-1 max-[1023px]:hidden">{label}</span>
-                  {(isActive || (to === "/" && libraryish)) && <span className="size-[6px] rounded-full bg-accent max-[1023px]:hidden" />}
+                  {(isActive || (to === home && libraryish)) && <span className="size-[6px] rounded-full bg-accent max-[1023px]:hidden" />}
                 </>
               )}
             </NavLink>
           ))}
         </div>
         <div className="mt-auto flex flex-col gap-4">
+          <ModeSwitcher />
           <NavLink
             to="/settings"
             aria-label="Settings"
@@ -109,7 +121,7 @@ function Sidebar() {
             to={to}
             end={end}
             className={({ isActive }) =>
-              cx("flex-1 flex flex-col items-center justify-center gap-1 text-[11px] no-underline", isActive || (to === "/" && libraryish) ? "text-ink-hi" : "text-ink-3")
+              cx("flex-1 flex flex-col items-center justify-center gap-1 text-[11px] no-underline", isActive || (to === home && libraryish) ? "text-ink-hi" : "text-ink-3")
             }
           >
             <Icon size={20} />
@@ -129,18 +141,11 @@ function Sidebar() {
   );
 }
 
-function useAccent() {
-  const { data } = useSettings();
-  useEffect(() => {
-    if (data?.accent) document.documentElement.style.setProperty("--color-accent", data.accent);
-  }, [data?.accent]);
-}
-
 export function Shell() {
   const loc = useLocation();
   const outlet = useOutlet();
   const { openPalette, state } = usePalette();
-  useAccent();
+  useModeAccent();
   useEffect(() => trackPath(loc.pathname), [loc.pathname]);
   useEffect(() => {
     window.scrollTo(0, 0); // a block body: scrollTo() returns a Promise in newer Chromium
@@ -180,7 +185,7 @@ export function Shell() {
           <Sidebar />
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
-              key={loc.pathname.split("/").slice(0, 2).join("/") + (loc.pathname.startsWith("/film/") ? loc.pathname : "")}
+              key={/^\/(shows|books|games)(\/|$)/.test(loc.pathname) ? loc.pathname.split("/").slice(0, 3).join("/") : loc.pathname.split("/").slice(0, 2).join("/") + (loc.pathname.startsWith("/film/") ? loc.pathname : "")}
               className="flex-[999_1_560px] max-[1023px]:flex-1 min-w-0 flex flex-col relative pt-(--tb)"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.2, 0.7, 0.2, 1] } }}

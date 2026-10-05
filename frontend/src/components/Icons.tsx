@@ -73,3 +73,22 @@ export const IconUpload = ({ size = 18, ...r }: P) => (
 export const IconCheck = ({ size = 18, ...r }: P) => (
   <svg {...base(size, { strokeWidth: 2.2, ...r })} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
 );
+// Expansion: workspace modes and announcements (design extensions, same stroke style)
+export const IconFilm = ({ size, ...r }: P) => (
+  <svg {...base(size, r)} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" /></svg>
+);
+export const IconTV = ({ size, ...r }: P) => (
+  <svg {...base(size, r)} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M8 2.5l4 3.5 4-3.5M9 22h6" /></svg>
+);
+export const IconBook = ({ size, ...r }: P) => (
+  <svg {...base(size, r)} strokeLinecap="round" strokeLinejoin="round"><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5z" /><path d="M4 20.5A2.5 2.5 0 016.5 23H20v-5M9 8h7" /></svg>
+);
+export const IconGame = ({ size, ...r }: P) => (
+  <svg {...base(size, r)} strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 7h11a4 4 0 013.9 4.9l-1.2 5a2.6 2.6 0 01-4.5 1.1L14 16h-4l-1.7 2a2.6 2.6 0 01-4.5-1.1l-1.2-5A4 4 0 016.5 7z" /><path d="M8 10.5v3M6.5 12h3" /><circle cx="15.5" cy="11" r=".6" fill="currentColor" /><circle cx="17" cy="13" r=".6" fill="currentColor" /></svg>
+);
+export const IconBell = ({ size, ...r }: P) => (
+  <svg {...base(size, r)} strokeLinecap="round" strokeLinejoin="round"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15z" /><path d="M10 20.5a2 2 0 004 0" /></svg>
+);
+export const IconCalendar = ({ size, ...r }: P) => (
+  <svg {...base(size, r)} strokeLinecap="round" strokeLinejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
+);

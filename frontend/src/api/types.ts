@@ -181,6 +181,7 @@ export type SettingsOut = {
   tmdb_connected: boolean | null;
   omdb_configured: boolean;
   flags: Record<Flag, boolean>;
+  mode_accents?: Partial<Record<"movie" | "show" | "book" | "game", string>>;
   restart_required?: boolean;
 };
 

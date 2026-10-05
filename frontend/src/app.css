@@ -76,3 +76,8 @@
   button:active:not(:disabled) { transform: none; }
   .quick-card .quick-btn, .poster-img { transition: none; }
 }
+
+/* Workspace modes: the accent follows the mode and cross-fades when you switch (registered so it can animate). */
+@property --color-accent { syntax: "<color>"; inherits: true; initial-value: #7FDBFF; }
+[data-mode-fade] { transition: --color-accent .6s var(--ease-out-soft); }
+@media (prefers-reduced-motion: reduce) { [data-mode-fade] { transition: none; } }

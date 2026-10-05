@@ -23,7 +23,7 @@ function query(params?: Params): string {
   return s ? `?${s}` : "";
 }
 
-async function request<T>(method: string, path: string, opts: { params?: Params; body?: unknown } = {}): Promise<T> {
+export async function request<T>(method: string, path: string, opts: { params?: Params; body?: unknown } = {}): Promise<T> {
   if (FIXTURES) {
     const { fixture } = await import("./fixtures");
     return fixture(method, path, opts.params ?? {}) as T;

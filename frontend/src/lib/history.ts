@@ -8,6 +8,9 @@ const LABELS: [RegExp, string][] = [
   [/^\/film\//, "Back"],
   [/^\/settings/, "Settings"],
   [/^\/import/, "Import"],
+  [/^\/shows$/, "Shows"],
+  [/^\/books$/, "Books"],
+  [/^\/games$/, "Games"],
 ];
 
 let previous: string | null = null;
