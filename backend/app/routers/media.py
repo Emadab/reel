@@ -187,6 +187,12 @@ def _detail(s: Session, item: Item) -> dict:
         out["upcoming_episode"] = shows.episode_out(upcoming, seen) if upcoming else None
     if item.kind == "game":
         out["time_left"] = games.time_left(item, run)
+    from ..flags import enabled
+
+    if enabled(s, "announcements"):
+        from .announcements import follow_state
+
+        out["follow"] = follow_state(s, item.id)  # type: ignore[arg-type]
     return out
 
 

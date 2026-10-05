@@ -1,3 +1,4 @@
+import re
 import shutil
 import sqlite3
 import tempfile
@@ -35,6 +36,14 @@ class SettingsIn(BaseModel):
     omdb_key: str | None = None
     data_dir: str | None = None
     flags: dict[str, bool] | None = None
+    mode_accents: dict[str, str] | None = None
+    rawg_key: str | None = None
+    google_books_key: str | None = None
+    hardcover_token: str | None = None
+    contact_email: str | None = None
+    notify_desktop: bool | None = None
+    ntfy_topic: str | None = None
+    quiet_hours: str | None = None  # "23:00-08:00" or ""
 
 
 async def _check_tmdb(token: str) -> bool:
@@ -55,6 +64,14 @@ def _out(s: Session, tmdb_ok: bool | None = None) -> dict:
         "tmdb_connected": tmdb_ok,
         "omdb_configured": bool(settings.omdb_key),
         "flags": flags.all_flags(s),
+        "mode_accents": {m: v for m in ("show", "book", "game") if (v := get_setting(s, f"accent:{m}"))},
+        "rawg_configured": bool(settings.rawg_key),
+        "google_books_configured": bool(settings.google_books_key),
+        "hardcover_configured": bool(settings.hardcover_token),
+        "contact_email": settings.contact_email,
+        "notify_desktop": (get_setting(s, "notify_desktop", "1") or "1") == "1",
+        "ntfy_topic": get_setting(s, "ntfy_topic", "") or "",
+        "quiet_hours": get_setting(s, "quiet_hours", "") or "",
     }
 
 
@@ -75,6 +92,24 @@ async def put_settings(body: SettingsIn, s: Session = Depends(get_session)):
     ok = None
     for name, on in (body.flags or {}).items():
         flags.set_flag(s, name, on)
+    for mode, accent in (body.mode_accents or {}).items():
+        if mode not in ("show", "book", "game") or accent.upper() not in ACCENTS:
+            raise HTTPException(422, "Unknown mode or accent")
+        put_setting(s, f"accent:{mode}", accent.upper())
+    for field, env in (("rawg_key", "RAWG_KEY"), ("google_books_key", "GOOGLE_BOOKS_KEY"), ("hardcover_token", "HARDCOVER_TOKEN"), ("contact_email", "CONTACT_EMAIL")):
+        if (v := getattr(body, field)) is not None:
+            set_env(env, v.strip())  # keys live only in backend/.env and never come back to the UI
+    if body.notify_desktop is not None:
+        put_setting(s, "notify_desktop", "1" if body.notify_desktop else "0")
+    if body.ntfy_topic is not None:
+        if body.ntfy_topic and not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", body.ntfy_topic.strip()):
+            raise HTTPException(422, "An ntfy topic is letters, digits, - and _ only")
+        put_setting(s, "ntfy_topic", body.ntfy_topic.strip())
+    if body.quiet_hours is not None:
+        q = body.quiet_hours.strip()
+        if q and not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d", q):
+            raise HTTPException(422, "Quiet hours look like 23:00-08:00")
+        put_setting(s, "quiet_hours", q)
     if body.accent is not None:
         if body.accent.upper() not in ACCENTS:
             raise HTTPException(422, "Unknown accent")

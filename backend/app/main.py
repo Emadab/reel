@@ -6,10 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import db, jobs, omdb
+from . import db, jobs, omdb, scheduler
 from .config import settings
 from .recommender import service
-from .routers import history, imports, library, media, movies, recs, search, system, watches
+from .routers import announcements, history, imports, library, media, movies, recs, search, system, watches
 
 FRONTEND = Path(__file__).parent.parent.parent / "frontend" / "dist"
 
@@ -20,13 +20,15 @@ async def lifespan(_: FastAPI):
     worker = jobs.start()
     service.on_startup()
     jobs.enqueue("scores:library", omdb.fill_scores)  # IMDb / RT / Metacritic for films that have none yet
+    ticker = scheduler.start()  # announcements and show re-derivation; idle while their flags are off
     yield
+    ticker.cancel()
     worker.cancel()
 
 
 app = FastAPI(title="Reel", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"], allow_headers=["*"])
-for r in (system, search, movies, watches, library, history, recs, imports, media):
+for r in (system, search, movies, watches, library, history, recs, imports, media, announcements):
     app.include_router(r.router, prefix="/api")
 app.mount("/media", StaticFiles(directory=settings.media_dir, check_dir=False), name="media")
 
