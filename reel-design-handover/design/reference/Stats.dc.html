@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stats</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#07080C}
+a{color:#ECEEF3}a:hover{color:#FFFFFF}
+.nav:hover{background:rgba(255,255,255,0.05)}
+.cell:hover{outline:1.5px solid #FFFFFF;outline-offset:1px}
+.bar:hover .fill{filter:brightness(1.25)}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #07080C; color: #ECEEF3; font-family: Geist, 'Segoe UI', system-ui, sans-serif; display: flex; flex-wrap: wrap; position: relative; overflow: hidden">
+
+  <nav aria-label="Primary" style="flex: 1 1 220px; max-width: 100%; display: flex; flex-direction: column; gap: 28px; padding: 28px 18px; box-sizing: border-box; border-right: 1px solid rgba(255,255,255,0.07); position: relative">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 10px">
+      <div style="width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid {{accent}}; display: grid; place-items: center; box-sizing: border-box"><div style="width: 8px; height: 8px; border-radius: 50%; background: {{accent}}; box-shadow: 0 0 12px {{accent}}"></div></div>
+      <span style="font-family: Unbounded, sans-serif; font-weight: 600; font-size: 17px; letter-spacing: 0.02em">Reel</span>
+    </div>
+    <a href="Search.dc.html" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #A3A9B6; text-decoration: none; font-size: 14px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="flex: 1; white-space: nowrap">Search</span>
+      <kbd style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B6; border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 2px 6px">Ctrl K</kbd>
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <a class="nav" href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="10" rx="1.5"></rect><rect x="14" y="3" width="7" height="10" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect><rect x="14" y="16" width="7" height="5" rx="1.5"></rect></svg>
+        <span>Library</span>
+      </a>
+      <a class="nav" href="Timeline.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 12h18"></path><circle cx="7" cy="12" r="2"></circle><circle cx="16" cy="12" r="2"></circle><path d="M7 5v3M16 16v3M12 5v3"></path></svg>
+        <span>Timeline</span>
+      </a>
+      <a href="Stats.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.08); color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6M3 20h18"></path></svg>
+        <span style="flex: 1">Stats</span><span style="width: 6px; height: 6px; border-radius: 50%; background: {{accent}}"></span>
+      </a>
+      <a class="nav" href="ForYou.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"></path></svg>
+        <span>For you</span>
+      </a>
+      <a class="nav" href="TasteMap.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="6" cy="7" r="2"></circle><circle cx="17" cy="6" r="1.5"></circle><circle cx="10" cy="16" r="2.5"></circle><circle cx="18.5" cy="16.5" r="1.5"></circle></svg>
+        <span>Taste map</span>
+      </a>
+    </div>
+    <p style="margin: auto 0 0; padding: 0 10px; font-size: 11px; line-height: 1.5; color: #8E95A3">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 36px 48px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px">
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px">
+      <h1 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 600; font-size: 40px; letter-spacing: -0.01em">Stats</h1>
+      <div role="group" aria-label="Range" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08)">
+        <sc-for list="{{ranges}}" as="r" hint-placeholder-count="2">
+          <button type="button" aria-pressed="{{r.pressed}}" onClick="{{r.pick}}" style="height: 36px; padding: 0 16px; border: 0; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; background: {{r.bg}}; color: {{r.fg}}">{{r.label}}</button>
+        </sc-for>
+      </div>
+    </header>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 16px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <div style="padding: 22px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 10px">
+          <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">{{k.label}}</span>
+          <span style="font-family: Unbounded, sans-serif; font-weight: 500; font-size: 40px; line-height: 1">{{k.value}}</span>
+          <span style="font-size: 13px; color: #8E95A3">{{k.sub}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <section aria-label="Viewing days, last 12 months" style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px">
+        <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Viewing days <span style="font-family: Geist, sans-serif; font-weight: 400; font-size: 14px; color: #A3A9B6">· last 12 months · {{activeDays}} days</span></h2>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #A3A9B6">
+          <span>none</span>
+          <span style="width: 13px; height: 13px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+          <span style="width: 13px; height: 13px; border-radius: 3px; background: {{lvl1}}"></span>
+          <span style="width: 13px; height: 13px; border-radius: 3px; background: {{lvl2}}"></span>
+          <span>2 films</span>
+        </div>
+      </div>
+      <div style="overflow-x: auto">
+        <div style="display: flex; flex-direction: column; gap: 6px; width: max-content">
+          <div style="display: flex; gap: 3px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #8E95A3; padding-left: 30px">
+            <sc-for list="{{monthLabels}}" as="ml" hint-placeholder-count="53">
+              <span style="width: 14px; white-space: nowrap; overflow: visible">{{ml}}</span>
+            </sc-for>
+          </div>
+          <div style="display: flex; gap: 3px">
+            <div style="width: 27px; display: flex; flex-direction: column; gap: 3px; font-family: 'Geist Mono', monospace; font-size: 10px; color: #8E95A3">
+              <span style="height: 14px">Mon</span><span style="height: 14px"></span><span style="height: 14px">Wed</span><span style="height: 14px"></span><span style="height: 14px">Fri</span><span style="height: 14px"></span><span style="height: 14px">Sun</span>
+            </div>
+            <sc-for list="{{weeks}}" as="w" hint-placeholder-count="53">
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                <sc-for list="{{w}}" as="d" hint-placeholder-count="7">
+                  <span class="cell" title="{{d.tip}}" style="width: 14px; height: 14px; border-radius: 3px; background: {{d.bg}}"></span>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 16px">
+      <section style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Genres</h2>
+        <svg viewBox="-30 0 380 300" role="img" aria-label="{{radarAria}}" style="width: 100%; height: auto">
+          <sc-for list="{{rings}}" as="r" hint-placeholder-count="4">
+            <polygon points="{{r}}" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1"></polygon>
+          </sc-for>
+          <sc-for list="{{spokes}}" as="s" hint-placeholder-count="6">
+            <line x1="160" y1="150" x2="{{s.x}}" y2="{{s.y}}" stroke="rgba(255,255,255,0.09)" stroke-width="1"></line>
+          </sc-for>
+          <polygon points="{{radarPts}}" fill="{{radarFill}}" stroke="{{accent}}" stroke-width="2" stroke-linejoin="round"></polygon>
+          <sc-for list="{{dots}}" as="d" hint-placeholder-count="6">
+            <circle cx="{{d.x}}" cy="{{d.y}}" r="4" fill="{{accent}}" stroke="#101218" stroke-width="2"><title>{{d.tip}}</title></circle>
+          </sc-for>
+          <sc-for list="{{labels}}" as="l" hint-placeholder-count="6">
+            <text x="{{l.x}}" y="{{l.y}}" text-anchor="{{l.anchor}}" dominant-baseline="middle" fill="#C3C8D1" font-size="12" font-family="Geist, sans-serif">{{l.text}}</text>
+          </sc-for>
+        </svg>
+      </section>
+
+      <section style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 22px">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Top directors</h2>
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+            <sc-for list="{{directors}}" as="p" hint-placeholder-count="5">
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">{{p.name}}</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">{{p.n}}</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: {{accent}}; width: {{p.w}}%"></span></span>
+              </li>
+            </sc-for>
+          </ol>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Top actors</h2>
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+            <sc-for list="{{actors}}" as="p" hint-placeholder-count="5">
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">{{p.name}}</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">{{p.n}}</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: {{accent}}; width: {{p.w}}%"></span></span>
+              </li>
+            </sc-for>
+          </ol>
+        </div>
+      </section>
+
+      <section style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Your ratings</h2>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B6">mean {{mean}}</span>
+        </div>
+        <div style="flex: 1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; align-items: end; min-height: 220px">
+          <sc-for list="{{dist}}" as="b" hint-placeholder-count="10">
+            <div class="bar" title="{{b.tip}}" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">{{b.n}}</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: {{b.color}}; height: {{b.h}}px"></span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 8px">
+          <sc-for list="{{dist}}" as="b" hint-placeholder-count="10">
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">{{b.label}}</span>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FDBFF","options":["#7FDBFF","#C6F36B","#FFB86B","#C9A7FF"]},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { range: 'all' };
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#7FDBFF';
+    const all = this.state.range === 'all';
+    const ranges = [['all', 'All time'], ['2026', '2026']].map(([id, label]) => {
+      const on = this.state.range === id;
+      return { label, pressed: on ? 'true' : 'false', bg: on ? 'rgba(255,255,255,0.12)' : 'transparent', fg: on ? '#FFFFFF' : '#A3A9B6', pick: () => this.setState({ range: id }) };
+    });
+    const kpis = all ? [
+      { label: 'FILMS', value: '312', sub: '486 watches, 41 rewatched' },
+      { label: 'HOURS', value: '1,012', sub: 'about 42 days of film' },
+      { label: 'VIEWING DAYS', value: '451', sub: 'since 2014' },
+      { label: 'AVERAGE RATING', value: '3.6', sub: 'out of 5' }
+    ] : [
+      { label: 'FILMS', value: '17', sub: '17 watches, none rewatched' },
+      { label: 'HOURS', value: '36.4', sub: 'about 2 h 8 m per film' },
+      { label: 'VIEWING DAYS', value: '17', sub: 'one film a fortnight' },
+      { label: 'AVERAGE RATING', value: '4.4', sub: 'out of 5' }
+    ];
+
+    // Heatmap: Mon 6 Oct 2025 to Mon 5 Oct 2026
+    const counts = {};
+    ['2025-10-11', '2025-10-25', '2025-11-02', '2025-11-08', '2025-11-15', '2025-11-21', '2025-11-29', '2025-12-06', '2025-12-20', '2025-12-25', '2025-12-27', '2025-12-31',
+     '2026-01-12', '2026-01-27', '2026-02-08', '2026-03-01', '2026-03-19', '2026-04-05', '2026-05-17', '2026-05-30', '2026-06-14', '2026-07-02', '2026-07-21', '2026-08-09', '2026-08-23', '2026-09-06', '2026-09-20', '2026-09-28', '2026-10-03'].forEach((d) => { counts[d] = 1; });
+    counts['2025-10-18'] = 2; counts['2025-12-13'] = 2;
+    const lvl1 = 'color-mix(in oklch, ' + accent + ' 55%, #07080C)';
+    const lvl2 = accent;
+    const mNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const start = Date.UTC(2025, 9, 6);
+    const end = Date.UTC(2026, 9, 5);
+    const weeks = [];
+    const monthLabels = [];
+    let lastMonth = -1;
+    let active = 0;
+    for (let w = 0; w < 53; w++) {
+      const col = [];
+      for (let d = 0; d < 7; d++) {
+        const t = start + (w * 7 + d) * 86400000;
+        const dt = new Date(t);
+        const key = dt.toISOString().slice(0, 10);
+        const n = counts[key] || 0;
+        if (n) active++;
+        const label = mNames[dt.getUTCMonth()] + ' ' + dt.getUTCDate();
+        if (t > end) col.push({ bg: 'transparent', tip: '' });
+        else col.push({ bg: n === 0 ? 'rgba(255,255,255,0.05)' : (n === 1 ? lvl1 : lvl2), tip: label + ': ' + (n === 0 ? 'no films' : n === 1 ? '1 film' : n + ' films') });
+      }
+      const firstMonth = new Date(start + w * 7 * 86400000).getUTCMonth();
+      monthLabels.push(firstMonth !== lastMonth ? mNames[firstMonth] : '');
+      lastMonth = firstMonth;
+      weeks.push(col);
+    }
+
+    // Radar
+    const genres = all
+      ? [['Drama', 0.95], ['Sci-fi', 0.7], ['Romance', 0.55], ['Thriller', 0.45], ['Animation', 0.25], ['Comedy', 0.2]]
+      : [['Drama', 1], ['Sci-fi', 0.4], ['Romance', 0.35], ['Thriller', 0.15], ['Animation', 0.06], ['Comedy', 0.06]];
+    const cx = 160, cy = 150, R = 105;
+    const pt = (i, v) => {
+      const a = -Math.PI / 2 + (i * 2 * Math.PI) / genres.length;
+      return [cx + Math.cos(a) * R * v, cy + Math.sin(a) * R * v];
+    };
+    const poly = (v) => genres.map((_, i) => pt(i, v).map((n) => n.toFixed(1)).join(',')).join(' ');
+    const rings = [0.25, 0.5, 0.75, 1].map(poly);
+    const spokes = genres.map((_, i) => { const [x, y] = pt(i, 1); return { x: x.toFixed(1), y: y.toFixed(1) }; });
+    const radarPts = genres.map(([, v], i) => pt(i, v).map((n) => n.toFixed(1)).join(',')).join(' ');
+    const dots = genres.map(([g, v], i) => { const [x, y] = pt(i, v); return { x: x.toFixed(1), y: y.toFixed(1), tip: g + ': ' + Math.round(v * 100) + '% of your top genre' }; });
+    const labels = genres.map(([g], i) => {
+      const [x, y] = pt(i, 1.2);
+      const anchor = Math.abs(x - cx) < 4 ? 'middle' : (x > cx ? 'start' : 'end');
+      return { x: x.toFixed(1), y: y.toFixed(1), anchor, text: g };
+    });
+
+    const bars = (rows) => { const max = Math.max(...rows.map((r) => r[1])); return rows.map(([name, n]) => ({ name, n, w: Math.round((n / max) * 100) })); };
+    const directors = bars(all
+      ? [['Denis Villeneuve', 9], ['Christopher Nolan', 8], ['Wong Kar-wai', 6], ['Abbas Kiarostami', 5], ['Bong Joon-ho', 5]]
+      : [['Denis Villeneuve', 2], ['Christopher Nolan', 2], ['Andrei Tarkovsky', 1], ['Asghar Farhadi', 1], ['Wong Kar-wai', 1]]);
+    const actors = bars(all
+      ? [['Ryan Gosling', 7], ['Tony Leung Chiu-wai', 5], ['Timothée Chalamet', 5], ['Song Kang-ho', 4], ['Cillian Murphy', 4]]
+      : [['Timothée Chalamet', 2], ['Matt Damon', 2], ['Florence Pugh', 2], ['Tony Leung Chiu-wai', 1], ['Song Kang-ho', 1]]);
+
+    const distRaw = all ? [2, 4, 5, 11, 18, 46, 71, 92, 48, 15] : [0, 0, 0, 0, 0, 0, 1, 5, 8, 3];
+    const dmax = Math.max(...distRaw);
+    const dist = distRaw.map((n, i) => {
+      const r = (i + 1) * 0.5;
+      return { n, label: r % 1 ? r.toFixed(1) : String(r), h: Math.max(2, Math.round((n / dmax) * 170)), tip: r.toFixed(1) + ' stars: ' + n + ' films', color: n ? accent : 'rgba(255,255,255,0.08)' };
+    });
+
+    return {
+      accent, ranges, kpis, weeks, monthLabels, lvl1, lvl2,
+      activeDays: String(active),
+      rings, spokes, radarPts, dots, labels,
+      radarFill: 'color-mix(in oklch, ' + accent + ' 22%, transparent)',
+      radarAria: 'Genre profile: ' + genres.map(([g, v]) => g + ' ' + Math.round(v * 100) + '%').join(', '),
+      directors, actors, dist,
+      mean: all ? '3.6' : '4.4'
+    };
+  }
+}
+</script>
+</body>
+</html>

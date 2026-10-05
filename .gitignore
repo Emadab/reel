@@ -1,0 +1,5 @@
+backend/.env
+backend/data/
+backend/.venv/
+__pycache__/
+node_modules/

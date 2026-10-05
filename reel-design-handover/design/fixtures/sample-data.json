@@ -1,0 +1,2882 @@
+{
+ "_about": "Fixture data reproducing design/screenshots. 'Today' is 2026-10-05. poster/backdrop are null so the UI renders PosterArt from poster_art. TMDB ids are best-effort; verify before using them against the live API.",
+ "today": "2026-10-05",
+ "accent": "#7FDBFF",
+ "library": {
+  "counts": {
+   "watched": 312,
+   "watchlist": 14,
+   "rewatches": 41
+  },
+  "totals": {
+   "films": 312,
+   "watches": 486,
+   "hours": 1012
+  },
+  "last_watched": {
+   "tmdb_id": 976893,
+   "title": "Perfect Days",
+   "year": 2023,
+   "director": "Wim Wenders",
+   "runtime": 124,
+   "poster": null,
+   "poster_sm": null,
+   "palette": [
+    "#2F5A4C",
+    "#F1E6C8",
+    "#9FC9B9",
+    "#1B2B26",
+    "#0A0E12"
+   ],
+   "poster_art": {
+    "bg": "#2F5A4C",
+    "fg": "#F1E6C8",
+    "motif": "band"
+   },
+   "genres": [
+    "Drama"
+   ],
+   "my_rating": 4.5,
+   "watch_count": 1,
+   "on_watchlist": false,
+   "last_watched": {
+    "date": "2026-10-03",
+    "precision": "day"
+   },
+   "watch": {
+    "id": 1,
+    "tmdb_id": 976893,
+    "watched_on": "2026-10-03",
+    "date_precision": "day",
+    "rating": 4.5,
+    "is_rewatch": false,
+    "location": "Home",
+    "with_whom": null,
+    "notes": null
+   }
+  },
+  "items": [
+   {
+    "tmdb_id": 976893,
+    "title": "Perfect Days",
+    "year": 2023,
+    "director": "Wim Wenders",
+    "runtime": 124,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#2F5A4C",
+     "#F1E6C8",
+     "#9FC9B9",
+     "#1B2B26",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#2F5A4C",
+     "fg": "#F1E6C8",
+     "motif": "band"
+    },
+    "genres": [
+     "Drama"
+    ],
+    "my_rating": 4.5,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-10-03",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 666277,
+    "title": "Past Lives",
+    "year": 2023,
+    "director": "Celine Song",
+    "runtime": 106,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#233A57",
+     "#F0C9A8",
+     "#233A57",
+     "#F0C9A8",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#233A57",
+     "fg": "#F0C9A8",
+     "motif": "sun"
+    },
+    "genres": [
+     "Drama",
+     "Romance"
+    ],
+    "my_rating": 4.5,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-09-28",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 693134,
+    "title": "Dune: Part Two",
+    "year": 2024,
+    "director": "Denis Villeneuve",
+    "runtime": 166,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#C46A2F",
+     "#1B0D05",
+     "#C46A2F",
+     "#1B0D05",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#C46A2F",
+     "fg": "#1B0D05",
+     "motif": "arch"
+    },
+    "genres": [
+     "Science Fiction",
+     "Adventure"
+    ],
+    "my_rating": 4.5,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-09-20",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 843,
+    "title": "In the Mood for Love",
+    "year": 2000,
+    "director": "Wong Kar-wai",
+    "runtime": 98,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#8E1A1F",
+     "#F4D9B8",
+     "#8E1A1F",
+     "#F4D9B8",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#8E1A1F",
+     "fg": "#F4D9B8",
+     "motif": "band"
+    },
+    "genres": [
+     "Drama",
+     "Romance"
+    ],
+    "my_rating": 5.0,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-09-06",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 329865,
+    "title": "Arrival",
+    "year": 2016,
+    "director": "Denis Villeneuve",
+    "runtime": 116,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#B9BFC0",
+     "#1C2326",
+     "#B9BFC0",
+     "#1C2326",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#B9BFC0",
+     "fg": "#1C2326",
+     "motif": "arch"
+    },
+    "genres": [
+     "Drama",
+     "Science Fiction"
+    ],
+    "my_rating": 4.5,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-08-23",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 965150,
+    "title": "Aftersun",
+    "year": 2022,
+    "director": "Charlotte Wells",
+    "runtime": 102,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#6FB3CF",
+     "#0E2230",
+     "#6FB3CF",
+     "#0E2230",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#6FB3CF",
+     "fg": "#0E2230",
+     "motif": "sun"
+    },
+    "genres": [
+     "Drama"
+    ],
+    "my_rating": 4.0,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-08-09",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 76341,
+    "title": "Mad Max: Fury Road",
+    "year": 2015,
+    "director": "George Miller",
+    "runtime": 120,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#E8A33D",
+     "#1E1205",
+     "#E8A33D",
+     "#1E1205",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#E8A33D",
+     "fg": "#1E1205",
+     "motif": "sun"
+    },
+    "genres": [
+     "Action",
+     "Adventure",
+     "Science Fiction"
+    ],
+    "my_rating": 4.0,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-07-21",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 531428,
+    "title": "Portrait of a Lady on Fire",
+    "year": 2019,
+    "director": "Céline Sciamma",
+    "runtime": 122,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#C9572A",
+     "#1D0E07",
+     "#C9572A",
+     "#1D0E07",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#C9572A",
+     "fg": "#1D0E07",
+     "motif": "band"
+    },
+    "genres": [
+     "Drama",
+     "Romance"
+    ],
+    "my_rating": 4.5,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-07-02",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 872585,
+    "title": "Oppenheimer",
+    "year": 2023,
+    "director": "Christopher Nolan",
+    "runtime": 180,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#1A1210",
+     "#F07A32",
+     "#1A1210",
+     "#F07A32",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#1A1210",
+     "fg": "#F07A32",
+     "motif": "sun"
+    },
+    "genres": [
+     "Drama",
+     "History"
+    ],
+    "my_rating": 4.0,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-06-14",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 64690,
+    "title": "Drive",
+    "year": 2011,
+    "director": "Nicolas Winding Refn",
+    "runtime": 100,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#E35A9B",
+     "#1A0A12",
+     "#E35A9B",
+     "#1A0A12",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#E35A9B",
+     "fg": "#1A0A12",
+     "motif": "band"
+    },
+    "genres": [
+     "Drama",
+     "Thriller",
+     "Crime"
+    ],
+    "my_rating": 3.5,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-05-30",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 496243,
+    "title": "Parasite",
+    "year": 2019,
+    "director": "Bong Joon-ho",
+    "runtime": 132,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#2E3A33",
+     "#E9E3D2",
+     "#2E3A33",
+     "#E9E3D2",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#2E3A33",
+     "fg": "#E9E3D2",
+     "motif": "arch"
+    },
+    "genres": [
+     "Comedy",
+     "Thriller",
+     "Drama"
+    ],
+    "my_rating": 4.5,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-05-17",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 129,
+    "title": "Spirited Away",
+    "year": 2001,
+    "director": "Hayao Miyazaki",
+    "runtime": 125,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#3F7F96",
+     "#F3E7C9",
+     "#3F7F96",
+     "#F3E7C9",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#3F7F96",
+     "fg": "#F3E7C9",
+     "motif": "sun"
+    },
+    "genres": [
+     "Animation",
+     "Family",
+     "Fantasy"
+    ],
+    "my_rating": 4.5,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-04-05",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 152601,
+    "title": "Her",
+    "year": 2013,
+    "director": "Spike Jonze",
+    "runtime": 126,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#E06A55",
+     "#2A0E0A",
+     "#E06A55",
+     "#2A0E0A",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#E06A55",
+     "fg": "#2A0E0A",
+     "motif": "band"
+    },
+    "genres": [
+     "Romance",
+     "Science Fiction",
+     "Drama"
+    ],
+    "my_rating": 4.0,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-03-19",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 376867,
+    "title": "Moonlight",
+    "year": 2016,
+    "director": "Barry Jenkins",
+    "runtime": 111,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#2E3F94",
+     "#F2C9D9",
+     "#2E3F94",
+     "#F2C9D9",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#2E3F94",
+     "fg": "#F2C9D9",
+     "motif": "sun"
+    },
+    "genres": [
+     "Drama"
+    ],
+    "my_rating": 4.0,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-03-01",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 60243,
+    "title": "A Separation",
+    "year": 2011,
+    "director": "Asghar Farhadi",
+    "runtime": 123,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#6B5B4B",
+     "#F4EDE2",
+     "#6B5B4B",
+     "#F4EDE2",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#6B5B4B",
+     "fg": "#F4EDE2",
+     "motif": "arch"
+    },
+    "genres": [
+     "Drama"
+    ],
+    "my_rating": 5.0,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-02-08",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 157336,
+    "title": "Interstellar",
+    "year": 2014,
+    "director": "Christopher Nolan",
+    "runtime": 169,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#CFC8B8",
+     "#191714",
+     "#CFC8B8",
+     "#191714",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#CFC8B8",
+     "fg": "#191714",
+     "motif": "sun"
+    },
+    "genres": [
+     "Adventure",
+     "Drama",
+     "Science Fiction"
+    ],
+    "my_rating": 4.5,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-01-27",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 1398,
+    "title": "Stalker",
+    "year": 1979,
+    "director": "Andrei Tarkovsky",
+    "runtime": 162,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#5C6640",
+     "#EDE8D0",
+     "#5C6640",
+     "#EDE8D0",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#5C6640",
+     "fg": "#EDE8D0",
+     "motif": "band"
+    },
+    "genres": [
+     "Drama",
+     "Science Fiction"
+    ],
+    "my_rating": 5.0,
+    "watch_count": 1,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2026-01-12",
+     "precision": "day"
+    }
+   },
+   {
+    "tmdb_id": 335984,
+    "title": "Blade Runner 2049",
+    "year": 2017,
+    "director": "Denis Villeneuve",
+    "runtime": 164,
+    "poster": null,
+    "poster_sm": null,
+    "palette": [
+     "#F08A3C",
+     "#2FA3A8",
+     "#1E2B33",
+     "#F2A65A",
+     "#0A0E12"
+    ],
+    "poster_art": {
+     "bg": "#1E2B33",
+     "fg": "#F2A65A",
+     "motif": "arch"
+    },
+    "genres": [
+     "Science Fiction",
+     "Drama"
+    ],
+    "my_rating": 5.0,
+    "watch_count": 3,
+    "on_watchlist": false,
+    "last_watched": {
+     "date": "2025-11-21",
+     "precision": "day"
+    }
+   }
+  ],
+  "next_cursor": null,
+  "filters": [
+   "Genre",
+   "Decade",
+   "Rating",
+   "Director",
+   "Sort: recently watched"
+  ]
+ },
+ "movie_detail": {
+  "335984": {
+   "tmdb_id": 335984,
+   "title": "Blade Runner 2049",
+   "year": 2017,
+   "director": "Denis Villeneuve",
+   "runtime": 164,
+   "poster": null,
+   "poster_sm": null,
+   "palette": [
+    "#F08A3C",
+    "#2FA3A8",
+    "#1E2B33",
+    "#F2A65A",
+    "#0A0E12"
+   ],
+   "poster_art": {
+    "bg": "#1E2B33",
+    "fg": "#F2A65A",
+    "motif": "arch"
+   },
+   "genres": [
+    "Science Fiction",
+    "Drama"
+   ],
+   "my_rating": 5.0,
+   "watch_count": 3,
+   "on_watchlist": false,
+   "last_watched": {
+    "date": "2025-11-21",
+    "precision": "day"
+   },
+   "overview": "Thirty years after the first film, K, a replicant blade runner working for the LAPD, digs up a buried secret that could unravel what is left of society. The trail leads him into the ruins outside Los Angeles and to Rick Deckard, who has been missing for decades.",
+   "language": "English",
+   "release_date": "2017-10-06",
+   "backdrop": null,
+   "trailer_key": null,
+   "keywords": [
+    "replicant",
+    "dystopia",
+    "artificial memory",
+    "neo-noir",
+    "los angeles"
+   ],
+   "cast": [
+    {
+     "name": "Ryan Gosling",
+     "character": "K"
+    },
+    {
+     "name": "Harrison Ford",
+     "character": "Rick Deckard"
+    },
+    {
+     "name": "Ana de Armas",
+     "character": "Joi"
+    },
+    {
+     "name": "Sylvia Hoeks",
+     "character": "Luv"
+    },
+    {
+     "name": "Robin Wright",
+     "character": "Lt. Joshi"
+    },
+    {
+     "name": "Jared Leto",
+     "character": "Niander Wallace"
+    }
+   ],
+   "crew_highlights": {
+    "cinematography": [
+     "Roger Deakins"
+    ],
+    "music": [
+     "Hans Zimmer",
+     "Benjamin Wallfisch"
+    ]
+   },
+   "scores": {
+    "tmdb": "7.6",
+    "imdb": "8.0",
+    "rt": "88%",
+    "metacritic": "81"
+   },
+   "fetched_at": "2026-09-23T10:00:00Z",
+   "watches": [
+    {
+     "id": 18,
+     "tmdb_id": 335984,
+     "watched_on": "2025-11-21",
+     "date_precision": "day",
+     "rating": 5.0,
+     "is_rewatch": true,
+     "location": "Home",
+     "with_whom": null,
+     "notes": "Third time. The orange Las Vegas sequence still floors me."
+    },
+    {
+     "id": 19,
+     "tmdb_id": 335984,
+     "watched_on": "2020-03-01",
+     "date_precision": "month",
+     "rating": 5.0,
+     "is_rewatch": true,
+     "location": "Home",
+     "with_whom": null,
+     "notes": null
+    },
+    {
+     "id": 20,
+     "tmdb_id": 335984,
+     "watched_on": "2017-10-08",
+     "date_precision": "day",
+     "rating": 4.5,
+     "is_rewatch": false,
+     "location": "Cinema",
+     "with_whom": "friends",
+     "notes": null
+    }
+   ],
+   "neighbors": [
+    {
+     "film": {
+      "tmdb_id": 329865,
+      "title": "Arrival",
+      "year": 2016,
+      "director": "Denis Villeneuve",
+      "runtime": 116,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#B9BFC0",
+       "#1C2326",
+       "#B9BFC0",
+       "#1C2326",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#B9BFC0",
+       "fg": "#1C2326",
+       "motif": "arch"
+      },
+      "genres": [
+       "Drama",
+       "Science Fiction"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-08-23",
+       "precision": "day"
+      }
+     },
+     "kind": "watched"
+    },
+    {
+     "film": {
+      "tmdb_id": 693134,
+      "title": "Dune: Part Two",
+      "year": 2024,
+      "director": "Denis Villeneuve",
+      "runtime": 166,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#C46A2F",
+       "#1B0D05",
+       "#C46A2F",
+       "#1B0D05",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#C46A2F",
+       "fg": "#1B0D05",
+       "motif": "arch"
+      },
+      "genres": [
+       "Science Fiction",
+       "Adventure"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-09-20",
+       "precision": "day"
+      }
+     },
+     "kind": "watched"
+    },
+    {
+     "film": {
+      "tmdb_id": 1398,
+      "title": "Stalker",
+      "year": 1979,
+      "director": "Andrei Tarkovsky",
+      "runtime": 162,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#5C6640",
+       "#EDE8D0",
+       "#5C6640",
+       "#EDE8D0",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#5C6640",
+       "fg": "#EDE8D0",
+       "motif": "band"
+      },
+      "genres": [
+       "Drama",
+       "Science Fiction"
+      ],
+      "my_rating": 5.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-01-12",
+       "precision": "day"
+      }
+     },
+     "kind": "watched"
+    },
+    {
+     "film": {
+      "tmdb_id": 593,
+      "title": "Solaris",
+      "year": 1972,
+      "palette": [
+       "#5EA096",
+       "#D9E6E0",
+       "#24343A",
+       "#D9E6E0",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#24343A",
+       "fg": "#D9E6E0",
+       "motif": "sun"
+      }
+     },
+     "kind": "suggested",
+     "score": 0.87
+    },
+    {
+     "film": {
+      "tmdb_id": 157336,
+      "title": "Interstellar",
+      "year": 2014,
+      "director": "Christopher Nolan",
+      "runtime": 169,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#CFC8B8",
+       "#191714",
+       "#CFC8B8",
+       "#191714",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#CFC8B8",
+       "fg": "#191714",
+       "motif": "sun"
+      },
+      "genres": [
+       "Adventure",
+       "Drama",
+       "Science Fiction"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-01-27",
+       "precision": "day"
+      }
+     },
+     "kind": "watched"
+    },
+    {
+     "film": {
+      "tmdb_id": 152601,
+      "title": "Her",
+      "year": 2013,
+      "director": "Spike Jonze",
+      "runtime": 126,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#E06A55",
+       "#2A0E0A",
+       "#E06A55",
+       "#2A0E0A",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#E06A55",
+       "fg": "#2A0E0A",
+       "motif": "band"
+      },
+      "genres": [
+       "Romance",
+       "Science Fiction",
+       "Drama"
+      ],
+      "my_rating": 4.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-03-19",
+       "precision": "day"
+      }
+     },
+     "kind": "watched"
+    }
+   ]
+  }
+ },
+ "search": {
+  "query": "drive",
+  "took_ms": 180,
+  "results": [
+   {
+    "tmdb_id": 64690,
+    "title": "Drive",
+    "year": 2011,
+    "director": "Nicolas Winding Refn",
+    "poster_art": {
+     "bg": "#E35A9B"
+    },
+    "watch_count": 1,
+    "on_watchlist": false
+   },
+   {
+    "tmdb_id": 758866,
+    "title": "Drive My Car",
+    "year": 2021,
+    "director": "Ryusuke Hamaguchi",
+    "poster_art": {
+     "bg": "#B3342E"
+    },
+    "watch_count": 0,
+    "on_watchlist": false
+   },
+   {
+    "tmdb_id": 1018,
+    "title": "Mulholland Drive",
+    "year": 2001,
+    "director": "David Lynch",
+    "poster_art": {
+     "bg": "#1B2340"
+    },
+    "watch_count": 0,
+    "on_watchlist": true
+   },
+   {
+    "tmdb_id": 339403,
+    "title": "Baby Driver",
+    "year": 2017,
+    "director": "Edgar Wright",
+    "poster_art": {
+     "bg": "#F2C14E"
+    },
+    "watch_count": 0,
+    "on_watchlist": false
+   }
+  ],
+  "ui_state": {
+   "selected_index": 1,
+   "form": {
+    "watched_on": "2026-10-04",
+    "date_precision": "day",
+    "rating": 4.5,
+    "is_rewatch": false
+   }
+  }
+ },
+ "timeline": {
+  "year": 2026,
+  "totals": {
+   "watches": 17,
+   "approx": 0,
+   "hours": 36.4
+  },
+  "months": [
+   {
+    "month": 1,
+    "films": [
+     {
+      "tmdb_id": 1398,
+      "title": "Stalker",
+      "year": 1979,
+      "director": "Andrei Tarkovsky",
+      "runtime": 162,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#5C6640",
+       "#EDE8D0",
+       "#5C6640",
+       "#EDE8D0",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#5C6640",
+       "fg": "#EDE8D0",
+       "motif": "band"
+      },
+      "genres": [
+       "Drama",
+       "Science Fiction"
+      ],
+      "my_rating": 5.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-01-12",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 17,
+       "tmdb_id": 1398,
+       "watched_on": "2026-01-12",
+       "date_precision": "day",
+       "rating": 5.0,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     },
+     {
+      "tmdb_id": 157336,
+      "title": "Interstellar",
+      "year": 2014,
+      "director": "Christopher Nolan",
+      "runtime": 169,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#CFC8B8",
+       "#191714",
+       "#CFC8B8",
+       "#191714",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#CFC8B8",
+       "fg": "#191714",
+       "motif": "sun"
+      },
+      "genres": [
+       "Adventure",
+       "Drama",
+       "Science Fiction"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-01-27",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 16,
+       "tmdb_id": 157336,
+       "watched_on": "2026-01-27",
+       "date_precision": "day",
+       "rating": 4.5,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 2,
+    "films": [
+     {
+      "tmdb_id": 60243,
+      "title": "A Separation",
+      "year": 2011,
+      "director": "Asghar Farhadi",
+      "runtime": 123,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#6B5B4B",
+       "#F4EDE2",
+       "#6B5B4B",
+       "#F4EDE2",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#6B5B4B",
+       "fg": "#F4EDE2",
+       "motif": "arch"
+      },
+      "genres": [
+       "Drama"
+      ],
+      "my_rating": 5.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-02-08",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 15,
+       "tmdb_id": 60243,
+       "watched_on": "2026-02-08",
+       "date_precision": "day",
+       "rating": 5.0,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 3,
+    "films": [
+     {
+      "tmdb_id": 376867,
+      "title": "Moonlight",
+      "year": 2016,
+      "director": "Barry Jenkins",
+      "runtime": 111,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#2E3F94",
+       "#F2C9D9",
+       "#2E3F94",
+       "#F2C9D9",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#2E3F94",
+       "fg": "#F2C9D9",
+       "motif": "sun"
+      },
+      "genres": [
+       "Drama"
+      ],
+      "my_rating": 4.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-03-01",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 14,
+       "tmdb_id": 376867,
+       "watched_on": "2026-03-01",
+       "date_precision": "day",
+       "rating": 4.0,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     },
+     {
+      "tmdb_id": 152601,
+      "title": "Her",
+      "year": 2013,
+      "director": "Spike Jonze",
+      "runtime": 126,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#E06A55",
+       "#2A0E0A",
+       "#E06A55",
+       "#2A0E0A",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#E06A55",
+       "fg": "#2A0E0A",
+       "motif": "band"
+      },
+      "genres": [
+       "Romance",
+       "Science Fiction",
+       "Drama"
+      ],
+      "my_rating": 4.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-03-19",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 13,
+       "tmdb_id": 152601,
+       "watched_on": "2026-03-19",
+       "date_precision": "day",
+       "rating": 4.0,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 4,
+    "films": [
+     {
+      "tmdb_id": 129,
+      "title": "Spirited Away",
+      "year": 2001,
+      "director": "Hayao Miyazaki",
+      "runtime": 125,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#3F7F96",
+       "#F3E7C9",
+       "#3F7F96",
+       "#F3E7C9",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#3F7F96",
+       "fg": "#F3E7C9",
+       "motif": "sun"
+      },
+      "genres": [
+       "Animation",
+       "Family",
+       "Fantasy"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-04-05",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 12,
+       "tmdb_id": 129,
+       "watched_on": "2026-04-05",
+       "date_precision": "day",
+       "rating": 4.5,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 5,
+    "films": [
+     {
+      "tmdb_id": 496243,
+      "title": "Parasite",
+      "year": 2019,
+      "director": "Bong Joon-ho",
+      "runtime": 132,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#2E3A33",
+       "#E9E3D2",
+       "#2E3A33",
+       "#E9E3D2",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#2E3A33",
+       "fg": "#E9E3D2",
+       "motif": "arch"
+      },
+      "genres": [
+       "Comedy",
+       "Thriller",
+       "Drama"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-05-17",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 11,
+       "tmdb_id": 496243,
+       "watched_on": "2026-05-17",
+       "date_precision": "day",
+       "rating": 4.5,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     },
+     {
+      "tmdb_id": 64690,
+      "title": "Drive",
+      "year": 2011,
+      "director": "Nicolas Winding Refn",
+      "runtime": 100,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#E35A9B",
+       "#1A0A12",
+       "#E35A9B",
+       "#1A0A12",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#E35A9B",
+       "fg": "#1A0A12",
+       "motif": "band"
+      },
+      "genres": [
+       "Drama",
+       "Thriller",
+       "Crime"
+      ],
+      "my_rating": 3.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-05-30",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 10,
+       "tmdb_id": 64690,
+       "watched_on": "2026-05-30",
+       "date_precision": "day",
+       "rating": 3.5,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 6,
+    "films": [
+     {
+      "tmdb_id": 872585,
+      "title": "Oppenheimer",
+      "year": 2023,
+      "director": "Christopher Nolan",
+      "runtime": 180,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#1A1210",
+       "#F07A32",
+       "#1A1210",
+       "#F07A32",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#1A1210",
+       "fg": "#F07A32",
+       "motif": "sun"
+      },
+      "genres": [
+       "Drama",
+       "History"
+      ],
+      "my_rating": 4.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-06-14",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 9,
+       "tmdb_id": 872585,
+       "watched_on": "2026-06-14",
+       "date_precision": "day",
+       "rating": 4.0,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 7,
+    "films": [
+     {
+      "tmdb_id": 531428,
+      "title": "Portrait of a Lady on Fire",
+      "year": 2019,
+      "director": "Céline Sciamma",
+      "runtime": 122,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#C9572A",
+       "#1D0E07",
+       "#C9572A",
+       "#1D0E07",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#C9572A",
+       "fg": "#1D0E07",
+       "motif": "band"
+      },
+      "genres": [
+       "Drama",
+       "Romance"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-07-02",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 8,
+       "tmdb_id": 531428,
+       "watched_on": "2026-07-02",
+       "date_precision": "day",
+       "rating": 4.5,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     },
+     {
+      "tmdb_id": 76341,
+      "title": "Mad Max: Fury Road",
+      "year": 2015,
+      "director": "George Miller",
+      "runtime": 120,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#E8A33D",
+       "#1E1205",
+       "#E8A33D",
+       "#1E1205",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#E8A33D",
+       "fg": "#1E1205",
+       "motif": "sun"
+      },
+      "genres": [
+       "Action",
+       "Adventure",
+       "Science Fiction"
+      ],
+      "my_rating": 4.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-07-21",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 7,
+       "tmdb_id": 76341,
+       "watched_on": "2026-07-21",
+       "date_precision": "day",
+       "rating": 4.0,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 8,
+    "films": [
+     {
+      "tmdb_id": 965150,
+      "title": "Aftersun",
+      "year": 2022,
+      "director": "Charlotte Wells",
+      "runtime": 102,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#6FB3CF",
+       "#0E2230",
+       "#6FB3CF",
+       "#0E2230",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#6FB3CF",
+       "fg": "#0E2230",
+       "motif": "sun"
+      },
+      "genres": [
+       "Drama"
+      ],
+      "my_rating": 4.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-08-09",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 6,
+       "tmdb_id": 965150,
+       "watched_on": "2026-08-09",
+       "date_precision": "day",
+       "rating": 4.0,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     },
+     {
+      "tmdb_id": 329865,
+      "title": "Arrival",
+      "year": 2016,
+      "director": "Denis Villeneuve",
+      "runtime": 116,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#B9BFC0",
+       "#1C2326",
+       "#B9BFC0",
+       "#1C2326",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#B9BFC0",
+       "fg": "#1C2326",
+       "motif": "arch"
+      },
+      "genres": [
+       "Drama",
+       "Science Fiction"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-08-23",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 5,
+       "tmdb_id": 329865,
+       "watched_on": "2026-08-23",
+       "date_precision": "day",
+       "rating": 4.5,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 9,
+    "films": [
+     {
+      "tmdb_id": 843,
+      "title": "In the Mood for Love",
+      "year": 2000,
+      "director": "Wong Kar-wai",
+      "runtime": 98,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#8E1A1F",
+       "#F4D9B8",
+       "#8E1A1F",
+       "#F4D9B8",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#8E1A1F",
+       "fg": "#F4D9B8",
+       "motif": "band"
+      },
+      "genres": [
+       "Drama",
+       "Romance"
+      ],
+      "my_rating": 5.0,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-09-06",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 4,
+       "tmdb_id": 843,
+       "watched_on": "2026-09-06",
+       "date_precision": "day",
+       "rating": 5.0,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     },
+     {
+      "tmdb_id": 693134,
+      "title": "Dune: Part Two",
+      "year": 2024,
+      "director": "Denis Villeneuve",
+      "runtime": 166,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#C46A2F",
+       "#1B0D05",
+       "#C46A2F",
+       "#1B0D05",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#C46A2F",
+       "fg": "#1B0D05",
+       "motif": "arch"
+      },
+      "genres": [
+       "Science Fiction",
+       "Adventure"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-09-20",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 3,
+       "tmdb_id": 693134,
+       "watched_on": "2026-09-20",
+       "date_precision": "day",
+       "rating": 4.5,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     },
+     {
+      "tmdb_id": 666277,
+      "title": "Past Lives",
+      "year": 2023,
+      "director": "Celine Song",
+      "runtime": 106,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#233A57",
+       "#F0C9A8",
+       "#233A57",
+       "#F0C9A8",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#233A57",
+       "fg": "#F0C9A8",
+       "motif": "sun"
+      },
+      "genres": [
+       "Drama",
+       "Romance"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-09-28",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 2,
+       "tmdb_id": 666277,
+       "watched_on": "2026-09-28",
+       "date_precision": "day",
+       "rating": 4.5,
+       "is_rewatch": false,
+       "location": null,
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 10,
+    "films": [
+     {
+      "tmdb_id": 976893,
+      "title": "Perfect Days",
+      "year": 2023,
+      "director": "Wim Wenders",
+      "runtime": 124,
+      "poster": null,
+      "poster_sm": null,
+      "palette": [
+       "#2F5A4C",
+       "#F1E6C8",
+       "#9FC9B9",
+       "#1B2B26",
+       "#0A0E12"
+      ],
+      "poster_art": {
+       "bg": "#2F5A4C",
+       "fg": "#F1E6C8",
+       "motif": "band"
+      },
+      "genres": [
+       "Drama"
+      ],
+      "my_rating": 4.5,
+      "watch_count": 1,
+      "on_watchlist": false,
+      "last_watched": {
+       "date": "2026-10-03",
+       "precision": "day"
+      },
+      "watch": {
+       "id": 1,
+       "tmdb_id": 976893,
+       "watched_on": "2026-10-03",
+       "date_precision": "day",
+       "rating": 4.5,
+       "is_rewatch": false,
+       "location": "Home",
+       "with_whom": null,
+       "notes": null
+      }
+     }
+    ],
+    "approx": []
+   },
+   {
+    "month": 11,
+    "films": [],
+    "approx": []
+   },
+   {
+    "month": 12,
+    "films": [],
+    "approx": []
+   }
+  ],
+  "year_only": [],
+  "years": [
+   {
+    "year": 2014,
+    "total": 23,
+    "approx": 20
+   },
+   {
+    "year": 2015,
+    "total": 31,
+    "approx": 18
+   },
+   {
+    "year": 2016,
+    "total": 26,
+    "approx": 12
+   },
+   {
+    "year": 2017,
+    "total": 29,
+    "approx": 9
+   },
+   {
+    "year": 2018,
+    "total": 33,
+    "approx": 10
+   },
+   {
+    "year": 2019,
+    "total": 40,
+    "approx": 9
+   },
+   {
+    "year": 2020,
+    "total": 51,
+    "approx": 12
+   },
+   {
+    "year": 2021,
+    "total": 49,
+    "approx": 7
+   },
+   {
+    "year": 2022,
+    "total": 44,
+    "approx": 3
+   },
+   {
+    "year": 2023,
+    "total": 44,
+    "approx": 1
+   },
+   {
+    "year": 2024,
+    "total": 47,
+    "approx": 0
+   },
+   {
+    "year": 2025,
+    "total": 52,
+    "approx": 0
+   },
+   {
+    "year": 2026,
+    "total": 17,
+    "approx": 0
+   }
+  ]
+ },
+ "stats": {
+  "all": {
+   "kpis": {
+    "films": 312,
+    "watches": 486,
+    "rewatched": 41,
+    "hours": 1012,
+    "viewing_days": 451,
+    "first_year": 2014,
+    "avg_rating": 3.6
+   },
+   "genres": [
+    {
+     "name": "Drama",
+     "value": 0.95
+    },
+    {
+     "name": "Sci-fi",
+     "value": 0.7
+    },
+    {
+     "name": "Romance",
+     "value": 0.55
+    },
+    {
+     "name": "Thriller",
+     "value": 0.45
+    },
+    {
+     "name": "Animation",
+     "value": 0.25
+    },
+    {
+     "name": "Comedy",
+     "value": 0.2
+    }
+   ],
+   "directors": [
+    {
+     "name": "Denis Villeneuve",
+     "count": 9
+    },
+    {
+     "name": "Christopher Nolan",
+     "count": 8
+    },
+    {
+     "name": "Wong Kar-wai",
+     "count": 6
+    },
+    {
+     "name": "Abbas Kiarostami",
+     "count": 5
+    },
+    {
+     "name": "Bong Joon-ho",
+     "count": 5
+    }
+   ],
+   "actors": [
+    {
+     "name": "Ryan Gosling",
+     "count": 7
+    },
+    {
+     "name": "Tony Leung Chiu-wai",
+     "count": 5
+    },
+    {
+     "name": "Timothée Chalamet",
+     "count": 5
+    },
+    {
+     "name": "Song Kang-ho",
+     "count": 4
+    },
+    {
+     "name": "Cillian Murphy",
+     "count": 4
+    }
+   ],
+   "ratings": [
+    {
+     "bin": 0.5,
+     "count": 2
+    },
+    {
+     "bin": 1.0,
+     "count": 4
+    },
+    {
+     "bin": 1.5,
+     "count": 5
+    },
+    {
+     "bin": 2.0,
+     "count": 11
+    },
+    {
+     "bin": 2.5,
+     "count": 18
+    },
+    {
+     "bin": 3.0,
+     "count": 46
+    },
+    {
+     "bin": 3.5,
+     "count": 71
+    },
+    {
+     "bin": 4.0,
+     "count": 92
+    },
+    {
+     "bin": 4.5,
+     "count": 48
+    },
+    {
+     "bin": 5.0,
+     "count": 15
+    }
+   ],
+   "mean": 3.6
+  },
+  "2026": {
+   "kpis": {
+    "films": 17,
+    "watches": 17,
+    "rewatched": 0,
+    "hours": 36.4,
+    "viewing_days": 17,
+    "first_year": 2026,
+    "avg_rating": 4.4
+   },
+   "genres": [
+    {
+     "name": "Drama",
+     "value": 1
+    },
+    {
+     "name": "Sci-fi",
+     "value": 0.4
+    },
+    {
+     "name": "Romance",
+     "value": 0.35
+    },
+    {
+     "name": "Thriller",
+     "value": 0.15
+    },
+    {
+     "name": "Animation",
+     "value": 0.06
+    },
+    {
+     "name": "Comedy",
+     "value": 0.06
+    }
+   ],
+   "directors": [
+    {
+     "name": "Denis Villeneuve",
+     "count": 2
+    },
+    {
+     "name": "Christopher Nolan",
+     "count": 2
+    },
+    {
+     "name": "Andrei Tarkovsky",
+     "count": 1
+    },
+    {
+     "name": "Asghar Farhadi",
+     "count": 1
+    },
+    {
+     "name": "Wong Kar-wai",
+     "count": 1
+    }
+   ],
+   "actors": [
+    {
+     "name": "Timothée Chalamet",
+     "count": 2
+    },
+    {
+     "name": "Matt Damon",
+     "count": 2
+    },
+    {
+     "name": "Florence Pugh",
+     "count": 2
+    },
+    {
+     "name": "Tony Leung Chiu-wai",
+     "count": 1
+    },
+    {
+     "name": "Song Kang-ho",
+     "count": 1
+    }
+   ],
+   "ratings": [
+    {
+     "bin": 0.5,
+     "count": 0
+    },
+    {
+     "bin": 1.0,
+     "count": 0
+    },
+    {
+     "bin": 1.5,
+     "count": 0
+    },
+    {
+     "bin": 2.0,
+     "count": 0
+    },
+    {
+     "bin": 2.5,
+     "count": 0
+    },
+    {
+     "bin": 3.0,
+     "count": 0
+    },
+    {
+     "bin": 3.5,
+     "count": 1
+    },
+    {
+     "bin": 4.0,
+     "count": 5
+    },
+    {
+     "bin": 4.5,
+     "count": 8
+    },
+    {
+     "bin": 5.0,
+     "count": 3
+    }
+   ],
+   "mean": 4.4
+  },
+  "heatmap": {
+   "start": "2025-10-06",
+   "end": "2026-10-05",
+   "days": [
+    {
+     "date": "2025-10-11",
+     "count": 1
+    },
+    {
+     "date": "2025-10-18",
+     "count": 2
+    },
+    {
+     "date": "2025-10-25",
+     "count": 1
+    },
+    {
+     "date": "2025-11-02",
+     "count": 1
+    },
+    {
+     "date": "2025-11-08",
+     "count": 1
+    },
+    {
+     "date": "2025-11-15",
+     "count": 1
+    },
+    {
+     "date": "2025-11-21",
+     "count": 1
+    },
+    {
+     "date": "2025-11-29",
+     "count": 1
+    },
+    {
+     "date": "2025-12-06",
+     "count": 1
+    },
+    {
+     "date": "2025-12-13",
+     "count": 2
+    },
+    {
+     "date": "2025-12-20",
+     "count": 1
+    },
+    {
+     "date": "2025-12-25",
+     "count": 1
+    },
+    {
+     "date": "2025-12-27",
+     "count": 1
+    },
+    {
+     "date": "2025-12-31",
+     "count": 1
+    },
+    {
+     "date": "2026-01-12",
+     "count": 1
+    },
+    {
+     "date": "2026-01-27",
+     "count": 1
+    },
+    {
+     "date": "2026-02-08",
+     "count": 1
+    },
+    {
+     "date": "2026-03-01",
+     "count": 1
+    },
+    {
+     "date": "2026-03-19",
+     "count": 1
+    },
+    {
+     "date": "2026-04-05",
+     "count": 1
+    },
+    {
+     "date": "2026-05-17",
+     "count": 1
+    },
+    {
+     "date": "2026-05-30",
+     "count": 1
+    },
+    {
+     "date": "2026-06-14",
+     "count": 1
+    },
+    {
+     "date": "2026-07-02",
+     "count": 1
+    },
+    {
+     "date": "2026-07-21",
+     "count": 1
+    },
+    {
+     "date": "2026-08-09",
+     "count": 1
+    },
+    {
+     "date": "2026-08-23",
+     "count": 1
+    },
+    {
+     "date": "2026-09-06",
+     "count": 1
+    },
+    {
+     "date": "2026-09-20",
+     "count": 1
+    },
+    {
+     "date": "2026-09-28",
+     "count": 1
+    },
+    {
+     "date": "2026-10-03",
+     "count": 1
+    }
+   ]
+  }
+ },
+ "recommendations": {
+  "model": {
+   "version": "v2",
+   "ratings_used": 214,
+   "reactions_used": 63,
+   "computed_at": "2026-10-05T11:58:00Z"
+  },
+  "top": {
+   "tmdb_id": 593,
+   "title": "Solaris",
+   "year": 1972,
+   "director": "Andrei Tarkovsky",
+   "runtime": 167,
+   "score": 0.87,
+   "is_wildcard": false,
+   "because": [
+    "Stalker",
+    "Interstellar"
+   ],
+   "why": null,
+   "poster_art": {
+    "bg": "#24343A",
+    "fg": "#D9E6E0",
+    "motif": "sun"
+   },
+   "because_ratings": [
+    5.0,
+    4.5
+   ],
+   "genres": [
+    "Science Fiction",
+    "Drama"
+   ],
+   "reasons": [
+    "same director as Stalker",
+    "space station",
+    "grief",
+    "memory"
+   ],
+   "glow": "#5EA096"
+  },
+  "items": [
+   {
+    "tmdb_id": 396371,
+    "title": "Columbus",
+    "year": 2017,
+    "director": "Kogonada",
+    "runtime": 104,
+    "score": 0.84,
+    "is_wildcard": false,
+    "because": [
+     "Past Lives",
+     "Perfect Days"
+    ],
+    "why": null,
+    "poster_art": {
+     "bg": "#D8D2C4",
+     "fg": "#22262A",
+     "motif": "band"
+    }
+   },
+   {
+    "tmdb_id": 11104,
+    "title": "Chungking Express",
+    "year": 1994,
+    "director": "Wong Kar-wai",
+    "runtime": 102,
+    "score": 0.82,
+    "is_wildcard": false,
+    "because": [
+     "In the Mood for Love"
+    ],
+    "why": null,
+    "poster_art": {
+     "bg": "#E5C43A",
+     "fg": "#14110A",
+     "motif": "sun"
+    }
+   },
+   {
+    "tmdb_id": 146233,
+    "title": "Prisoners",
+    "year": 2013,
+    "director": "Denis Villeneuve",
+    "runtime": 153,
+    "score": 0.79,
+    "is_wildcard": false,
+    "because": [
+     "Arrival",
+     "Blade Runner 2049"
+    ],
+    "why": null,
+    "poster_art": {
+     "bg": "#3C4A52",
+     "fg": "#E6ECEE",
+     "motif": "arch"
+    }
+   },
+   {
+    "tmdb_id": 491584,
+    "title": "Burning",
+    "year": 2018,
+    "director": "Lee Chang-dong",
+    "runtime": 148,
+    "score": 0.77,
+    "is_wildcard": false,
+    "because": [
+     "Parasite"
+    ],
+    "why": null,
+    "poster_art": {
+     "bg": "#B5552E",
+     "fg": "#170C06",
+     "motif": "band"
+    }
+   },
+   {
+    "tmdb_id": 30017,
+    "title": "Close-Up",
+    "year": 1990,
+    "director": "Abbas Kiarostami",
+    "runtime": 98,
+    "score": 0.76,
+    "is_wildcard": false,
+    "because": [
+     "A Separation"
+    ],
+    "why": null,
+    "poster_art": {
+     "bg": "#E9E4D6",
+     "fg": "#2A2722",
+     "motif": "arch"
+    }
+   },
+   {
+    "tmdb_id": 25623,
+    "title": "House",
+    "year": 1977,
+    "director": "Nobuhiko Obayashi",
+    "runtime": 88,
+    "score": 0.41,
+    "is_wildcard": true,
+    "because": [],
+    "why": "Far from your usual taste: no genre or director overlap with your top 50.",
+    "poster_art": {
+     "bg": "#7A3FD0",
+     "fg": "#F6E9FF",
+     "motif": "sun"
+    }
+   }
+  ],
+  "ui_state": {
+   "liked": [
+    11104
+   ],
+   "dismissed": []
+  },
+  "health": {
+   "hit_at_20": 6,
+   "baseline_hit_at_20": 3,
+   "holdout_n": 10,
+   "candidate_count": 412,
+   "sources": [
+    "TMDB recs",
+    "discover",
+    "MovieLens"
+   ],
+   "wildcard_share": 0.1
+  }
+ },
+ "tastemap": {
+  "film_count": 1240,
+  "points": [
+   {
+    "tmdb_id": 1398,
+    "title": "Stalker",
+    "kind": "watched",
+    "x": 0.18,
+    "y": 0.28,
+    "rating": 5.0,
+    "color": "#5C6640"
+   },
+   {
+    "tmdb_id": 976893,
+    "title": "Perfect Days",
+    "kind": "watched",
+    "x": 0.27,
+    "y": 0.37,
+    "rating": 4.5,
+    "color": "#2F5A4C"
+   },
+   {
+    "tmdb_id": 157336,
+    "title": "Interstellar",
+    "kind": "watched",
+    "x": 0.5,
+    "y": 0.17,
+    "rating": 4.5,
+    "color": "#CFC8B8"
+   },
+   {
+    "tmdb_id": 335984,
+    "title": "Blade Runner 2049",
+    "kind": "watched",
+    "x": 0.65,
+    "y": 0.15,
+    "rating": 5.0,
+    "color": "#1E2B33"
+   },
+   {
+    "tmdb_id": 329865,
+    "title": "Arrival",
+    "kind": "watched",
+    "x": 0.57,
+    "y": 0.29,
+    "rating": 4.5,
+    "color": "#B9BFC0"
+   },
+   {
+    "tmdb_id": 693134,
+    "title": "Dune: Part Two",
+    "kind": "watched",
+    "x": 0.74,
+    "y": 0.27,
+    "rating": 4.5,
+    "color": "#C46A2F"
+   },
+   {
+    "tmdb_id": 872585,
+    "title": "Oppenheimer",
+    "kind": "watched",
+    "x": 0.58,
+    "y": 0.42,
+    "rating": 4.0,
+    "color": "#1A1210"
+   },
+   {
+    "tmdb_id": 843,
+    "title": "In the Mood for Love",
+    "kind": "watched",
+    "x": 0.22,
+    "y": 0.66,
+    "rating": 5.0,
+    "color": "#8E1A1F"
+   },
+   {
+    "tmdb_id": 666277,
+    "title": "Past Lives",
+    "kind": "watched",
+    "x": 0.34,
+    "y": 0.72,
+    "rating": 4.5,
+    "color": "#233A57"
+   },
+   {
+    "tmdb_id": 152601,
+    "title": "Her",
+    "kind": "watched",
+    "x": 0.44,
+    "y": 0.61,
+    "rating": 4.0,
+    "color": "#E06A55"
+   },
+   {
+    "tmdb_id": 531428,
+    "title": "Portrait of a Lady on Fire",
+    "kind": "watched",
+    "x": 0.17,
+    "y": 0.8,
+    "rating": 4.5,
+    "color": "#C9572A"
+   },
+   {
+    "tmdb_id": 376867,
+    "title": "Moonlight",
+    "kind": "watched",
+    "x": 0.29,
+    "y": 0.56,
+    "rating": 4.0,
+    "color": "#2E3F94"
+   },
+   {
+    "tmdb_id": 965150,
+    "title": "Aftersun",
+    "kind": "watched",
+    "x": 0.4,
+    "y": 0.83,
+    "rating": 4.0,
+    "color": "#6FB3CF"
+   },
+   {
+    "tmdb_id": 496243,
+    "title": "Parasite",
+    "kind": "watched",
+    "x": 0.74,
+    "y": 0.62,
+    "rating": 4.5,
+    "color": "#2E3A33"
+   },
+   {
+    "tmdb_id": 60243,
+    "title": "A Separation",
+    "kind": "watched",
+    "x": 0.6,
+    "y": 0.57,
+    "rating": 5.0,
+    "color": "#6B5B4B"
+   },
+   {
+    "tmdb_id": 64690,
+    "title": "Drive",
+    "kind": "watched",
+    "x": 0.82,
+    "y": 0.74,
+    "rating": 3.5,
+    "color": "#E35A9B"
+   },
+   {
+    "tmdb_id": 76341,
+    "title": "Mad Max: Fury Road",
+    "kind": "watched",
+    "x": 0.86,
+    "y": 0.56,
+    "rating": 4.0,
+    "color": "#E8A33D"
+   },
+   {
+    "tmdb_id": 129,
+    "title": "Spirited Away",
+    "kind": "watched",
+    "x": 0.88,
+    "y": 0.33,
+    "rating": 4.5,
+    "color": "#3F7F96"
+   },
+   {
+    "tmdb_id": 396371,
+    "title": "Columbus",
+    "kind": "suggested",
+    "x": 0.33,
+    "y": 0.47,
+    "score": 0.84,
+    "is_wildcard": false
+   },
+   {
+    "tmdb_id": 11104,
+    "title": "Chungking Express",
+    "kind": "suggested",
+    "x": 0.12,
+    "y": 0.59,
+    "score": 0.82,
+    "is_wildcard": false
+   },
+   {
+    "tmdb_id": 593,
+    "title": "Solaris",
+    "kind": "suggested",
+    "x": 0.35,
+    "y": 0.18,
+    "score": 0.87,
+    "is_wildcard": false
+   },
+   {
+    "tmdb_id": 30017,
+    "title": "Close-Up",
+    "kind": "suggested",
+    "x": 0.45,
+    "y": 0.49,
+    "score": 0.76,
+    "is_wildcard": false
+   },
+   {
+    "tmdb_id": 146233,
+    "title": "Prisoners",
+    "kind": "suggested",
+    "x": 0.7,
+    "y": 0.44,
+    "score": 0.79,
+    "is_wildcard": false
+   },
+   {
+    "tmdb_id": 491584,
+    "title": "Burning",
+    "kind": "suggested",
+    "x": 0.67,
+    "y": 0.72,
+    "score": 0.77,
+    "is_wildcard": false
+   },
+   {
+    "tmdb_id": 25623,
+    "title": "House",
+    "kind": "suggested",
+    "x": 0.92,
+    "y": 0.88,
+    "score": 0.41,
+    "is_wildcard": true
+   }
+  ],
+  "candidates_note": "unseen candidate dots are generated with the seeded PRNG in design/reference/TasteMap.dc.html (seed 7)",
+  "clusters": [
+   {
+    "label": "SLOW & CONTEMPLATIVE",
+    "x": 0.2,
+    "y": 0.12
+   },
+   {
+    "label": "CEREBRAL SCI-FI",
+    "x": 0.64,
+    "y": 0.06
+   },
+   {
+    "label": "LONGING & DISTANCE",
+    "x": 0.27,
+    "y": 0.92
+   },
+   {
+    "label": "TENSE & SOCIAL",
+    "x": 0.76,
+    "y": 0.84
+   },
+   {
+    "label": "ANIMATION",
+    "x": 0.88,
+    "y": 0.23
+   }
+  ],
+  "explain": {
+   "396371": {
+    "nearest": [
+     {
+      "tmdb_id": 666277,
+      "title": "Past Lives",
+      "rating": 4.5,
+      "similarity": 0.81
+     },
+     {
+      "tmdb_id": 976893,
+      "title": "Perfect Days",
+      "rating": 4.5,
+      "similarity": 0.78
+     },
+     {
+      "tmdb_id": 965150,
+      "title": "Aftersun",
+      "rating": 4.0,
+      "similarity": 0.71
+     }
+    ],
+    "note": "Sits between your quiet-everyday films and your longing-and-distance ones, a gap nothing you have watched fills yet."
+   },
+   "11104": {
+    "nearest": [
+     {
+      "tmdb_id": 843,
+      "title": "In the Mood for Love",
+      "rating": 5.0,
+      "similarity": 0.86
+     },
+     {
+      "tmdb_id": 152601,
+      "title": "Her",
+      "rating": 4.0,
+      "similarity": 0.66
+     },
+     {
+      "tmdb_id": 666277,
+      "title": "Past Lives",
+      "rating": 4.5,
+      "similarity": 0.63
+     }
+    ],
+    "note": "Same director as your highest-rated romance; the model also leans on your thumbs-up from last week."
+   },
+   "593": {
+    "nearest": [
+     {
+      "tmdb_id": 1398,
+      "title": "Stalker",
+      "rating": 5.0,
+      "similarity": 0.84
+     },
+     {
+      "tmdb_id": 157336,
+      "title": "Interstellar",
+      "rating": 4.5,
+      "similarity": 0.79
+     },
+     {
+      "tmdb_id": 329865,
+      "title": "Arrival",
+      "rating": 4.5,
+      "similarity": 0.74
+     }
+    ],
+    "note": "Bridges your slow-cinema cluster and your cerebral sci-fi cluster."
+   },
+   "30017": {
+    "nearest": [
+     {
+      "tmdb_id": 60243,
+      "title": "A Separation",
+      "rating": 5.0,
+      "similarity": 0.72
+     },
+     {
+      "tmdb_id": 976893,
+      "title": "Perfect Days",
+      "rating": 4.5,
+      "similarity": 0.69
+     },
+     {
+      "tmdb_id": 1398,
+      "title": "Stalker",
+      "rating": 5.0,
+      "similarity": 0.61
+     }
+    ],
+    "note": "Pulled in by A Separation and your Kiarostami history."
+   },
+   "146233": {
+    "nearest": [
+     {
+      "tmdb_id": 329865,
+      "title": "Arrival",
+      "rating": 4.5,
+      "similarity": 0.74
+     },
+     {
+      "tmdb_id": 335984,
+      "title": "Blade Runner 2049",
+      "rating": 5.0,
+      "similarity": 0.7
+     },
+     {
+      "tmdb_id": 496243,
+      "title": "Parasite",
+      "rating": 4.5,
+      "similarity": 0.66
+     }
+    ],
+    "note": "Your most-watched director, from his thriller side rather than sci-fi."
+   },
+   "491584": {
+    "nearest": [
+     {
+      "tmdb_id": 496243,
+      "title": "Parasite",
+      "rating": 4.5,
+      "similarity": 0.8
+     },
+     {
+      "tmdb_id": 60243,
+      "title": "A Separation",
+      "rating": 5.0,
+      "similarity": 0.68
+     },
+     {
+      "tmdb_id": 64690,
+      "title": "Drive",
+      "rating": 3.5,
+      "similarity": 0.55
+     }
+    ],
+    "note": "Close to Parasite in both story and structure features."
+   },
+   "25623": {
+    "nearest": [
+     {
+      "tmdb_id": 129,
+      "title": "Spirited Away",
+      "rating": 4.5,
+      "similarity": 0.42
+     },
+     {
+      "tmdb_id": 152601,
+      "title": "Her",
+      "rating": 4.0,
+      "similarity": 0.31
+     },
+     {
+      "tmdb_id": 64690,
+      "title": "Drive",
+      "rating": 3.5,
+      "similarity": 0.29
+     }
+    ],
+    "note": "A wildcard: deliberately far from everything you rate highly, so the model keeps learning outside its comfort zone."
+   }
+  },
+  "default_selected": 396371
+ }
+}

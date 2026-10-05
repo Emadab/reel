@@ -1,0 +1,1399 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Stats</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet"><style>
+body{margin:0;background:#07080C}
+a{color:#ECEEF3}a:hover{color:#FFFFFF}
+.nav:hover{background:rgba(255,255,255,0.05)}
+.cell:hover{outline:1.5px solid #FFFFFF;outline-offset:1px}
+.bar:hover .fill{filter:brightness(1.25)}
+</style></head>
+<body data-rendered="1">
+
+
+<div style="min-height: 100vh; background: #07080C; color: #ECEEF3; font-family: Geist, 'Segoe UI', system-ui, sans-serif; display: flex; flex-wrap: wrap; position: relative; overflow: hidden">
+
+  <nav aria-label="Primary" style="flex: 1 1 220px; max-width: 100%; display: flex; flex-direction: column; gap: 28px; padding: 28px 18px; box-sizing: border-box; border-right: 1px solid rgba(255,255,255,0.07); position: relative">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 10px">
+      <div style="width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid #7FDBFF; display: grid; place-items: center; box-sizing: border-box"><div style="width: 8px; height: 8px; border-radius: 50%; background: #7FDBFF; box-shadow: 0 0 12px #7FDBFF"></div></div>
+      <span style="font-family: Unbounded, sans-serif; font-weight: 600; font-size: 17px; letter-spacing: 0.02em">Reel</span>
+    </div>
+    <a href="Search.dc.html" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #A3A9B6; text-decoration: none; font-size: 14px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="flex: 1; white-space: nowrap">Search</span>
+      <kbd style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B6; border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 2px 6px">Ctrl K</kbd>
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <a class="nav" href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="10" rx="1.5"></rect><rect x="14" y="3" width="7" height="10" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect><rect x="14" y="16" width="7" height="5" rx="1.5"></rect></svg>
+        <span>Library</span>
+      </a>
+      <a class="nav" href="Timeline.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 12h18"></path><circle cx="7" cy="12" r="2"></circle><circle cx="16" cy="12" r="2"></circle><path d="M7 5v3M16 16v3M12 5v3"></path></svg>
+        <span>Timeline</span>
+      </a>
+      <a href="Stats.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.08); color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6M3 20h18"></path></svg>
+        <span style="flex: 1">Stats</span><span style="width: 6px; height: 6px; border-radius: 50%; background: #7FDBFF"></span>
+      </a>
+      <a class="nav" href="ForYou.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"></path></svg>
+        <span>For you</span>
+      </a>
+      <a class="nav" href="TasteMap.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="6" cy="7" r="2"></circle><circle cx="17" cy="6" r="1.5"></circle><circle cx="10" cy="16" r="2.5"></circle><circle cx="18.5" cy="16.5" r="1.5"></circle></svg>
+        <span>Taste map</span>
+      </a>
+    </div>
+    <p style="margin: auto 0 0; padding: 0 10px; font-size: 11px; line-height: 1.5; color: #8E95A3">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 36px 48px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px">
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px">
+      <h1 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 600; font-size: 40px; letter-spacing: -0.01em">Stats</h1>
+      <div role="group" aria-label="Range" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08)">
+        
+          <button type="button" aria-pressed="true" style="height: 36px; padding: 0 16px; border: 0; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; background: rgba(255,255,255,0.12); color: #FFFFFF">All time</button>
+        
+          <button type="button" aria-pressed="false" style="height: 36px; padding: 0 16px; border: 0; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; background: transparent; color: #A3A9B6">2026</button>
+        
+      </div>
+    </header>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 16px">
+      
+        <div style="padding: 22px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 10px">
+          <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">FILMS</span>
+          <span style="font-family: Unbounded, sans-serif; font-weight: 500; font-size: 40px; line-height: 1">312</span>
+          <span style="font-size: 13px; color: #8E95A3">486 watches, 41 rewatched</span>
+        </div>
+      
+        <div style="padding: 22px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 10px">
+          <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">HOURS</span>
+          <span style="font-family: Unbounded, sans-serif; font-weight: 500; font-size: 40px; line-height: 1">1,012</span>
+          <span style="font-size: 13px; color: #8E95A3">about 42 days of film</span>
+        </div>
+      
+        <div style="padding: 22px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 10px">
+          <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">VIEWING DAYS</span>
+          <span style="font-family: Unbounded, sans-serif; font-weight: 500; font-size: 40px; line-height: 1">451</span>
+          <span style="font-size: 13px; color: #8E95A3">since 2014</span>
+        </div>
+      
+        <div style="padding: 22px; border-radius: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 10px">
+          <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">AVERAGE RATING</span>
+          <span style="font-family: Unbounded, sans-serif; font-weight: 500; font-size: 40px; line-height: 1">3.6</span>
+          <span style="font-size: 13px; color: #8E95A3">out of 5</span>
+        </div>
+      
+    </div>
+
+    <section aria-label="Viewing days, last 12 months" style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px">
+        <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Viewing days <span style="font-family: Geist, sans-serif; font-weight: 400; font-size: 14px; color: #A3A9B6">· last 12 months · 31 days</span></h2>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #A3A9B6">
+          <span>none</span>
+          <span style="width: 13px; height: 13px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+          <span style="width: 13px; height: 13px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+          <span style="width: 13px; height: 13px; border-radius: 3px; background: #7FDBFF"></span>
+          <span>2 films</span>
+        </div>
+      </div>
+      <div style="overflow-x: auto">
+        <div style="display: flex; flex-direction: column; gap: 6px; width: max-content">
+          <div style="display: flex; gap: 3px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #8E95A3; padding-left: 30px">
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Oct</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Nov</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Dec</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Jan</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Feb</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Mar</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Apr</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">May</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Jun</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Jul</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Aug</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Sep</span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible"></span>
+            
+              <span style="width: 14px; white-space: nowrap; overflow: visible">Oct</span>
+            
+          </div>
+          <div style="display: flex; gap: 3px">
+            <div style="width: 27px; display: flex; flex-direction: column; gap: 3px; font-family: 'Geist Mono', monospace; font-size: 10px; color: #8E95A3">
+              <span style="height: 14px">Mon</span><span style="height: 14px"></span><span style="height: 14px">Wed</span><span style="height: 14px"></span><span style="height: 14px">Fri</span><span style="height: 14px"></span><span style="height: 14px">Sun</span>
+            </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Oct 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 11: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Oct 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Oct 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 18: 2 films" style="width: 14px; height: 14px; border-radius: 3px; background: #7FDBFF"></span>
+                
+                  <span class="cell" title="Oct 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Oct 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 25: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Oct 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Oct 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 31: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 2: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Nov 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 8: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Nov 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Nov 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 15: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Nov 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Nov 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 21: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Nov 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Nov 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Nov 29: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Nov 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Dec 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 6: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Dec 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Dec 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 13: 2 films" style="width: 14px; height: 14px; border-radius: 3px; background: #7FDBFF"></span>
+                
+                  <span class="cell" title="Dec 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Dec 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 20: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Dec 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Dec 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 25: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Dec 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 27: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Dec 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Dec 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Dec 31: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Jan 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jan 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jan 12: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Jan 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jan 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jan 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 27: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Jan 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jan 31: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Feb 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 8: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Feb 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Feb 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Feb 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Feb 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 1: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Mar 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Mar 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Mar 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 19: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Mar 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Mar 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Mar 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Mar 31: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 5: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Apr 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Apr 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Apr 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Apr 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Apr 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="May 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="May 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 17: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="May 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="May 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="May 30: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="May 31: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jun 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jun 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 14: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jun 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jun 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jun 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jun 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 2: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Jul 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jul 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jul 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jul 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 21: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Jul 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Jul 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Jul 31: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Aug 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 6: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 9: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Aug 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Aug 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 20: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 23: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Aug 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 28: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Aug 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Aug 31: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 3: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 6: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Sep 7: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 8: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 9: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 10: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 11: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 12: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 13: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Sep 14: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 15: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 16: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 17: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 18: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 19: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 20: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Sep 21: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 22: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 23: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 24: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 25: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 26: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 27: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Sep 28: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Sep 29: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Sep 30: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 1: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 2: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="Oct 3: 1 film" style="width: 14px; height: 14px; border-radius: 3px; background: color-mix(in oklch, #7FDBFF 55%, #07080C)"></span>
+                
+                  <span class="cell" title="Oct 4: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+              </div>
+            
+              <div style="display: flex; flex-direction: column; gap: 3px">
+                
+                  <span class="cell" title="Oct 5: no films" style="width: 14px; height: 14px; border-radius: 3px; background: rgba(255,255,255,0.05)"></span>
+                
+                  <span class="cell" title="" style="width: 14px; height: 14px; border-radius: 3px; background: transparent"></span>
+                
+                  <span class="cell" title="" style="width: 14px; height: 14px; border-radius: 3px; background: transparent"></span>
+                
+                  <span class="cell" title="" style="width: 14px; height: 14px; border-radius: 3px; background: transparent"></span>
+                
+                  <span class="cell" title="" style="width: 14px; height: 14px; border-radius: 3px; background: transparent"></span>
+                
+                  <span class="cell" title="" style="width: 14px; height: 14px; border-radius: 3px; background: transparent"></span>
+                
+                  <span class="cell" title="" style="width: 14px; height: 14px; border-radius: 3px; background: transparent"></span>
+                
+              </div>
+            
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 16px">
+      <section style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Genres</h2>
+        <svg viewBox="-30 0 380 300" role="img" aria-label="Genre profile: Drama 95%, Sci-fi 70%, Romance 55%, Thriller 45%, Animation 25%, Comedy 20%" style="width: 100%; height: auto">
+          
+            <polygon points="160.0,123.8 182.7,136.9 182.7,163.1 160.0,176.3 137.3,163.1 137.3,136.9" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1"></polygon>
+          
+            <polygon points="160.0,97.5 205.5,123.8 205.5,176.3 160.0,202.5 114.5,176.3 114.5,123.8" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1"></polygon>
+          
+            <polygon points="160.0,71.3 228.2,110.6 228.2,189.4 160.0,228.8 91.8,189.4 91.8,110.6" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1"></polygon>
+          
+            <polygon points="160.0,45.0 250.9,97.5 250.9,202.5 160.0,255.0 69.1,202.5 69.1,97.5" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1"></polygon>
+          
+          
+            <line x1="160" y1="150" x2="160.0" y2="45.0" stroke="rgba(255,255,255,0.09)" stroke-width="1"></line>
+          
+            <line x1="160" y1="150" x2="250.9" y2="97.5" stroke="rgba(255,255,255,0.09)" stroke-width="1"></line>
+          
+            <line x1="160" y1="150" x2="250.9" y2="202.5" stroke="rgba(255,255,255,0.09)" stroke-width="1"></line>
+          
+            <line x1="160" y1="150" x2="160.0" y2="255.0" stroke="rgba(255,255,255,0.09)" stroke-width="1"></line>
+          
+            <line x1="160" y1="150" x2="69.1" y2="202.5" stroke="rgba(255,255,255,0.09)" stroke-width="1"></line>
+          
+            <line x1="160" y1="150" x2="69.1" y2="97.5" stroke="rgba(255,255,255,0.09)" stroke-width="1"></line>
+          
+          <polygon points="160.0,50.3 223.7,113.3 210.0,178.9 160.0,197.3 137.3,163.1 141.8,139.5" fill="color-mix(in oklch, #7FDBFF 22%, transparent)" stroke="#7FDBFF" stroke-width="2" stroke-linejoin="round"></polygon>
+          
+            <circle cx="160.0" cy="50.3" r="4" fill="#7FDBFF" stroke="#101218" stroke-width="2"><title>Drama: 95% of your top genre</title></circle>
+          
+            <circle cx="223.7" cy="113.3" r="4" fill="#7FDBFF" stroke="#101218" stroke-width="2"><title>Sci-fi: 70% of your top genre</title></circle>
+          
+            <circle cx="210.0" cy="178.9" r="4" fill="#7FDBFF" stroke="#101218" stroke-width="2"><title>Romance: 55% of your top genre</title></circle>
+          
+            <circle cx="160.0" cy="197.3" r="4" fill="#7FDBFF" stroke="#101218" stroke-width="2"><title>Thriller: 45% of your top genre</title></circle>
+          
+            <circle cx="137.3" cy="163.1" r="4" fill="#7FDBFF" stroke="#101218" stroke-width="2"><title>Animation: 25% of your top genre</title></circle>
+          
+            <circle cx="141.8" cy="139.5" r="4" fill="#7FDBFF" stroke="#101218" stroke-width="2"><title>Comedy: 20% of your top genre</title></circle>
+          
+          
+            <text x="160.0" y="24.0" text-anchor="middle" dominant-baseline="middle" fill="#C3C8D1" font-size="12" font-family="Geist, sans-serif">Drama</text>
+          
+            <text x="269.1" y="87.0" text-anchor="start" dominant-baseline="middle" fill="#C3C8D1" font-size="12" font-family="Geist, sans-serif">Sci-fi</text>
+          
+            <text x="269.1" y="213.0" text-anchor="start" dominant-baseline="middle" fill="#C3C8D1" font-size="12" font-family="Geist, sans-serif">Romance</text>
+          
+            <text x="160.0" y="276.0" text-anchor="middle" dominant-baseline="middle" fill="#C3C8D1" font-size="12" font-family="Geist, sans-serif">Thriller</text>
+          
+            <text x="50.9" y="213.0" text-anchor="end" dominant-baseline="middle" fill="#C3C8D1" font-size="12" font-family="Geist, sans-serif">Animation</text>
+          
+            <text x="50.9" y="87.0" text-anchor="end" dominant-baseline="middle" fill="#C3C8D1" font-size="12" font-family="Geist, sans-serif">Comedy</text>
+          
+        </svg>
+      </section>
+
+      <section style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 22px">
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Top directors</h2>
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Denis Villeneuve</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">9</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 100%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Christopher Nolan</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">8</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 89%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Wong Kar-wai</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">6</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 67%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Abbas Kiarostami</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">5</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 56%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Bong Joon-ho</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">5</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 56%"></span></span>
+              </li>
+            
+          </ol>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Top actors</h2>
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Ryan Gosling</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">7</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 100%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Tony Leung Chiu-wai</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">5</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 71%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Timothée Chalamet</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">5</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 71%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Song Kang-ho</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">4</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 57%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center">
+                <span style="font-size: 14px">Cillian Murphy</span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #C3C8D1">4</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 57%"></span></span>
+              </li>
+            
+          </ol>
+        </div>
+      </section>
+
+      <section style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Your ratings</h2>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B6">mean 3.6</span>
+        </div>
+        <div style="flex: 1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; align-items: end; min-height: 220px">
+          
+            <div class="bar" title="0.5 stars: 2 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">2</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 4px"></span>
+            </div>
+          
+            <div class="bar" title="1.0 stars: 4 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">4</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 7px"></span>
+            </div>
+          
+            <div class="bar" title="1.5 stars: 5 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">5</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 9px"></span>
+            </div>
+          
+            <div class="bar" title="2.0 stars: 11 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">11</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 20px"></span>
+            </div>
+          
+            <div class="bar" title="2.5 stars: 18 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">18</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 33px"></span>
+            </div>
+          
+            <div class="bar" title="3.0 stars: 46 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">46</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 85px"></span>
+            </div>
+          
+            <div class="bar" title="3.5 stars: 71 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">71</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 131px"></span>
+            </div>
+          
+            <div class="bar" title="4.0 stars: 92 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">92</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 170px"></span>
+            </div>
+          
+            <div class="bar" title="4.5 stars: 48 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">48</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 89px"></span>
+            </div>
+          
+            <div class="bar" title="5.0 stars: 15 films" style="display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; height: 100%">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #C3C8D1">15</span>
+              <span class="fill" style="border-radius: 4px 4px 0 0; background: #7FDBFF; height: 28px"></span>
+            </div>
+          
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; border-top: 1px solid rgba(255,255,255,0.12); padding-top: 8px">
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">0.5</span>
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">1</span>
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">1.5</span>
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">2</span>
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">2.5</span>
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">3</span>
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">3.5</span>
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">4</span>
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">4.5</span>
+          
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; text-align: center; color: #8E95A3">5</span>
+          
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+
+
+
+</body></html>

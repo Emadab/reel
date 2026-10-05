@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Search and log a watch</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet"><style>
+body{margin:0;background:#07080C}
+a{color:#ECEEF3}a:hover{color:#FFFFFF}
+input,textarea{color-scheme:dark}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid #7FDBFF;outline-offset:2px}
+.row:hover{background:rgba(255,255,255,0.05)}
+</style></head>
+<body data-rendered="1">
+
+
+<div style="min-height: 100vh; background: #07080C; color: #ECEEF3; font-family: Geist, 'Segoe UI', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; justify-content: center; padding: 72px 16px 48px; box-sizing: border-box">
+  <div aria-hidden="true" style="position: absolute; inset: 0; padding: 140px 60px 0 300px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 28px 20px; filter: blur(10px); opacity: 0.55">
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #2F5A4C"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #233A57"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #C46A2F"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #8E1A1F"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #B9BFC0"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #6FB3CF"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #E8A33D"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #C9572A"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #1A1210"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #E35A9B"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #2E3A33"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #3F7F96"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #E06A55"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #2E3F94"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #6B5B4B"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #CFC8B8"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #5C6640"></div>
+    
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: #1E2B33"></div>
+    
+  </div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(4,5,8,0.62)"></div>
+
+  <div role="dialog" aria-modal="true" aria-label="Search films" style="position: relative; width: 100%; max-width: 760px; align-self: flex-start; border-radius: 24px; background: rgba(20,22,30,0.72); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(40px) saturate(140%); box-shadow: 0 60px 120px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.4); overflow: hidden">
+    <div style="display: flex; align-items: center; gap: 14px; padding: 0 22px; height: 68px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A3A9B6" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">Search films</label>
+      <input id="q" type="search" value="drive" placeholder="Search any film…" autocomplete="off" style="flex: 1 1 0%; min-width: 0px; height: 44px; border: 0px; background: transparent; color: rgb(255, 255, 255); font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-optical-sizing: inherit; font-size-adjust: inherit; font-kerning: inherit; font-feature-settings: inherit; font-variation-settings: inherit; font-size: 20px; outline: none;">
+      <kbd style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B6; border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 3px 7px">Esc</kbd>
+    </div>
+
+    <div style="padding: 14px 12px 6px">
+      <div style="display: flex; justify-content: space-between; padding: 0 12px 8px; font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: #8E95A3">
+        <span>TMDB · 4 RESULTS</span><span>debounced 180 ms</span>
+      </div>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px">
+        
+          <li>
+            <button type="button" class="row" aria-pressed="false" style="width: 100%; display: flex; align-items: center; gap: 14px; padding: 8px 12px; border-radius: 14px; font: inherit; color: inherit; text-align: left; cursor: pointer; background: transparent; border: 1px solid transparent">
+              <span style="width: 36px; height: 54px; border-radius: 6px; flex: none; background: #E35A9B"></span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                <span style="font-size: 15px; font-weight: 500">Drive <span style="font-family: 'Geist Mono', monospace; font-weight: 400; font-size: 13px; color: #A3A9B6">2011</span></span>
+                <span style="font-size: 13px; color: #A3A9B6">Nicolas Winding Refn</span>
+              </span>
+              
+                <span style="font-family: 'Geist Mono', monospace; font-size: 11px; padding: 4px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); color: #C9CDD6">Seen 1×</span>
+              
+            </button>
+          </li>
+        
+          <li>
+            <button type="button" class="row" aria-pressed="true" style="width: 100%; display: flex; align-items: center; gap: 14px; padding: 8px 12px; border-radius: 14px; font: inherit; color: inherit; text-align: left; cursor: pointer; background: rgba(127,219,255,0.08); border: 1px solid color-mix(in oklch, #7FDBFF 55%, transparent)">
+              <span style="width: 36px; height: 54px; border-radius: 6px; flex: none; background: #B3342E"></span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                <span style="font-size: 15px; font-weight: 500">Drive My Car <span style="font-family: 'Geist Mono', monospace; font-weight: 400; font-size: 13px; color: #A3A9B6">2021</span></span>
+                <span style="font-size: 13px; color: #A3A9B6">Ryusuke Hamaguchi</span>
+              </span>
+              
+            </button>
+          </li>
+        
+          <li>
+            <button type="button" class="row" aria-pressed="false" style="width: 100%; display: flex; align-items: center; gap: 14px; padding: 8px 12px; border-radius: 14px; font: inherit; color: inherit; text-align: left; cursor: pointer; background: transparent; border: 1px solid transparent">
+              <span style="width: 36px; height: 54px; border-radius: 6px; flex: none; background: #1B2340"></span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                <span style="font-size: 15px; font-weight: 500">Mulholland Drive <span style="font-family: 'Geist Mono', monospace; font-weight: 400; font-size: 13px; color: #A3A9B6">2001</span></span>
+                <span style="font-size: 13px; color: #A3A9B6">David Lynch</span>
+              </span>
+              
+                <span style="font-family: 'Geist Mono', monospace; font-size: 11px; padding: 4px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); color: #C9CDD6">On watchlist</span>
+              
+            </button>
+          </li>
+        
+          <li>
+            <button type="button" class="row" aria-pressed="false" style="width: 100%; display: flex; align-items: center; gap: 14px; padding: 8px 12px; border-radius: 14px; font: inherit; color: inherit; text-align: left; cursor: pointer; background: transparent; border: 1px solid transparent">
+              <span style="width: 36px; height: 54px; border-radius: 6px; flex: none; background: #F2C14E"></span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                <span style="font-size: 15px; font-weight: 500">Baby Driver <span style="font-family: 'Geist Mono', monospace; font-weight: 400; font-size: 13px; color: #A3A9B6">2017</span></span>
+                <span style="font-size: 13px; color: #A3A9B6">Edgar Wright</span>
+              </span>
+              
+            </button>
+          </li>
+        
+      </ul>
+    </div>
+
+    <form style="margin: 6px 12px 12px; padding: 20px; border-radius: 18px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap">
+        <span style="font-family: Unbounded, sans-serif; font-weight: 500; font-size: 16px">Log Drive My Car (2021)</span>
+        <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: #8E95A3">FETCHES DETAILS + POSTER ON SAVE</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <label for="d" style="font-size: 12px; color: #A3A9B6">Watched on</label>
+          <input id="d" type="date" value="2026-10-04" style="height: 44px; padding: 0px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(0, 0, 0, 0.25); color: rgb(255, 255, 255); font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-optical-sizing: inherit; font-size-adjust: inherit; font-kerning: inherit; font-feature-settings: inherit; font-variation-settings: inherit; font-size: 14px;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span id="plabel" style="font-size: 12px; color: #A3A9B6">I remember the</span>
+          <div role="group" aria-labelledby="plabel" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1)">
+            
+              <button type="button" aria-pressed="true" style="height: 34px; padding: 0 14px; border: 0; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; background: #ECEEF3; color: #07080C">Day</button>
+            
+              <button type="button" aria-pressed="false" style="height: 34px; padding: 0 14px; border: 0; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; background: transparent; color: #C9CDD6">Month</button>
+            
+              <button type="button" aria-pressed="false" style="height: 34px; padding: 0 14px; border: 0; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; background: transparent; color: #C9CDD6">Year</button>
+            
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span id="rlabel" style="font-size: 12px; color: #A3A9B6">Rating · 4.5</span>
+          <div role="group" aria-labelledby="rlabel" style="display: flex; gap: 2px">
+            
+              <button type="button" aria-label="1 stars" style="width: 40px; height: 44px; border: 0; background: transparent; cursor: pointer; padding: 0; display: grid; place-items: center; color: #F5D88A">
+                <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="h1"><stop offset="100%" stop-color="currentColor"></stop><stop offset="100%" stop-color="transparent"></stop></linearGradient></defs><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" fill="url(#h1)" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+              </button>
+            
+              <button type="button" aria-label="2 stars" style="width: 40px; height: 44px; border: 0; background: transparent; cursor: pointer; padding: 0; display: grid; place-items: center; color: #F5D88A">
+                <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="h2"><stop offset="100%" stop-color="currentColor"></stop><stop offset="100%" stop-color="transparent"></stop></linearGradient></defs><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" fill="url(#h2)" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+              </button>
+            
+              <button type="button" aria-label="3 stars" style="width: 40px; height: 44px; border: 0; background: transparent; cursor: pointer; padding: 0; display: grid; place-items: center; color: #F5D88A">
+                <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="h3"><stop offset="100%" stop-color="currentColor"></stop><stop offset="100%" stop-color="transparent"></stop></linearGradient></defs><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" fill="url(#h3)" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+              </button>
+            
+              <button type="button" aria-label="4 stars" style="width: 40px; height: 44px; border: 0; background: transparent; cursor: pointer; padding: 0; display: grid; place-items: center; color: #F5D88A">
+                <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="h4"><stop offset="100%" stop-color="currentColor"></stop><stop offset="100%" stop-color="transparent"></stop></linearGradient></defs><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" fill="url(#h4)" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+              </button>
+            
+              <button type="button" aria-label="5 stars" style="width: 40px; height: 44px; border: 0; background: transparent; cursor: pointer; padding: 0; display: grid; place-items: center; color: #F5D88A">
+                <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="h5"><stop offset="50%" stop-color="currentColor"></stop><stop offset="50%" stop-color="transparent"></stop></linearGradient></defs><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" fill="url(#h5)" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+              </button>
+            
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 14px">
+        <label style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); font-size: 14px; cursor: pointer">
+          <input type="checkbox" style="width: 18px; height: 18px; accent-color: rgb(127, 219, 255);">
+          Rewatch
+        </label>
+        <div style="flex: 1 1 180px; display: flex; flex-direction: column; gap: 0">
+          <label for="w" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">With whom</label>
+          <input id="w" type="text" placeholder="With whom (optional)" style="height: 44px; padding: 0px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(0, 0, 0, 0.25); color: rgb(255, 255, 255); font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-optical-sizing: inherit; font-size-adjust: inherit; font-kerning: inherit; font-feature-settings: inherit; font-variation-settings: inherit; font-size: 14px;">
+        </div>
+        <div style="flex: 1 1 180px; display: flex; flex-direction: column; gap: 0">
+          <label for="l" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">Where</label>
+          <input id="l" type="text" placeholder="Where (optional)" style="height: 44px; padding: 0px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(0, 0, 0, 0.25); color: rgb(255, 255, 255); font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-optical-sizing: inherit; font-size-adjust: inherit; font-kerning: inherit; font-feature-settings: inherit; font-variation-settings: inherit; font-size: 14px;">
+        </div>
+      </div>
+      <label for="n" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">Notes</label>
+      <textarea id="n" rows="2" placeholder="Notes" style="resize: vertical; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(0, 0, 0, 0.25); color: rgb(255, 255, 255); font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-optical-sizing: inherit; font-size-adjust: inherit; font-kerning: inherit; font-feature-settings: inherit; font-variation-settings: inherit; font-size: 14px;"></textarea>
+    </form>
+
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 22px; border-top: 1px solid rgba(255,255,255,0.08)">
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #A3A9B6">
+        <span style="display: flex; gap: 6px; align-items: center"><kbd style="font-family: 'Geist Mono', monospace; border: 1px solid rgba(255,255,255,0.14); border-radius: 5px; padding: 1px 6px">↑↓</kbd>choose</span>
+        <span style="display: flex; gap: 6px; align-items: center"><kbd style="font-family: 'Geist Mono', monospace; border: 1px solid rgba(255,255,255,0.14); border-radius: 5px; padding: 1px 6px">Tab</kbd>next field</span>
+        <span style="display: flex; gap: 6px; align-items: center"><kbd style="font-family: 'Geist Mono', monospace; border: 1px solid rgba(255,255,255,0.14); border-radius: 5px; padding: 1px 6px">Shift ↵</kbd>add to watchlist</span>
+      </div>
+      <a href="Detail.dc.html" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 18px; border-radius: 14px; background: #7FDBFF; color: #07080C; text-decoration: none; font-weight: 600; font-size: 14px">
+        Log watch
+        <kbd style="font-family: 'Geist Mono', monospace; font-size: 11px; border: 1px solid rgba(7,8,12,0.35); border-radius: 5px; padding: 1px 6px">↵</kbd>
+      </a>
+    </div>
+  </div>
+</div>
+
+
+
+
+</body></html>

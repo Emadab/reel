@@ -1,0 +1,11 @@
+[project]
+name = "backend"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "colorthief>=0.2.1",
+    "fastapi[standard]>=0.142.2",
+    "httpx>=0.28.1",
+    "python-dotenv>=1.2.4",
+    "sqlmodel>=0.0.47",
+]

@@ -1,0 +1,145 @@
+/* Reel: Tailwind CSS v4 theme. Copy to frontend/src/theme.css and import once in main.tsx.
+   Every value here is taken from the design files; do not round. */
+@import "tailwindcss";
+@import "@fontsource/unbounded/400.css";
+@import "@fontsource/unbounded/500.css";
+@import "@fontsource/unbounded/600.css";
+@import "@fontsource/geist/400.css";
+@import "@fontsource/geist/500.css";
+@import "@fontsource/geist/600.css";
+@import "@fontsource/geist-mono/400.css";
+@import "@fontsource/geist-mono/500.css";
+
+@theme {
+  /* Type */
+  --font-display: "Unbounded", sans-serif;
+  --font-sans: "Geist", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  /* Surfaces */
+  --color-bg: #07080C;            /* app background */
+  --color-bg-map: #0A0C11;        /* taste map canvas */
+  --color-bg-hero: #0A0E12;       /* detail hero base under the backdrop */
+  --color-bg-video: #0C1116;      /* trailer panel */
+  --color-bg-avatar: #141A20;     /* cast initials circle */
+  --color-bg-dialog: rgba(20, 22, 30, 0.72);
+  --color-scrim: rgba(4, 5, 8, 0.62);
+
+  /* Ink */
+  --color-ink: #ECEEF3;           /* primary text */
+  --color-ink-hi: #FFFFFF;        /* active nav, input text */
+  --color-ink-2: #C9CDD6;         /* secondary: chip text, inactive tabs */
+  --color-ink-2b: #C3C8D1;        /* secondary: meta lines, labels, values */
+  --color-ink-body: #D5D9E0;      /* notes, recommendation reasons */
+  --color-ink-3: #A3A9B6;         /* muted: nav items, captions */
+  --color-ink-3b: #9AA1AE;        /* page header mono subline */
+  --color-ink-4: #8E95A3;         /* faint: director·date, footers, axis labels */
+  --color-ink-star: #E6E1C8;      /* ★ rating text */
+  --color-star-on: #F5D88A;       /* star control, filled */
+  --color-star-off: #5C6270;      /* star control, empty */
+  --color-on-accent: #07080C;     /* text on accent buttons */
+
+  /* Accent (user-selectable; default first) */
+  --color-accent: #7FDBFF;
+  --color-accent-lime: #C6F36B;
+  --color-accent-amber: #FFB86B;
+  --color-accent-violet: #C9A7FF;
+
+  /* Semantic */
+  --color-score: #8FD3C6;         /* recommendation % */
+  --color-wild: #F0B6DA;          /* wildcard tag, ring, border @35% */
+
+  /* Radii */
+  --radius-pill: 999px;
+  --radius-panel-xl: 26px;        /* For you top pick */
+  --radius-panel-lg: 24px;        /* dialog, taste map, map side panel */
+  --radius-panel: 22px;           /* glass panels, rec cards */
+  --radius-tile: 20px;            /* KPI tiles, trailer, health strip */
+  --radius-form: 18px;            /* log form inner panel */
+  --radius-poster-lg: 16px;       /* detail/top-pick poster, hero buttons */
+  --radius-btn: 14px;             /* primary button, segmented outer, palette rows */
+  --radius-ctl: 12px;             /* nav item, input, chip, poster */
+  --radius-seg: 10px;             /* segmented inner, small posters */
+  --radius-swatch: 8px;
+  --radius-badge: 6px;
+
+  /* Motion */
+  --ease-out-soft: cubic-bezier(.2, .7, .2, 1);
+}
+
+/* Lines and fills are white at fixed alphas; exposed as plain custom properties. */
+:root {
+  --line-nav: rgba(255,255,255,0.07);
+  --line-1: rgba(255,255,255,0.08);
+  --line-2: rgba(255,255,255,0.09);
+  --line-3: rgba(255,255,255,0.10);
+  --line-4: rgba(255,255,255,0.12);
+  --line-5: rgba(255,255,255,0.14);
+  --line-6: rgba(255,255,255,0.16);
+  --divider: rgba(255,255,255,0.06);
+  --fill-card: rgba(255,255,255,0.035);
+  --fill-glass: rgba(255,255,255,0.04);
+  --fill-ctl: rgba(255,255,255,0.05);
+  --fill-tag: rgba(255,255,255,0.06);
+  --fill-nav-active: rgba(255,255,255,0.08);
+  --fill-seg-active: rgba(255,255,255,0.12);
+  --fill-cell-empty: rgba(255,255,255,0.05);
+  --fill-input: rgba(0,0,0,0.25);
+  color-scheme: dark;
+}
+
+html, body { background: var(--color-bg); color: var(--color-ink); font-family: var(--font-sans); margin: 0; }
+a { color: var(--color-ink); }
+a:hover { color: var(--color-ink-hi); }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+/* ---- Reusable recipes ---- */
+@utility glass {
+  background: var(--fill-glass);
+  border: 1px solid var(--line-2);
+  backdrop-filter: blur(24px);
+}
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+@utility title-page {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 40px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+@utility title-section {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 18px;
+}
+
+/* Poster wall hover tilt (Library) */
+.poster-card .poster-art { transition: transform .4s var(--ease-out-soft), box-shadow .4s; }
+.poster-card:hover .poster-art,
+.poster-card:focus-visible .poster-art { transform: perspective(900px) rotateX(5deg) rotateY(-7deg) translateY(-6px); }
+.poster-card:focus-visible { outline: none; }
+.poster-card:focus-visible .poster-art { outline: 2px solid var(--color-accent); outline-offset: 4px; }
+
+/* Timeline poster hover */
+.timeline-poster .poster-art { transition: transform .35s var(--ease-out-soft); }
+.timeline-poster:hover .poster-art { transform: translateY(-6px) scale(1.04); }
+
+/* Neighbour mini posters (Detail) */
+.mini-poster .poster-art { transition: transform .4s var(--ease-out-soft); }
+.mini-poster:hover .poster-art { transform: perspective(700px) rotateY(-8deg) translateY(-4px); }
+
+/* Taste map selected-ring pulse */
+@keyframes pulse-ring { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(2.6); opacity: 0; } }
+.pulse-ring { animation: pulse-ring 2.2s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .poster-card .poster-art, .timeline-poster .poster-art, .mini-poster .poster-art { transition: none; }
+  .poster-card:hover .poster-art, .timeline-poster:hover .poster-art, .mini-poster:hover .poster-art { transform: none; }
+  .pulse-ring { animation: none; opacity: .5; }
+}

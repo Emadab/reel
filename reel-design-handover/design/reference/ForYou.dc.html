@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>For you</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#07080C}
+a{color:#ECEEF3}a:hover{color:#FFFFFF}
+.nav:hover{background:rgba(255,255,255,0.05)}
+.ib:hover{background:rgba(255,255,255,0.1)}
+button:focus-visible,a:focus-visible{outline:2px solid #7FDBFF;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #07080C; color: #ECEEF3; font-family: Geist, 'Segoe UI', system-ui, sans-serif; display: flex; flex-wrap: wrap; position: relative; overflow: hidden">
+
+  <nav aria-label="Primary" style="flex: 1 1 220px; max-width: 100%; display: flex; flex-direction: column; gap: 28px; padding: 28px 18px; box-sizing: border-box; border-right: 1px solid rgba(255,255,255,0.07); position: relative; z-index: 1; background: #07080C">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 10px">
+      <div style="width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid {{accent}}; display: grid; place-items: center; box-sizing: border-box"><div style="width: 8px; height: 8px; border-radius: 50%; background: {{accent}}; box-shadow: 0 0 12px {{accent}}"></div></div>
+      <span style="font-family: Unbounded, sans-serif; font-weight: 600; font-size: 17px; letter-spacing: 0.02em">Reel</span>
+    </div>
+    <a href="Search.dc.html" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #A3A9B6; text-decoration: none; font-size: 14px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="flex: 1; white-space: nowrap">Search</span>
+      <kbd style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B6; border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 2px 6px">Ctrl K</kbd>
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <a class="nav" href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="10" rx="1.5"></rect><rect x="14" y="3" width="7" height="10" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect><rect x="14" y="16" width="7" height="5" rx="1.5"></rect></svg>
+        <span>Library</span>
+      </a>
+      <a class="nav" href="Timeline.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 12h18"></path><circle cx="7" cy="12" r="2"></circle><circle cx="16" cy="12" r="2"></circle><path d="M7 5v3M16 16v3M12 5v3"></path></svg>
+        <span>Timeline</span>
+      </a>
+      <a class="nav" href="Stats.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6M3 20h18"></path></svg>
+        <span>Stats</span>
+      </a>
+      <a href="ForYou.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.08); color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"></path></svg>
+        <span style="flex: 1">For you</span><span style="width: 6px; height: 6px; border-radius: 50%; background: {{accent}}"></span>
+      </a>
+      <a class="nav" href="TasteMap.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="6" cy="7" r="2"></circle><circle cx="17" cy="6" r="1.5"></circle><circle cx="10" cy="16" r="2.5"></circle><circle cx="18.5" cy="16.5" r="1.5"></circle></svg>
+        <span>Taste map</span>
+      </a>
+    </div>
+    <p style="margin: auto 0 0; padding: 0 10px; font-size: 11px; line-height: 1.5; color: #8E95A3">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 36px 48px 64px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; position: relative">
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h1 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 600; font-size: 40px; letter-spacing: -0.01em">For you</h1>
+        <p style="margin: 0; font-family: 'Geist Mono', monospace; font-size: 13px; color: #9AA1AE">ranked by model v2 · learned from 214 ratings + 63 reactions · updated 2 min ago</p>
+      </div>
+      <div role="group" aria-label="Show" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08)">
+        <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+          <button type="button" aria-pressed="{{t.pressed}}" onClick="{{t.pick}}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; background: {{t.bg}}; color: {{t.fg}}">{{t.label}}</button>
+        </sc-for>
+      </div>
+    </header>
+
+    <section aria-label="Top pick" style="position: relative; display: flex; flex-wrap: wrap; gap: 36px; padding: 28px; border-radius: 26px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(24px); overflow: hidden">
+      <div aria-hidden="true" style="position: absolute; right: -120px; top: -200px; width: 760px; height: 560px; background: radial-gradient(closest-side, rgba(94, 160, 150, 0.32), rgba(94, 160, 150, 0)); pointer-events: none"></div>
+      <div style="position: relative; width: 190px; aspect-ratio: 2 / 3; border-radius: 16px; background: #24343A; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 18px; box-sizing: border-box; box-shadow: 0 34px 70px -30px #5EA096">
+        <div style="position: absolute; right: -18%; top: 16%; width: 80%; aspect-ratio: 1; border-radius: 50%; opacity: 0.2; background: #D9E6E0"></div>
+        <span style="position: relative; font-family: 'Geist Mono', monospace; font-size: 12px; color: #D9E6E0">1972</span>
+        <span style="position: relative; font-family: Unbounded, sans-serif; font-weight: 600; font-size: 22px; color: #D9E6E0">Solaris</span>
+      </div>
+      <div style="position: relative; flex: 1 1 380px; display: flex; flex-direction: column; gap: 14px">
+        <span style="font-family: 'Geist Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: #8FD3C6">TOP PICK TONIGHT</span>
+        <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 600; font-size: 44px; line-height: 1.05">Solaris</h2>
+        <p style="margin: 0; font-size: 15px; color: #C3C8D1">Andrei Tarkovsky · 1972 · 2h 47m · Science Fiction, Drama</p>
+        <p style="margin: 4px 0 0; font-size: 17px; line-height: 1.5">Because you loved <a href="Detail.dc.html" style="color: #FFFFFF">Stalker</a> <span style="font-family: 'Geist Mono', monospace; color: #E6E1C8">★ 5.0</span> and <a href="Detail.dc.html" style="color: #FFFFFF">Interstellar</a> <span style="font-family: 'Geist Mono', monospace; color: #E6E1C8">★ 4.5</span></p>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <span style="height: 30px; display: flex; align-items: center; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); font-size: 13px; color: #C9CDD6">same director as Stalker</span>
+          <span style="height: 30px; display: flex; align-items: center; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); font-size: 13px; color: #C9CDD6">space station</span>
+          <span style="height: 30px; display: flex; align-items: center; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); font-size: 13px; color: #C9CDD6">grief</span>
+          <span style="height: 30px; display: flex; align-items: center; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); font-size: 13px; color: #C9CDD6">memory</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px">
+          <button type="button" style="display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 20px; border: 0; border-radius: 14px; background: {{accent}}; color: #07080C; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg>
+            Add to watchlist
+          </button>
+          <button type="button" class="ib" style="height: 46px; padding: 0 18px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: #ECEEF3; font: inherit; font-size: 14px; cursor: pointer">Seen it, rate it</button>
+          <button type="button" class="ib" style="height: 46px; padding: 0 18px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: #ECEEF3; font: inherit; font-size: 14px; cursor: pointer">Not interested</button>
+        </div>
+      </div>
+      <div style="position: relative; display: flex; flex-direction: column; align-items: flex-end; gap: 6px">
+        <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">CHANCE YOU RATE IT 4+</span>
+        <span style="font-family: Unbounded, sans-serif; font-weight: 500; font-size: 56px; line-height: 1; color: #8FD3C6">87%</span>
+      </div>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 16px">
+      <sc-for list="{{recs}}" as="r" hint-placeholder-count="6">
+        <article style="display: flex; gap: 18px; padding: 18px; border-radius: 22px; background: rgba(255,255,255,0.035); border: 1px solid {{r.border}}; opacity: {{r.opacity}}; transition: opacity .3s">
+          <div style="position: relative; width: 92px; flex: none; aspect-ratio: 2 / 3; border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; box-sizing: border-box; background: {{r.bg}}">
+            <span style="font-family: Unbounded, sans-serif; font-weight: 600; font-size: 11px; line-height: 1.15; color: {{r.fg}}">{{r.title}}</span>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+            <sc-if value="{{r.wild}}" hint-placeholder-val="{{ false }}">
+              <span style="align-self: flex-start; font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 6px; border: 1px dashed #F0B6DA; color: #F0B6DA">WILDCARD</span>
+            </sc-if>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px">
+              <h3 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 17px; line-height: 1.2">{{r.title}}</h3>
+              <span style="font-family: 'Geist Mono', monospace; font-size: 14px; color: {{r.scoreColor}}">{{r.score}}</span>
+            </div>
+            <span style="font-size: 13px; color: #A3A9B6">{{r.meta}}</span>
+            <p style="margin: 0; font-size: 14px; line-height: 1.45; color: #D5D9E0">{{r.why}}</p>
+            <div style="display: flex; gap: 6px; margin-top: auto; padding-top: 6px">
+              <button type="button" class="ib" aria-label="Add to watchlist" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: #ECEEF3; display: grid; place-items: center; cursor: pointer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg>
+              </button>
+              <button type="button" class="ib" aria-label="More like this" aria-pressed="{{r.likedPressed}}" onClick="{{r.like}}" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid {{r.likeBorder}}; background: {{r.likeBg}}; color: {{r.likeFg}}; display: grid; place-items: center; cursor: pointer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M7 11v9H4v-9zM7 11l4-8c1.7 0 2.8 1.3 2.5 3L13 9h5.5a2 2 0 012 2.3l-1.2 7A2 2 0 0117.3 20H7"></path></svg>
+              </button>
+              <button type="button" class="ib" aria-label="Not interested" aria-pressed="{{r.dismissedPressed}}" onClick="{{r.dismiss}}" style="width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: #ECEEF3; display: grid; place-items: center; cursor: pointer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M6 6l12 12"></path></svg>
+              </button>
+              <span style="margin-left: auto; align-self: center; font-size: 12px; color: #8E95A3">{{r.status}}</span>
+            </div>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+
+    <section aria-label="Recommender health" style="display: flex; flex-wrap: wrap; gap: 32px; align-items: center; padding: 20px 24px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.09)">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">HELD-OUT HIT RATE · TOP 20</span>
+        <span style="font-size: 15px">6 of your last 10 watches <span style="color: #A3A9B6">(v1 found 3)</span></span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">CANDIDATES</span>
+        <span style="font-size: 15px">412 from TMDB recs, discover and MovieLens</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">WILDCARD SHARE</span>
+        <span style="font-size: 15px">10% of slots</span>
+      </div>
+      <a href="TasteMap.dc.html" style="margin-left: auto; display: flex; align-items: center; height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); text-decoration: none; font-size: 14px">See why on the taste map</a>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FDBFF","options":["#7FDBFF","#C6F36B","#FFB86B","#C9A7FF"]},"$preview":{"width":1440,"height":1260}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'all', liked: { chungking: true }, dismissed: {} };
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#7FDBFF';
+    const tabs = [['all', 'All'], ['short', 'Under 2 hours'], ['wild', 'Wildcards']].map(([id, label]) => {
+      const on = this.state.tab === id;
+      return { label, pressed: on ? 'true' : 'false', bg: on ? 'rgba(255,255,255,0.12)' : 'transparent', fg: on ? '#FFFFFF' : '#A3A9B6', pick: () => this.setState({ tab: id }) };
+    });
+    const base = [
+      { id: 'columbus', title: 'Columbus', meta: 'Kogonada · 2017 · 1h 44m', min: 104, why: 'Because you loved Past Lives and Perfect Days', score: '84%', bg: '#D8D2C4', fg: '#22262A' },
+      { id: 'chungking', title: 'Chungking Express', meta: 'Wong Kar-wai · 1994 · 1h 42m', min: 102, why: 'Because you loved In the Mood for Love', score: '82%', bg: '#E5C43A', fg: '#14110A' },
+      { id: 'prisoners', title: 'Prisoners', meta: 'Denis Villeneuve · 2013 · 2h 33m', min: 153, why: 'Because you loved Arrival and Blade Runner 2049', score: '79%', bg: '#3C4A52', fg: '#E6ECEE' },
+      { id: 'burning', title: 'Burning', meta: 'Lee Chang-dong · 2018 · 2h 28m', min: 148, why: 'Because you loved Parasite', score: '77%', bg: '#B5552E', fg: '#170C06' },
+      { id: 'closeup', title: 'Close-Up', meta: 'Abbas Kiarostami · 1990 · 1h 38m', min: 98, why: 'Because you loved A Separation', score: '76%', bg: '#E9E4D6', fg: '#2A2722' },
+      { id: 'house', title: 'House', meta: 'Nobuhiko Obayashi · 1977 · 1h 28m', min: 88, why: 'Far from your usual taste: no genre or director overlap with your top 50.', score: '41%', bg: '#7A3FD0', fg: '#F6E9FF', wild: true }
+    ];
+    const t = this.state.tab;
+    const recs = base
+      .filter((r) => t === 'all' || (t === 'short' && r.min < 120) || (t === 'wild' && r.wild))
+      .map((r) => {
+        const liked = !!this.state.liked[r.id];
+        const dismissed = !!this.state.dismissed[r.id];
+        return {
+          ...r, wild: !!r.wild,
+          scoreColor: r.wild ? '#F0B6DA' : '#8FD3C6',
+          border: r.wild ? 'rgba(240,182,218,0.35)' : 'rgba(255,255,255,0.08)',
+          opacity: dismissed ? '0.4' : '1',
+          likedPressed: liked ? 'true' : 'false',
+          dismissedPressed: dismissed ? 'true' : 'false',
+          likeBg: liked ? accent : 'transparent',
+          likeFg: liked ? '#07080C' : '#ECEEF3',
+          likeBorder: liked ? accent : 'rgba(255,255,255,0.12)',
+          status: dismissed ? 'Hidden, model notified' : (liked ? 'Noted: more like this' : ''),
+          like: () => this.setState({ liked: { ...this.state.liked, [r.id]: !liked }, dismissed: { ...this.state.dismissed, [r.id]: false } }),
+          dismiss: () => this.setState({ dismissed: { ...this.state.dismissed, [r.id]: !dismissed }, liked: { ...this.state.liked, [r.id]: false } })
+        };
+      });
+    return { accent, tabs, recs };
+  }
+}
+</script>
+</body>
+</html>

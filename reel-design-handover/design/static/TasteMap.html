@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Taste map</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet"><style>
+body{margin:0;background:#07080C}
+a{color:#ECEEF3}a:hover{color:#FFFFFF}
+.nav:hover{background:rgba(255,255,255,0.05)}
+@keyframes pulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.6);opacity:0}}
+.pulse{animation:pulse 2.2s ease-out infinite}
+.rec:hover .ring{transform:scale(1.25)}
+.ring{transition:transform .25s}
+.rec:focus-visible{outline:2px solid #FFFFFF;outline-offset:4px;border-radius:50%}
+</style></head>
+<body data-rendered="1">
+
+
+<div style="min-height: 100vh; background: #07080C; color: #ECEEF3; font-family: Geist, 'Segoe UI', system-ui, sans-serif; display: flex; flex-wrap: wrap; position: relative; overflow: hidden">
+
+  <nav aria-label="Primary" style="flex: 1 1 220px; max-width: 100%; display: flex; flex-direction: column; gap: 28px; padding: 28px 18px; box-sizing: border-box; border-right: 1px solid rgba(255,255,255,0.07); position: relative">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 10px">
+      <div style="width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid #7FDBFF; display: grid; place-items: center; box-sizing: border-box"><div style="width: 8px; height: 8px; border-radius: 50%; background: #7FDBFF; box-shadow: 0 0 12px #7FDBFF"></div></div>
+      <span style="font-family: Unbounded, sans-serif; font-weight: 600; font-size: 17px; letter-spacing: 0.02em">Reel</span>
+    </div>
+    <a href="Search.dc.html" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #A3A9B6; text-decoration: none; font-size: 14px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="flex: 1; white-space: nowrap">Search</span>
+      <kbd style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B6; border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 2px 6px">Ctrl K</kbd>
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <a class="nav" href="Main.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="10" rx="1.5"></rect><rect x="14" y="3" width="7" height="10" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect><rect x="14" y="16" width="7" height="5" rx="1.5"></rect></svg>
+        <span>Library</span>
+      </a>
+      <a class="nav" href="Timeline.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 12h18"></path><circle cx="7" cy="12" r="2"></circle><circle cx="16" cy="12" r="2"></circle><path d="M7 5v3M16 16v3M12 5v3"></path></svg>
+        <span>Timeline</span>
+      </a>
+      <a class="nav" href="Stats.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6M3 20h18"></path></svg>
+        <span>Stats</span>
+      </a>
+      <a class="nav" href="ForYou.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"></path></svg>
+        <span>For you</span>
+      </a>
+      <a href="TasteMap.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.08); color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="6" cy="7" r="2"></circle><circle cx="17" cy="6" r="1.5"></circle><circle cx="10" cy="16" r="2.5"></circle><circle cx="18.5" cy="16.5" r="1.5"></circle></svg>
+        <span style="flex: 1">Taste map</span><span style="width: 6px; height: 6px; border-radius: 50%; background: #7FDBFF"></span>
+      </a>
+    </div>
+    <p style="margin: auto 0 0; padding: 0 10px; font-size: 11px; line-height: 1.5; color: #8E95A3">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 36px 48px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <h1 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 600; font-size: 40px; letter-spacing: -0.01em">Taste map</h1>
+        <p style="margin: 0; font-family: 'Geist Mono', monospace; font-size: 13px; color: #9AA1AE">UMAP of 1,240 film embeddings · overview + keywords + genres</p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: center; font-size: 13px; color: #C3C8D1">
+        <span style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 18px; border-radius: 3px; background: #C46A2F; box-shadow: 0 0 10px #C46A2F"></span>watched (size = your rating)</span>
+        <span style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 50%; box-sizing: border-box; border: 2px solid #7FDBFF"></span>suggested</span>
+        <label style="display: flex; align-items: center; gap: 8px; height: 44px; cursor: pointer">
+          <input type="checkbox" checked="" style="width: 18px; height: 18px; accent-color: rgb(127, 219, 255);">
+          <span style="display: flex; align-items: center; gap: 8px"><span style="width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4)"></span>unseen candidates</span>
+        </label>
+      </div>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch">
+      <section aria-label="Map" style="flex: 999 1 520px; min-width: 0; position: relative; height: 700px; border-radius: 24px; overflow: hidden; background-color: #0A0C11; background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 28px 28px; border: 1px solid rgba(255,255,255,0.09)">
+        
+          <span style="position: absolute; transform: translate(-50%, -50%); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(236,238,243,0.5); white-space: nowrap; pointer-events: none; left: 20%; top: 12%">SLOW &amp; CONTEMPLATIVE</span>
+        
+          <span style="position: absolute; transform: translate(-50%, -50%); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(236,238,243,0.5); white-space: nowrap; pointer-events: none; left: 64%; top: 6%">CEREBRAL SCI-FI</span>
+        
+          <span style="position: absolute; transform: translate(-50%, -50%); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(236,238,243,0.5); white-space: nowrap; pointer-events: none; left: 27%; top: 92%">LONGING &amp; DISTANCE</span>
+        
+          <span style="position: absolute; transform: translate(-50%, -50%); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(236,238,243,0.5); white-space: nowrap; pointer-events: none; left: 76%; top: 84%">TENSE &amp; SOCIAL</span>
+        
+          <span style="position: absolute; transform: translate(-50%, -50%); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(236,238,243,0.5); white-space: nowrap; pointer-events: none; left: 88%; top: 23%">ANIMATION</span>
+        
+
+        
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.26); left: 17.3%; top: 34.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.13); left: 27.6%; top: 32.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 29.2%; top: 33.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.17); left: 28.3%; top: 29.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.22); left: 23.8%; top: 31.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 22.3%; top: 27.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 16.8%; top: 29.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 25.8%; top: 34.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.26); left: 24.4%; top: 29.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.16); left: 21.1%; top: 29.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.28); left: 20.6%; top: 38.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.16); left: 21.6%; top: 24.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.14); left: 23.3%; top: 34.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 22.3%; top: 32.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.25); left: 19.8%; top: 29.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.13); left: 16.7%; top: 36.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.28); left: 35.8%; top: 33.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.18); left: 21.4%; top: 34.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 19.2%; top: 42.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.15); left: 17.7%; top: 37.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.26); left: 20.3%; top: 33.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 14.4%; top: 31.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.26); left: 26.8%; top: 36.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 24.1%; top: 20.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.30); left: 21.0%; top: 28.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.30); left: 24.2%; top: 28.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.17); left: 19.6%; top: 25.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 27.5%; top: 23.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 58.6%; top: 32.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.25); left: 65.8%; top: 24.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 71.1%; top: 31.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.26); left: 59.5%; top: 36.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.22); left: 55.5%; top: 34.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.15); left: 69.5%; top: 23.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.18); left: 67.4%; top: 25.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.16); left: 56.5%; top: 23.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.26); left: 61.4%; top: 25.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.25); left: 63.3%; top: 30.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 55.6%; top: 18.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 67.9%; top: 24.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.25); left: 65.3%; top: 33.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.13); left: 68.8%; top: 26.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 63.5%; top: 20.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 57.1%; top: 10.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.26); left: 67.2%; top: 31.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 72.8%; top: 21.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.16); left: 57.5%; top: 14.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.18); left: 50.2%; top: 29.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.13); left: 63.2%; top: 27.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.17); left: 61.3%; top: 29.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.26); left: 68.8%; top: 34.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 68.6%; top: 26.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.22); left: 71.1%; top: 11.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.19); left: 73.6%; top: 25.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.17); left: 63.9%; top: 27.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 65.6%; top: 25.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.19); left: 18.6%; top: 72.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 18.3%; top: 59.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 26.0%; top: 58.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.14); left: 29.4%; top: 75.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.14); left: 36.3%; top: 70.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.15); left: 35.9%; top: 68.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 38.3%; top: 64.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.16); left: 29.3%; top: 77.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.25); left: 24.6%; top: 75.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.22); left: 31.3%; top: 60.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.13); left: 28.1%; top: 64.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 27.4%; top: 72.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.13); left: 37.2%; top: 62.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.18); left: 26.6%; top: 62.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.15); left: 30.2%; top: 74.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 25.8%; top: 75.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 23.7%; top: 69.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.18); left: 35.0%; top: 67.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.15); left: 33.7%; top: 65.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 31.5%; top: 64.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.27); left: 28.1%; top: 61.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 33.4%; top: 72.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.19); left: 14.8%; top: 58.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.17); left: 26.6%; top: 72.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.18); left: 27.5%; top: 74.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 36.9%; top: 78.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 28.0%; top: 75.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 24.5%; top: 72.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.14); left: 83.3%; top: 62.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 64.4%; top: 55.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.19); left: 73.1%; top: 58.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 64.5%; top: 67.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 69.5%; top: 53.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.22); left: 69.4%; top: 64.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.15); left: 66.6%; top: 54.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.25); left: 73.4%; top: 65.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.26); left: 73.5%; top: 57.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 81.0%; top: 61.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 78.7%; top: 58.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 67.9%; top: 57.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.28); left: 81.1%; top: 68.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.16); left: 61.6%; top: 58.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.22); left: 69.3%; top: 74.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.21); left: 67.6%; top: 65.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 71.4%; top: 62.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.27); left: 66.3%; top: 62.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.13); left: 70.7%; top: 60.4%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 75.8%; top: 61.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.28); left: 69.6%; top: 72.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 66.2%; top: 57.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 67.3%; top: 62.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 75.5%; top: 60.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 71.8%; top: 63.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.27); left: 69.6%; top: 64.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 79.6%; top: 68.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.27); left: 75.2%; top: 58.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 88.7%; top: 35.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 85.0%; top: 35.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 86.3%; top: 31.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 86.4%; top: 34.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.12); left: 90.8%; top: 36.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.28); left: 85.3%; top: 34.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 89.9%; top: 36.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 92.4%; top: 33.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 86.8%; top: 30.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.19); left: 83.0%; top: 33.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.25); left: 89.6%; top: 37.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.13); left: 90.8%; top: 34.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.30); left: 89.6%; top: 34.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.19); left: 87.9%; top: 30.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 89.6%; top: 33.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.27); left: 86.3%; top: 33.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 88.2%; top: 32.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.20); left: 90.6%; top: 33.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.17); left: 84.1%; top: 35.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.16); left: 93.7%; top: 34.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.24); left: 90.5%; top: 35.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.15); left: 88.7%; top: 38.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.13); left: 90.5%; top: 36.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.14); left: 89.0%; top: 31.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.18); left: 88.7%; top: 31.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.29); left: 89.2%; top: 34.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.22); left: 90.7%; top: 31.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.23); left: 89.0%; top: 36.7%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 85.6%; top: 17.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 49.5%; top: 82.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 69.8%; top: 29.5%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 36.4%; top: 78.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 51.4%; top: 28.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 64.0%; top: 61.3%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 58.9%; top: 31.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 87.7%; top: 92.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 22.7%; top: 79.8%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 92.6%; top: 83.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 19.9%; top: 24.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 15.0%; top: 36.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 68.1%; top: 89.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 5.3%; top: 83.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 49.6%; top: 9.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 6.7%; top: 43.6%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 58.5%; top: 4.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 40.1%; top: 43.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 31.5%; top: 45.0%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 69.5%; top: 25.1%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 3.5%; top: 92.9%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 77.6%; top: 69.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 90.0%; top: 40.2%"></span>
+          
+            <span style="position: absolute; width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px; border-radius: 50%; background: rgba(255,255,255,0.1); left: 21.6%; top: 37.0%"></span>
+          
+        
+
+        <svg aria-hidden="true" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none">
+          
+            <line x1="33" y1="47" x2="34" y2="72" stroke="#7FDBFF" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></line>
+          
+            <line x1="33" y1="47" x2="27" y2="37" stroke="#7FDBFF" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></line>
+          
+            <line x1="33" y1="47" x2="40" y2="83" stroke="#7FDBFF" stroke-opacity="0.55" stroke-width="1.5" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"></line>
+          
+        </svg>
+
+        
+          <a href="Detail.dc.html" title="Stalker, your rating 5.0" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 18%; top: 28%">
+            <span style="display: block; border-radius: 3px; width: 24px; height: 36px; background: #5C6640; box-shadow: 0 0 18px #5C6640, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Stalker</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Perfect Days, your rating 4.5" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 27%; top: 37%">
+            <span style="display: block; border-radius: 3px; width: 21px; height: 32px; background: #2F5A4C; box-shadow: 0 0 18px #2F5A4C, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: #FFFFFF">Perfect Days</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Interstellar, your rating 4.5" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 50%; top: 17%">
+            <span style="display: block; border-radius: 3px; width: 21px; height: 32px; background: #CFC8B8; box-shadow: 0 0 18px #CFC8B8, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Interstellar</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Blade Runner 2049, your rating 5.0" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 65%; top: 15%">
+            <span style="display: block; border-radius: 3px; width: 24px; height: 36px; background: #1E2B33; box-shadow: 0 0 18px #1E2B33, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Blade Runner 2049</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Arrival, your rating 4.5" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 57%; top: 29%">
+            <span style="display: block; border-radius: 3px; width: 21px; height: 32px; background: #B9BFC0; box-shadow: 0 0 18px #B9BFC0, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Arrival</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Dune: Part Two, your rating 4.5" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 74%; top: 27%">
+            <span style="display: block; border-radius: 3px; width: 21px; height: 32px; background: #C46A2F; box-shadow: 0 0 18px #C46A2F, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Dune: Part Two</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Oppenheimer, your rating 4.0" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 58%; top: 42%">
+            <span style="display: block; border-radius: 3px; width: 18px; height: 27px; background: #1A1210; box-shadow: 0 0 18px #1A1210, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Oppenheimer</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="In the Mood for Love, your rating 5.0" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 22%; top: 66%">
+            <span style="display: block; border-radius: 3px; width: 24px; height: 36px; background: #8E1A1F; box-shadow: 0 0 18px #8E1A1F, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">In the Mood for Love</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Past Lives, your rating 4.5" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 34%; top: 72%">
+            <span style="display: block; border-radius: 3px; width: 21px; height: 32px; background: #233A57; box-shadow: 0 0 18px #233A57, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: #FFFFFF">Past Lives</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Her, your rating 4.0" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 44%; top: 61%">
+            <span style="display: block; border-radius: 3px; width: 18px; height: 27px; background: #E06A55; box-shadow: 0 0 18px #E06A55, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Her</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Portrait of a Lady on Fire, your rating 4.5" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 17%; top: 80%">
+            <span style="display: block; border-radius: 3px; width: 21px; height: 32px; background: #C9572A; box-shadow: 0 0 18px #C9572A, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Portrait of a Lady on Fire</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Moonlight, your rating 4.0" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 29%; top: 56%">
+            <span style="display: block; border-radius: 3px; width: 18px; height: 27px; background: #2E3F94; box-shadow: 0 0 18px #2E3F94, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Moonlight</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Aftersun, your rating 4.0" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 40%; top: 83%">
+            <span style="display: block; border-radius: 3px; width: 18px; height: 27px; background: #6FB3CF; box-shadow: 0 0 18px #6FB3CF, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: #FFFFFF">Aftersun</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Parasite, your rating 4.5" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 74%; top: 62%">
+            <span style="display: block; border-radius: 3px; width: 21px; height: 32px; background: #2E3A33; box-shadow: 0 0 18px #2E3A33, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Parasite</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="A Separation, your rating 5.0" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 60%; top: 57%">
+            <span style="display: block; border-radius: 3px; width: 24px; height: 36px; background: #6B5B4B; box-shadow: 0 0 18px #6B5B4B, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">A Separation</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Drive, your rating 3.5" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 82%; top: 74%">
+            <span style="display: block; border-radius: 3px; width: 15px; height: 23px; background: #E35A9B; box-shadow: 0 0 18px #E35A9B, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Drive</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Mad Max: Fury Road, your rating 4.0" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 86%; top: 56%">
+            <span style="display: block; border-radius: 3px; width: 18px; height: 27px; background: #E8A33D; box-shadow: 0 0 18px #E8A33D, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Mad Max: Fury Road</span>
+          </a>
+        
+          <a href="Detail.dc.html" title="Spirited Away, your rating 4.5" style="position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; left: 88%; top: 33%">
+            <span style="display: block; border-radius: 3px; width: 21px; height: 32px; background: #3F7F96; box-shadow: 0 0 18px #3F7F96, 0 0 0 1px rgba(255,255,255,0.18)"></span>
+            <span style="font-size: 11px; white-space: nowrap; color: rgba(236,238,243,0.62)">Spirited Away</span>
+          </a>
+        
+
+        
+          <button type="button" class="rec" aria-label="Columbus, suggested, 84% chance you rate it 4 or more" aria-pressed="true" style="position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; left: 33%; top: 47%">
+            
+              <span class="pulse" style="position: absolute; width: 16px; height: 16px; border-radius: 50%; border: 2px solid #7FDBFF"></span>
+            
+            <span class="ring" style="width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; border: 2px solid #7FDBFF; background: #7FDBFF"></span>
+            <span style="position: absolute; top: 38px; font-size: 12px; font-weight: 500; white-space: nowrap; color: #7FDBFF">Columbus</span>
+          </button>
+        
+          <button type="button" class="rec" aria-label="Chungking Express, suggested, 82% chance you rate it 4 or more" aria-pressed="false" style="position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; left: 12%; top: 59%">
+            
+            <span class="ring" style="width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; border: 2px solid #7FDBFF; background: rgba(7,8,12,0.6)"></span>
+            <span style="position: absolute; top: 38px; font-size: 12px; font-weight: 500; white-space: nowrap; color: #7FDBFF">Chungking Express</span>
+          </button>
+        
+          <button type="button" class="rec" aria-label="Solaris, suggested, 87% chance you rate it 4 or more" aria-pressed="false" style="position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; left: 35%; top: 18%">
+            
+            <span class="ring" style="width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; border: 2px solid #7FDBFF; background: rgba(7,8,12,0.6)"></span>
+            <span style="position: absolute; top: 38px; font-size: 12px; font-weight: 500; white-space: nowrap; color: #7FDBFF">Solaris</span>
+          </button>
+        
+          <button type="button" class="rec" aria-label="Close-Up, suggested, 76% chance you rate it 4 or more" aria-pressed="false" style="position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; left: 45%; top: 49%">
+            
+            <span class="ring" style="width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; border: 2px solid #7FDBFF; background: rgba(7,8,12,0.6)"></span>
+            <span style="position: absolute; top: 38px; font-size: 12px; font-weight: 500; white-space: nowrap; color: #7FDBFF">Close-Up</span>
+          </button>
+        
+          <button type="button" class="rec" aria-label="Prisoners, suggested, 79% chance you rate it 4 or more" aria-pressed="false" style="position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; left: 70%; top: 44%">
+            
+            <span class="ring" style="width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; border: 2px solid #7FDBFF; background: rgba(7,8,12,0.6)"></span>
+            <span style="position: absolute; top: 38px; font-size: 12px; font-weight: 500; white-space: nowrap; color: #7FDBFF">Prisoners</span>
+          </button>
+        
+          <button type="button" class="rec" aria-label="Burning, suggested, 77% chance you rate it 4 or more" aria-pressed="false" style="position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; left: 67%; top: 72%">
+            
+            <span class="ring" style="width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; border: 2px solid #7FDBFF; background: rgba(7,8,12,0.6)"></span>
+            <span style="position: absolute; top: 38px; font-size: 12px; font-weight: 500; white-space: nowrap; color: #7FDBFF">Burning</span>
+          </button>
+        
+          <button type="button" class="rec" aria-label="House, suggested, 41% chance you rate it 4 or more" aria-pressed="false" style="position: absolute; transform: translate(-50%, -50%); width: 44px; height: 44px; padding: 0; border: 0; background: transparent; cursor: pointer; display: grid; place-items: center; left: 92%; top: 88%">
+            
+            <span class="ring" style="width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; border: 2px solid #F0B6DA; background: rgba(7,8,12,0.6)"></span>
+            <span style="position: absolute; top: 38px; font-size: 12px; font-weight: 500; white-space: nowrap; color: #F0B6DA">House</span>
+          </button>
+        
+
+        <div style="position: absolute; left: 18px; bottom: 16px; font-family: 'Geist Mono', monospace; font-size: 11px; color: #8E95A3">drag to pan · scroll to zoom</div>
+      </section>
+
+      <aside style="flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 18px; padding: 24px; border-radius: 24px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(24px); box-sizing: border-box">
+        <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #7FDBFF">SUGGESTED</span>
+        <div style="display: flex; gap: 14px; align-items: flex-start">
+          <div style="width: 64px; flex: none; aspect-ratio: 2 / 3; border-radius: 8px; background: #D8D2C4"></div>
+          <div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+            <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 20px; line-height: 1.15">Columbus</h2>
+            <span style="font-size: 13px; color: #A3A9B6">Kogonada · 2017 · 1h 44m</span>
+            <span style="font-family: 'Geist Mono', monospace; font-size: 13px; color: #7FDBFF">84% chance of 4+</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px">
+          <h3 style="margin: 0; font-size: 13px; font-weight: 500; color: #C3C8D1">Closest films you rated</h3>
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px">
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; align-items: baseline">
+                <span style="font-size: 14px">Past Lives <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #E6E1C8">★ 4.5</span></span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B6">cos 0.81</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 81%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; align-items: baseline">
+                <span style="font-size: 14px">Perfect Days <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #E6E1C8">★ 4.5</span></span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B6">cos 0.78</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 78%"></span></span>
+              </li>
+            
+              <li style="display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; align-items: baseline">
+                <span style="font-size: 14px">Aftersun <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #E6E1C8">★ 4.0</span></span>
+                <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B6">cos 0.71</span>
+                <span style="grid-column: 1 / -1; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.06)"><span style="display: block; height: 4px; border-radius: 4px; background: #7FDBFF; width: 71%"></span></span>
+              </li>
+            
+          </ol>
+        </div>
+        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #A3A9B6">Sits between your quiet-everyday films and your longing-and-distance ones, a gap nothing you have watched fills yet.</p>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: auto">
+          <button type="button" style="height: 44px; border: 0; border-radius: 12px; background: #7FDBFF; color: #07080C; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer">Add to watchlist</button>
+          <a href="ForYou.dc.html" style="height: 44px; display: grid; place-items: center; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); text-decoration: none; font-size: 14px">Back to For you</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+
+
+
+</body></html>

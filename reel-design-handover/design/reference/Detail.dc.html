@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Film detail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#07080C}
+a{color:#ECEEF3}a:hover{color:#FFFFFF}
+.nav:hover{background:rgba(255,255,255,0.05)}
+.mini .art{transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.mini:hover .art{transform:perspective(700px) rotateY(-8deg) translateY(-4px)}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #07080C; color: #ECEEF3; font-family: Geist, 'Segoe UI', system-ui, sans-serif; display: flex; flex-wrap: wrap; position: relative; overflow: hidden">
+
+  <nav aria-label="Primary" style="flex: 1 1 220px; max-width: 100%; display: flex; flex-direction: column; gap: 28px; padding: 28px 18px; box-sizing: border-box; border-right: 1px solid rgba(255,255,255,0.07); position: relative; z-index: 1; background: #07080C">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 0 10px">
+      <div style="width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid {{accent}}; display: grid; place-items: center; box-sizing: border-box"><div style="width: 8px; height: 8px; border-radius: 50%; background: {{accent}}; box-shadow: 0 0 12px {{accent}}"></div></div>
+      <span style="font-family: Unbounded, sans-serif; font-weight: 600; font-size: 17px; letter-spacing: 0.02em">Reel</span>
+    </div>
+    <a href="Search.dc.html" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #A3A9B6; text-decoration: none; font-size: 14px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="flex: 1; white-space: nowrap">Search</span>
+      <kbd style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B6; border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 2px 6px">Ctrl K</kbd>
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <a href="Main.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; background: rgba(255,255,255,0.08); color: #FFFFFF; text-decoration: none; font-size: 14px; font-weight: 500">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="10" rx="1.5"></rect><rect x="14" y="3" width="7" height="10" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect><rect x="14" y="16" width="7" height="5" rx="1.5"></rect></svg>
+        <span style="flex: 1">Library</span><span style="width: 6px; height: 6px; border-radius: 50%; background: {{accent}}"></span>
+      </a>
+      <a class="nav" href="Timeline.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 12h18"></path><circle cx="7" cy="12" r="2"></circle><circle cx="16" cy="12" r="2"></circle><path d="M7 5v3M16 16v3M12 5v3"></path></svg>
+        <span>Timeline</span>
+      </a>
+      <a class="nav" href="Stats.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M11 20V5M17 20v-6M3 20h18"></path></svg>
+        <span>Stats</span>
+      </a>
+      <a class="nav" href="ForYou.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"></path></svg>
+        <span>For you</span>
+      </a>
+      <a class="nav" href="TasteMap.dc.html" style="display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: 12px; color: #A3A9B6; text-decoration: none; font-size: 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="6" cy="7" r="2"></circle><circle cx="17" cy="6" r="1.5"></circle><circle cx="10" cy="16" r="2.5"></circle><circle cx="18.5" cy="16.5" r="1.5"></circle></svg>
+        <span>Taste map</span>
+      </a>
+    </div>
+    <p style="margin: auto 0 0; padding: 0 10px; font-size: 11px; line-height: 1.5; color: #8E95A3">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 48px; padding-bottom: 72px">
+    <section aria-label="Film" style="position: relative; min-height: 600px; padding: 32px 48px 44px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; overflow: hidden">
+      <div aria-hidden="true" style="position: absolute; inset: 0; background: #0A0E12"></div>
+      <div aria-hidden="true" style="position: absolute; left: 30%; top: -18%; width: 900px; height: 700px; background: radial-gradient(closest-side, color-mix(in oklch, {{glow}} 70%, transparent), transparent)"></div>
+      <div aria-hidden="true" style="position: absolute; right: -10%; top: 10%; width: 700px; height: 600px; background: radial-gradient(closest-side, color-mix(in oklch, {{glow2}} 45%, transparent), transparent)"></div>
+      <div aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: 0; height: 60%; background: linear-gradient(to bottom, rgba(7,8,12,0), #07080C)"></div>
+
+      <div style="position: relative; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap">
+        <a href="Main.dc.html" style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px 0 12px; border-radius: 12px; background: rgba(7,8,12,0.45); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(16px); text-decoration: none; font-size: 14px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+          Library
+        </a>
+        <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: rgba(236,238,243,0.55); border: 1px dashed rgba(236,238,243,0.3); border-radius: 8px; padding: 6px 10px">BACKDROP · TMDB w1280 · CACHED LOCALLY</span>
+      </div>
+
+      <div style="position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 36px">
+        <div style="position: relative; width: 200px; aspect-ratio: 2 / 3; border-radius: 16px; background: #1E2B33; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 18px; box-sizing: border-box; box-shadow: 0 40px 80px -30px {{glow}}, 0 0 0 1px rgba(255,255,255,0.08)">
+          <div style="position: absolute; left: 16%; right: 16%; top: 20%; height: 46%; border-radius: 999px 999px 0 0; opacity: 0.4; border: 2px solid #F2A65A"></div>
+          <span style="position: relative; font-family: 'Geist Mono', monospace; font-size: 12px; color: #F2A65A">2017</span>
+          <span style="position: relative; font-family: Unbounded, sans-serif; font-weight: 600; font-size: 20px; line-height: 1.1; color: #F2A65A">Blade Runner 2049</span>
+        </div>
+        <div style="flex: 1 1 360px; display: flex; flex-direction: column; gap: 14px">
+          <span style="font-family: 'Geist Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: {{glow}}">SCIENCE FICTION · DRAMA</span>
+          <h1 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 600; font-size: 56px; line-height: 1.02; letter-spacing: -0.02em; text-wrap: balance">Blade Runner 2049</h1>
+          <p style="margin: 0; font-size: 15px; color: #C3C8D1">2017 · 2h 44m · Denis Villeneuve · English</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px">
+            <a href="Search.dc.html" style="display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 20px; border-radius: 14px; background: {{glow}}; color: #120904; text-decoration: none; font-weight: 600; font-size: 14px; box-shadow: 0 10px 30px -10px {{glow}}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+              Log a rewatch
+            </a>
+            <button type="button" style="display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 18px; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); color: #ECEEF3; font: inherit; font-size: 14px; cursor: pointer; backdrop-filter: blur(16px)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+              Play trailer
+            </button>
+            <button type="button" aria-label="More actions" style="width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); color: #ECEEF3; cursor: pointer">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
+            </button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 14px">
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #A3A9B6">YOUR RATING</span>
+            <span style="font-family: Unbounded, sans-serif; font-weight: 500; font-size: 64px; line-height: 1; color: {{glow}}">5.0</span>
+            <span style="font-size: 13px; color: #A3A9B6">across 3 watches</span>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px">
+            <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: #A3A9B6">PALETTE FROM POSTER</span>
+            <div style="display: flex; gap: 6px">
+              <sc-for list="{{palette}}" as="c" hint-placeholder-count="5">
+                <span title="{{c}}" style="width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.18); background: {{c}}"></span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 40px; padding: 0 48px">
+      <div style="flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 36px">
+        <section style="display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Overview</h2>
+          <p style="margin: 0; max-width: 64ch; font-size: 16px; line-height: 1.65; color: #C9CDD6; text-wrap: pretty">Thirty years after the first film, K, a replicant blade runner working for the LAPD, digs up a buried secret that could unravel what is left of society. The trail leads him into the ruins outside Los Angeles and to Rick Deckard, who has been missing for decades.</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{keywords}}" as="k" hint-placeholder-count="5">
+              <span style="height: 30px; display: flex; align-items: center; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); font-size: 13px; color: #C3C8D1">{{k}}</span>
+            </sc-for>
+          </div>
+        </section>
+
+        <section aria-label="Trailer" style="position: relative; aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; background: #0C1116; border: 1px solid rgba(255,255,255,0.08); display: grid; place-items: center">
+          <div aria-hidden="true" style="position: absolute; inset: 0; background: radial-gradient(60% 70% at 35% 60%, color-mix(in oklch, {{glow}} 35%, transparent), transparent)"></div>
+          <button type="button" aria-label="Play trailer" style="position: relative; width: 76px; height: 76px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); backdrop-filter: blur(16px); color: #FFFFFF; display: grid; place-items: center; cursor: pointer">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+          </button>
+          <span style="position: absolute; left: 20px; bottom: 18px; font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B6">TRAILER · YouTube via TMDB videos</span>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 16px">
+          <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Cast</h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(120px, 100%), 1fr)); gap: 20px">
+            <sc-for list="{{cast}}" as="p" hint-placeholder-count="6">
+              <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px">
+                <div style="width: 72px; height: 72px; border-radius: 50%; background: #141A20; border: 1px solid rgba(255,255,255,0.1); display: grid; place-items: center; font-family: Unbounded, sans-serif; font-size: 18px; color: #8E95A3">{{p.initials}}</div>
+                <div style="display: flex; flex-direction: column; gap: 2px">
+                  <span style="font-size: 14px; font-weight: 500">{{p.name}}</span>
+                  <span style="font-size: 13px; color: #8E95A3">{{p.role}}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+
+      <aside style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <section style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(24px); display: flex; flex-direction: column; gap: 22px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Your history</h2>
+            <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #A3A9B6">3 watches</span>
+          </div>
+          <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0">
+            <sc-for list="{{history}}" as="w" hint-placeholder-count="3">
+              <li style="display: flex; gap: 16px">
+                <div style="display: flex; flex-direction: column; align-items: center; padding-top: 4px">
+                  <span style="width: 12px; height: 12px; border-radius: 50%; flex: none; background: {{w.dot}}; box-shadow: 0 0 14px {{w.dot}}"></span>
+                  <span style="flex: 1; width: 1px; background: rgba(255,255,255,0.12); margin: 6px 0"></span>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 6px; padding-bottom: 22px">
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px">
+                    <span style="font-size: 15px; font-weight: 500">{{w.date}}</span>
+                    <span style="font-family: 'Geist Mono', monospace; font-size: 14px; color: {{glow}}">★ {{w.rating}}</span>
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px">
+                    <span style="font-family: 'Geist Mono', monospace; font-size: 11px; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.06); color: #C3C8D1">{{w.precision}}</span>
+                    <span style="font-family: 'Geist Mono', monospace; font-size: 11px; padding: 3px 8px; border-radius: 6px; background: rgba(255,255,255,0.06); color: #C3C8D1">{{w.kind}}</span>
+                  </div>
+                  <span style="font-size: 13px; color: #A3A9B6">{{w.where}}</span>
+                  <sc-if value="{{w.hasNote}}" hint-placeholder-val="{{ false }}">
+                    <p style="margin: 2px 0 0; font-size: 14px; line-height: 1.5; color: #D5D9E0">{{w.note}}</p>
+                  </sc-if>
+                </div>
+              </li>
+            </sc-for>
+          </ol>
+        </section>
+
+        <section style="padding: 24px; border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px">
+          <sc-for list="{{scores}}" as="s" hint-placeholder-count="4">
+            <div style="display: flex; flex-direction: column; gap: 4px">
+              <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: #A3A9B6">{{s.label}}</span>
+              <span style="font-family: Unbounded, sans-serif; font-size: 24px; font-weight: 500">{{s.value}}</span>
+            </div>
+          </sc-for>
+        </section>
+
+        <section style="padding: 8px 24px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.09)">
+          <dl style="margin: 0; display: flex; flex-direction: column">
+            <sc-for list="{{facts}}" as="d" hint-placeholder-count="5">
+              <div style="display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06)">
+                <dt style="font-size: 13px; color: #A3A9B6">{{d.k}}</dt>
+                <dd style="margin: 0; font-size: 13px; text-align: right">{{d.v}}</dd>
+              </div>
+            </sc-for>
+          </dl>
+        </section>
+      </aside>
+    </div>
+
+    <section style="padding: 0 48px; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap">
+        <h2 style="margin: 0; font-family: Unbounded, sans-serif; font-weight: 500; font-size: 18px">Its neighbours on your taste map</h2>
+        <a href="TasteMap.dc.html" style="font-size: 14px; color: #C3C8D1">Open taste map</a>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(130px, 100%), 1fr)); gap: 18px">
+        <sc-for list="{{near}}" as="f" hint-placeholder-count="6">
+          <a class="mini" href="Detail.dc.html" style="display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit">
+            <div class="art" style="position: relative; aspect-ratio: 2 / 3; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px; box-sizing: border-box; background: {{f.bg}}">
+              <span style="font-family: Unbounded, sans-serif; font-weight: 600; font-size: 13px; line-height: 1.15; color: {{f.fg}}">{{f.title}}</span>
+            </div>
+            <span style="font-size: 12px; color: #A3A9B6">{{f.meta}}</span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FDBFF","options":["#7FDBFF","#C6F36B","#FFB86B","#C9A7FF"]},"glow":{"editor":"color","default":"#F08A3C","section":"Film palette"},"glow2":{"editor":"color","default":"#2FA3A8","section":"Film palette"},"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const glow = this.props.glow ?? '#F08A3C';
+    const glow2 = this.props.glow2 ?? '#2FA3A8';
+    return {
+      accent: this.props.accent ?? '#7FDBFF',
+      glow, glow2,
+      palette: ['#F08A3C', '#2FA3A8', '#1E2B33', '#F2A65A', '#0A0E12'],
+      keywords: ['replicant', 'dystopia', 'artificial memory', 'neo-noir', 'los angeles'],
+      cast: [
+        { initials: 'RG', name: 'Ryan Gosling', role: 'K' },
+        { initials: 'HF', name: 'Harrison Ford', role: 'Rick Deckard' },
+        { initials: 'AA', name: 'Ana de Armas', role: 'Joi' },
+        { initials: 'SH', name: 'Sylvia Hoeks', role: 'Luv' },
+        { initials: 'RW', name: 'Robin Wright', role: 'Lt. Joshi' },
+        { initials: 'JL', name: 'Jared Leto', role: 'Niander Wallace' }
+      ],
+      history: [
+        { date: 'Nov 21, 2025', precision: 'exact day', kind: 'rewatch', rating: '5.0', where: 'Home', hasNote: true, note: 'Third time. The orange Las Vegas sequence still floors me.', dot: glow },
+        { date: 'March 2020', precision: 'month only', kind: 'rewatch', rating: '5.0', where: 'Home', hasNote: false, note: '', dot: glow2 },
+        { date: 'Oct 8, 2017', precision: 'exact day', kind: 'first watch', rating: '4.5', where: 'Cinema · with friends', hasNote: false, note: '', dot: '#8E95A3' }
+      ],
+      scores: [
+        { label: 'TMDB', value: '7.6' },
+        { label: 'IMDB', value: '8.0' },
+        { label: 'ROTTEN TOMATOES', value: '88%' },
+        { label: 'METACRITIC', value: '81' }
+      ],
+      facts: [
+        { k: 'Released', v: 'Oct 6, 2017' },
+        { k: 'Director', v: 'Denis Villeneuve' },
+        { k: 'Cinematography', v: 'Roger Deakins' },
+        { k: 'Music', v: 'Hans Zimmer, Benjamin Wallfisch' },
+        { k: 'Data refreshed', v: '12 days ago' }
+      ],
+      near: [
+        { title: 'Arrival', meta: 'Watched · ★ 4.5', bg: '#B9BFC0', fg: '#1C2326' },
+        { title: 'Dune: Part Two', meta: 'Watched · ★ 4.5', bg: '#C46A2F', fg: '#1B0D05' },
+        { title: 'Stalker', meta: 'Watched · ★ 5.0', bg: '#5C6640', fg: '#EDE8D0' },
+        { title: 'Solaris', meta: 'Suggested · 87%', bg: '#24343A', fg: '#D9E6E0' },
+        { title: 'Interstellar', meta: 'Watched · ★ 4.5', bg: '#CFC8B8', fg: '#191714' },
+        { title: 'Her', meta: 'Watched · ★ 4.0', bg: '#E06A55', fg: '#2A0E0A' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

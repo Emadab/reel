@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Search and log a watch</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#07080C}
+a{color:#ECEEF3}a:hover{color:#FFFFFF}
+input,textarea{color-scheme:dark}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid #7FDBFF;outline-offset:2px}
+.row:hover{background:rgba(255,255,255,0.05)}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #07080C; color: #ECEEF3; font-family: Geist, 'Segoe UI', system-ui, sans-serif; position: relative; overflow: hidden; display: flex; justify-content: center; padding: 72px 16px 48px; box-sizing: border-box">
+  <div aria-hidden="true" style="position: absolute; inset: 0; padding: 140px 60px 0 300px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 28px 20px; filter: blur(10px); opacity: 0.55">
+    <sc-for list="{{wall}}" as="c" hint-placeholder-count="18">
+      <div style="aspect-ratio: 2 / 3; border-radius: 12px; background: {{c}}"></div>
+    </sc-for>
+  </div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(4,5,8,0.62)"></div>
+
+  <div role="dialog" aria-modal="true" aria-label="Search films" style="position: relative; width: 100%; max-width: 760px; align-self: flex-start; border-radius: 24px; background: rgba(20,22,30,0.72); border: 1px solid rgba(255,255,255,0.12); backdrop-filter: blur(40px) saturate(140%); box-shadow: 0 60px 120px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(0,0,0,0.4); overflow: hidden">
+    <div style="display: flex; align-items: center; gap: 14px; padding: 0 22px; height: 68px; border-bottom: 1px solid rgba(255,255,255,0.08)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A3A9B6" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">Search films</label>
+      <input id="q" type="search" value="{{q}}" onChange="{{onQ}}" placeholder="Search any film…" autocomplete="off" style="flex: 1; min-width: 0; height: 44px; border: 0; background: transparent; color: #FFFFFF; font: inherit; font-size: 20px; outline: none">
+      <kbd style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A3A9B6; border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 3px 7px">Esc</kbd>
+    </div>
+
+    <div style="padding: 14px 12px 6px">
+      <div style="display: flex; justify-content: space-between; padding: 0 12px 8px; font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: #8E95A3">
+        <span>TMDB · 4 RESULTS</span><span>debounced 180 ms</span>
+      </div>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px">
+        <sc-for list="{{results}}" as="r" hint-placeholder-count="4">
+          <li>
+            <button type="button" class="row" onClick="{{r.pick}}" aria-pressed="{{r.pressed}}" style="width: 100%; display: flex; align-items: center; gap: 14px; padding: 8px 12px; border-radius: 14px; font: inherit; color: inherit; text-align: left; cursor: pointer; background: {{r.bg}}; border: 1px solid {{r.border}}">
+              <span style="width: 36px; height: 54px; border-radius: 6px; flex: none; background: {{r.poster}}"></span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                <span style="font-size: 15px; font-weight: 500">{{r.title}} <span style="font-family: 'Geist Mono', monospace; font-weight: 400; font-size: 13px; color: #A3A9B6">{{r.year}}</span></span>
+                <span style="font-size: 13px; color: #A3A9B6">{{r.director}}</span>
+              </span>
+              <sc-if value="{{r.hasBadge}}" hint-placeholder-val="{{ false }}">
+                <span style="font-family: 'Geist Mono', monospace; font-size: 11px; padding: 4px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.16); color: #C9CDD6">{{r.badge}}</span>
+              </sc-if>
+            </button>
+          </li>
+        </sc-for>
+      </ul>
+    </div>
+
+    <form style="margin: 6px 12px 12px; padding: 20px; border-radius: 18px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap">
+        <span style="font-family: Unbounded, sans-serif; font-weight: 500; font-size: 16px">Log {{selTitle}}</span>
+        <span style="font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.08em; color: #8E95A3">FETCHES DETAILS + POSTER ON SAVE</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <label for="d" style="font-size: 12px; color: #A3A9B6">Watched on</label>
+          <input id="d" type="date" value="{{date}}" onChange="{{onDate}}" style="height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(0,0,0,0.25); color: #FFFFFF; font: inherit; font-size: 14px">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span id="plabel" style="font-size: 12px; color: #A3A9B6">I remember the</span>
+          <div role="group" aria-labelledby="plabel" style="display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.1)">
+            <sc-for list="{{precisions}}" as="p" hint-placeholder-count="3">
+              <button type="button" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="height: 34px; padding: 0 14px; border: 0; border-radius: 10px; font: inherit; font-size: 13px; cursor: pointer; background: {{p.bg}}; color: {{p.fg}}">{{p.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span id="rlabel" style="font-size: 12px; color: #A3A9B6">Rating · {{ratingText}}</span>
+          <div role="group" aria-labelledby="rlabel" style="display: flex; gap: 2px">
+            <sc-for list="{{stars}}" as="s" hint-placeholder-count="5">
+              <button type="button" aria-label="{{s.label}}" onClick="{{s.pick}}" style="width: 40px; height: 44px; border: 0; background: transparent; cursor: pointer; padding: 0; display: grid; place-items: center; color: {{s.color}}">
+                <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="h{{s.n}}"><stop offset="{{s.fill}}" stop-color="currentColor"></stop><stop offset="{{s.fill}}" stop-color="transparent"></stop></linearGradient></defs><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" fill="url(#h{{s.n}})" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 14px">
+        <label style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); font-size: 14px; cursor: pointer">
+          <input type="checkbox" checked="{{rewatch}}" onChange="{{toggleRewatch}}" style="width: 18px; height: 18px; accent-color: {{accent}}">
+          Rewatch
+        </label>
+        <div style="flex: 1 1 180px; display: flex; flex-direction: column; gap: 0">
+          <label for="w" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">With whom</label>
+          <input id="w" type="text" placeholder="With whom (optional)" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.25); color: #FFFFFF; font: inherit; font-size: 14px">
+        </div>
+        <div style="flex: 1 1 180px; display: flex; flex-direction: column; gap: 0">
+          <label for="l" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">Where</label>
+          <input id="l" type="text" placeholder="Where (optional)" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.25); color: #FFFFFF; font: inherit; font-size: 14px">
+        </div>
+      </div>
+      <label for="n" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%)">Notes</label>
+      <textarea id="n" rows="2" placeholder="Notes" style="resize: vertical; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.25); color: #FFFFFF; font: inherit; font-size: 14px"></textarea>
+    </form>
+
+    <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 22px; border-top: 1px solid rgba(255,255,255,0.08)">
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: #A3A9B6">
+        <span style="display: flex; gap: 6px; align-items: center"><kbd style="font-family: 'Geist Mono', monospace; border: 1px solid rgba(255,255,255,0.14); border-radius: 5px; padding: 1px 6px">↑↓</kbd>choose</span>
+        <span style="display: flex; gap: 6px; align-items: center"><kbd style="font-family: 'Geist Mono', monospace; border: 1px solid rgba(255,255,255,0.14); border-radius: 5px; padding: 1px 6px">Tab</kbd>next field</span>
+        <span style="display: flex; gap: 6px; align-items: center"><kbd style="font-family: 'Geist Mono', monospace; border: 1px solid rgba(255,255,255,0.14); border-radius: 5px; padding: 1px 6px">Shift ↵</kbd>add to watchlist</span>
+      </div>
+      <a href="Detail.dc.html" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 18px; border-radius: 14px; background: {{accent}}; color: #07080C; text-decoration: none; font-weight: 600; font-size: 14px">
+        Log watch
+        <kbd style="font-family: 'Geist Mono', monospace; font-size: 11px; border: 1px solid rgba(7,8,12,0.35); border-radius: 5px; padding: 1px 6px">↵</kbd>
+      </a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FDBFF","options":["#7FDBFF","#C6F36B","#FFB86B","#C9A7FF"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { q: 'drive', sel: 1, precision: 'day', rating: 4.5, rewatch: false, date: '2026-10-04' };
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#7FDBFF';
+    const list = [
+      { title: 'Drive', year: '2011', director: 'Nicolas Winding Refn', poster: '#E35A9B', badge: 'Seen 1×' },
+      { title: 'Drive My Car', year: '2021', director: 'Ryusuke Hamaguchi', poster: '#B3342E', badge: '' },
+      { title: 'Mulholland Drive', year: '2001', director: 'David Lynch', poster: '#1B2340', badge: 'On watchlist' },
+      { title: 'Baby Driver', year: '2017', director: 'Edgar Wright', poster: '#F2C14E', badge: '' }
+    ];
+    const results = list.map((r, i) => {
+      const on = this.state.sel === i;
+      return { ...r, hasBadge: r.badge !== '', pressed: on ? 'true' : 'false',
+        bg: on ? 'rgba(127,219,255,0.08)' : 'transparent',
+        border: on ? 'color-mix(in oklch, ' + accent + ' 55%, transparent)' : 'transparent',
+        pick: () => this.setState({ sel: i, rewatch: r.badge.startsWith('Seen') }) };
+    });
+    const s = list[this.state.sel];
+    const precisions = [['day', 'Day'], ['month', 'Month'], ['year', 'Year']].map(([id, label]) => {
+      const on = this.state.precision === id;
+      return { label, pressed: on ? 'true' : 'false', bg: on ? '#ECEEF3' : 'transparent', fg: on ? '#07080C' : '#C9CDD6', pick: () => this.setState({ precision: id }) };
+    });
+    const r = this.state.rating;
+    const stars = [1, 2, 3, 4, 5].map((n) => {
+      const fill = r >= n ? '100%' : (r >= n - 0.5 ? '50%' : '0%');
+      return { n, fill, label: n + ' stars', color: fill === '0%' ? '#5C6270' : '#F5D88A',
+        pick: () => this.setState({ rating: this.state.rating === n ? n - 0.5 : n }) };
+    });
+    return {
+      accent, results, precisions, stars,
+      q: this.state.q,
+      onQ: (e) => this.setState({ q: e.target.value }),
+      date: this.state.date,
+      onDate: (e) => this.setState({ date: e.target.value }),
+      selTitle: s.title + ' (' + s.year + ')',
+      ratingText: r.toFixed(1),
+      rewatch: this.state.rewatch,
+      toggleRewatch: () => this.setState({ rewatch: !this.state.rewatch }),
+      wall: ['#2F5A4C', '#233A57', '#C46A2F', '#8E1A1F', '#B9BFC0', '#6FB3CF', '#E8A33D', '#C9572A', '#1A1210', '#E35A9B', '#2E3A33', '#3F7F96', '#E06A55', '#2E3F94', '#6B5B4B', '#CFC8B8', '#5C6640', '#1E2B33']
+    };
+  }
+}
+</script>
+</body>
+</html>
