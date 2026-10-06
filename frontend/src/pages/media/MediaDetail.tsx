@@ -8,6 +8,7 @@ import { mix } from "../../components/Glow";
 import { IconCalendar, IconCheck, IconChevronDown, IconChevronLeft, IconMore, IconPlus } from "../../components/Icons";
 import { Poster, posterBg } from "../../components/Poster";
 import { RatingInput } from "../../components/Rating";
+import { Select } from "../../components/Select";
 import { useToast } from "../../components/Toasts";
 import { Button, ErrorLine, Eyebrow, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
 import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
@@ -316,16 +317,11 @@ function HistoryDialog({ item, onClose }: { item: ItemDetail; onClose: () => voi
       error={bad ? new Error("The finish date is before the start") : save.error}
       onSave={async () => { await save.mutateAsync(undefined); toast({ text: <>Added <em>{item.title}</em> to your history</> }); onClose(); }}
     >
-      <label className="flex flex-col gap-2 text-[12px] text-ink-3">
-        What you watched
-        <select
-          value={upto ?? ""} onChange={(e) => setUpto(e.target.value ? Number(e.target.value) : null)}
-          className="h-11 px-3 rounded-[12px] border border-(--line-5) bg-(--fill-input) text-ink-hi text-[14px] [color-scheme:dark] outline-none focus-visible:outline-2 focus-visible:outline-accent"
-        >
-          <option value="">The whole show (every aired episode)</option>
-          {seasons.slice(0, -1).map((s) => <option key={s.number} value={s.number}>{s.number === 1 ? "Season 1" : `Seasons 1–${s.number}`}</option>)}
-        </select>
-      </label>
+      <Select
+        label="What you watched" value={upto == null ? "" : String(upto)} onChange={(v) => setUpto(v ? Number(v) : null)}
+        options={[{ value: "", label: "The whole show (every aired episode)" },
+          ...seasons.slice(0, -1).map((s) => ({ value: String(s.number), label: s.number === 1 ? "Season 1" : `Seasons 1–${s.number}` }))]}
+      />
       <label className="self-start flex items-center gap-[10px] h-11 box-content px-[14px] rounded-[12px] border border-(--line-4) text-[14px] cursor-pointer">
         <input type="checkbox" checked={onAir} onChange={(e) => setOnAir(e.target.checked)} className="size-[18px] accent-accent" />
         Watched each episode on its release date
@@ -374,16 +370,7 @@ function PastRunDialog({ item, onClose }: { item: ItemDetail; onClose: () => voi
       <Remember value={p} onChange={(v) => { setP(v); setStart(fromUnknown(start)); setFinish(fromUnknown(finish)); }} />
       {book && <Segmented label="Format" variant="form" value={format} options={FORMATS} onChange={setFormat} />}
       {!book && platforms.length > 1 && (
-        <label className="flex flex-col gap-2 text-[12px] text-ink-3">
-          Platform
-          <select
-            value={platform} onChange={(e) => setPlatform(e.target.value)}
-            className="h-11 px-3 rounded-[12px] border border-(--line-5) bg-(--fill-input) text-ink-hi text-[14px] [color-scheme:dark] outline-none focus-visible:outline-2 focus-visible:outline-accent"
-          >
-            <option value="">Choose a platform</option>
-            {platforms.map((x) => <option key={x} value={x}>{x}</option>)}
-          </select>
-        </label>
+        <Select label="Platform" value={platform} onChange={setPlatform} placeholder="Choose a platform" options={platforms.map((x) => ({ value: x, label: x }))} />
       )}
       <RatingInput value={score} onChange={setScore} />
     </DateDialog>
@@ -722,17 +709,10 @@ function Variant({ item, run }: { item: ItemDetail; run: RunOut }) {
   const platforms: string[] = item.details.platforms ?? [];
   if (item.kind !== "game" || platforms.length < 2) return null;
   return (
-    <label className="flex flex-col gap-[6px] text-[12px] text-ink-3">
-      Platform
-      <select
-        value={run.variant.platform ?? ""}
-        onChange={(e) => set.mutate({ platform: e.target.value })}
-        className="h-11 px-3 rounded-[12px] border border-(--line-4) bg-(--fill-input) text-ink-hi text-[14px] [color-scheme:dark] outline-none focus-visible:outline-2 focus-visible:outline-accent"
-      >
-        <option value="">Choose a platform</option>
-        {platforms.map((p) => <option key={p} value={p}>{p}</option>)}
-      </select>
-    </label>
+    <Select
+      label="Platform" className="gap-[6px]" value={run.variant.platform ?? ""} placeholder="Choose a platform"
+      onChange={(v) => set.mutate({ platform: v })} options={platforms.map((p) => ({ value: p, label: p }))}
+    />
   );
 }
 
