@@ -181,15 +181,24 @@ function Crew({ film }: { film: MovieDetail }) {
   );
 }
 
+export type ScoreRow = { label: string; value: string | null; of: number; sub: string };
+
 /** Four scores, each with a meter on a shared 0–100 scale, plus the awards line. */
 export function Scores({ film, glow, critics = true }: { film: Pick<MovieDetail, "scores" | "votes" | "awards">; glow: string; critics?: boolean }) {
-  const num = (v: string | null) => (v == null ? null : parseFloat(v));
-  const rows: { label: string; value: string | null; of: number; sub: string }[] = [
+  const rows: ScoreRow[] = [
     { label: "TMDB", value: film.scores.tmdb, of: 10, sub: film.votes?.tmdb ? `${compact.format(film.votes.tmdb)} votes` : "users" },
     { label: "IMDb", value: film.scores.imdb, of: 10, sub: film.votes?.imdb ? `${compact.format(film.votes.imdb)} votes` : "users" },
     { label: "Rotten Tomatoes", value: film.scores.rt, of: 100, sub: "Tomatometer" },
     { label: "Metacritic", value: film.scores.metacritic, of: 100, sub: "Metascore" },
   ].slice(0, critics ? 4 : 2);
+  return <ScoreGrid rows={rows} awards={film.awards} glow={glow} />;
+}
+
+export const votes = (n: number | null | undefined) => (n ? `${compact.format(n)} votes` : "users");
+
+/** Scores two to a row, each with a meter scaled to its maximum. */
+export function ScoreGrid({ rows, awards, glow }: { rows: ScoreRow[]; awards?: string | null; glow: string }) {
+  const num = (v: string | null) => (v == null ? null : parseFloat(v));
   return (
     <section aria-label="Scores" className="rounded-[22px] bg-(--fill-glass) border border-(--line-2) overflow-hidden">
       <div className="grid grid-cols-2">
@@ -201,7 +210,7 @@ export function Scores({ film, glow, critics = true }: { film: Pick<MovieDetail,
               <Eyebrow className="text-[10.5px]">{r.label}</Eyebrow>
               <span className={cx("font-display text-[26px] font-medium leading-none tabular-nums", n == null && "text-ink-4")}>
                 {r.value ?? "–"}
-                {n != null && r.of === 10 && <span className="font-sans text-[13px] text-ink-4 font-normal"> / 10</span>}
+                {n != null && r.of < 100 && <span className="font-sans text-[13px] text-ink-4 font-normal"> / {r.of}</span>}
               </span>
               <span className="h-[3px] rounded-full bg-white/[0.07] overflow-hidden">
                 <span className="block h-full rounded-full transition-[width] duration-700 ease-out" style={{ width: `${fill}%`, background: glow, boxShadow: `0 0 10px ${glow}` }} />
@@ -211,10 +220,10 @@ export function Scores({ film, glow, critics = true }: { film: Pick<MovieDetail,
           );
         })}
       </div>
-      {film.awards && (
+      {awards && (
         <div className="flex flex-col gap-[6px] px-5 py-4 border-t border-(--line-2)">
           <Eyebrow className="text-[10.5px]">Awards</Eyebrow>
-          <p className="m-0 text-[14px] leading-[1.5] text-ink-2">{film.awards}</p>
+          <p className="m-0 text-[14px] leading-[1.5] text-ink-2">{awards}</p>
         </div>
       )}
     </section>

@@ -57,7 +57,7 @@ async def fetch(ext_id: str, kind="game") -> ItemData | None:
         endless=bool(ENDLESS_TAGS & set(tags)) or "Massively Multiplayer" in genres,
         people=people,
         details={"platforms": _platforms(d), "playtime_hours": d.get("playtime") or None, "metacritic": d.get("metacritic"),
-                 "rating": d.get("rating"), "esrb": (d.get("esrb_rating") or {}).get("name"), "website": d.get("website") or None,
+                 "rating": d.get("rating"), "rating_votes": d.get("ratings_count"), "esrb": (d.get("esrb_rating") or {}).get("name"), "website": d.get("website") or None,
                  "stores": [s["store"]["name"] for s in d.get("stores", []) if s.get("store")],
                  "screenshots": [s["image"] for s in shots if s.get("image")],
                  "dlc": [{"rawg": str(a["id"]), "name": a.get("name"), "released": a.get("released")} for a in adds]},

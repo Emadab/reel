@@ -16,7 +16,7 @@ import { onColor } from "../../lib/color";
 import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today } from "../../lib/format";
 import { backTarget } from "../../lib/history";
 import { MODES, START, STATUS_LABEL, statusLabel } from "../../lib/mode";
-import { Scores } from "../FilmDetail";
+import { ScoreGrid, Scores, votes } from "../FilmDetail";
 import { applyChoice, asFilm, FINAL, fraction, itemPath, Meter, pagePad, progressText, statusChoices, type StatusChoice } from "./parts";
 
 const ITEM_STATUS: Record<string, string> = { released: "Released", upcoming: "Upcoming", returning: "Returning series", ended: "Ended", canceled: "Canceled" };
@@ -840,7 +840,6 @@ function Details({ item }: { item: ItemDetail }) {
     ["Developer", item.kind === "game" ? item.people.filter((p) => p.role === "developer").map((p) => p.name).join(", ") || null : null],
     ["Publisher", item.kind === "game" ? item.people.filter((p) => p.role === "publisher").map((p) => p.name).join(", ") || null : null],
     ["Time to beat", item.kind === "game" && d.playtime_hours && !item.endless ? `~${d.playtime_hours} h (average)` : item.endless ? "Endless" : null],
-    ["Metacritic", d.metacritic ? String(d.metacritic) : null],
     ["Original title", item.original_title && item.original_title !== item.title ? item.original_title : null],
   ].filter(([, v]) => v) as [string, string][];
   const links = providerLinks(item);
@@ -1155,6 +1154,12 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
           {run && run.status && <YourRun item={item} run={run} glow={glow} />}
           <Runs item={item} glow={glow} glow2={glow2} />
           {kind === "show" && <Scores film={showScores(item)} glow={glow} critics={false} />}
+          {kind === "game" && (
+            <ScoreGrid glow={glow} rows={[
+              { label: "RAWG", value: item.details.rating ? Number(item.details.rating).toFixed(2) : null, of: 5, sub: votes(item.details.rating_votes) },
+              { label: "Metacritic", value: item.details.metacritic ? String(item.details.metacritic) : null, of: 100, sub: "Metascore" },
+            ]} />
+          )}
           <Details item={item} />
           <span className="font-mono text-[11px] text-ink-4 px-1">{item.added_at ? `added ${relativeTime(item.added_at)}` : "not in your library yet"}</span>
         </aside>
