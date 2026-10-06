@@ -208,7 +208,7 @@ def episode_out(e: Episode, seen: dict[int, Event]) -> dict:
 
 
 def add_history(s: Session, item: Item, upto_season: int | None, started_on: date | None, finished_on: date | None,
-                precision: str, rating: float | None) -> Run:
+                precision: str, rating: float | None, on_air_dates: bool = False) -> Run:
     """Backfill a show watched long ago in one go: every aired episode (or up to a season) as watched on the
     finish date. Fills in the current run when it's partly watched; a run that already has all of it means
     this is another time through, so it becomes a new run."""
@@ -220,9 +220,19 @@ def add_history(s: Session, item: Item, upto_season: int | None, started_on: dat
     if run is None or all(e.id in seen for e in target):
         run, seen = items.new_run(s, item), set()
     fresh = not seen
-    at = event_time(finished_on or started_on, precision)
-    set_watched(s, item, [e.id for e in target if e.id not in seen], True, at, precision, run=run)  # type: ignore[misc]
-    if fresh:  # the dates describe this run; a partly watched run keeps its own
+    new = [e for e in target if e.id not in seen]
+    if on_air_dates:  # each episode on the day it aired; the run's dates follow from them
+        set_watched(s, item, [e.id for e in new], True, None, "day", run=run)  # type: ignore[misc]
+        evs = watched_events(s, run)
+        for e in new:
+            evs[e.id].occurred_at = event_time(items.utc(e.airstamp_utc).date(), "day")  # type: ignore[index, union-attr]
+            s.add(evs[e.id])  # type: ignore[index]
+        s.flush()
+        sync_dates(s, run)
+    else:
+        at = event_time(finished_on or started_on, precision)
+        set_watched(s, item, [e.id for e in new], True, at, precision, run=run)  # type: ignore[misc]
+    if fresh and not on_air_dates:  # the dates describe this run; a partly watched run keeps its own
         run.date_precision = precision
         run.started_on = normalize(started_on or finished_on or date.min, precision) if (started_on or finished_on or precision == "unknown") else None
         run.finished_on = normalize(finished_on or started_on or date.min, precision) if run.status in FINISHED or run.status == "caught_up" else None

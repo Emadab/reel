@@ -272,6 +272,14 @@ function EpisodeDateDialog({ item, ep, onClose }: { item: ItemDetail; ep: Episod
         <button type="button" onClick={() => done(false)} className="h-11 px-0 bg-transparent border-0 text-[14px] text-wild cursor-pointer">Unmark watched</button>
       )}
     >
+      {ep.aired && ep.airstamp && (
+        <button
+          type="button" onClick={() => { setP("day"); setWhen(ep.airstamp!.slice(0, 10)); }}
+          className="self-start h-11 px-0 bg-transparent border-0 text-[14px] text-ink-2b underline cursor-pointer"
+        >
+          On its release date ({formatFullDate(ep.airstamp.slice(0, 10))})
+        </button>
+      )}
       <div className="flex flex-wrap gap-[18px] items-end">
         <When id={`ep-${ep.id}-d`} label="Watched on" value={when} precision={p} onChange={setWhen} />
         <Remember value={p} onChange={(v) => { setP(v); setWhen(fromUnknown(when)); }} />
@@ -312,11 +320,12 @@ function HistoryDialog({ item, onClose }: { item: ItemDetail; onClose: () => voi
   const [finish, setFinish] = useState(iso(today()));
   const [p, setP] = useState<RunPrecision>("year");
   const [score, setScore] = useState<number | null>(null);
-  const save = useMediaMut(() => mediaApi.history(item.id, {
-    upto_season: upto, date_precision: p, rating: score, ...(p === "unknown" ? {} : { started_on: start, finished_on: finish }),
-  }));
+  const [onAir, setOnAir] = useState(false);
+  const save = useMediaMut(() => mediaApi.history(item.id, onAir
+    ? { upto_season: upto, date_precision: "day", rating: score, on_air_dates: true }
+    : { upto_season: upto, date_precision: p, rating: score, ...(p === "unknown" ? {} : { started_on: start, finished_on: finish }) }));
   const toast = useToast();
-  const bad = p !== "unknown" && finish < start;
+  const bad = !onAir && p !== "unknown" && finish < start;
   return (
     <DateDialog
       label={`Add ${item.title} to your history`} onClose={onClose} saving={save.isPending || bad}
@@ -333,11 +342,19 @@ function HistoryDialog({ item, onClose }: { item: ItemDetail; onClose: () => voi
           {seasons.slice(0, -1).map((s) => <option key={s.number} value={s.number}>{s.number === 1 ? "Season 1" : `Seasons 1–${s.number}`}</option>)}
         </select>
       </label>
-      <div className="flex flex-wrap gap-[18px] items-end">
-        <When id="hist-s" label="Started" value={start} precision={p} onChange={setStart} />
-        <When id="hist-f" label="Finished" value={finish} precision={p} onChange={setFinish} />
-      </div>
-      <Remember value={p} onChange={setP} />
+      <label className="self-start flex items-center gap-[10px] h-11 box-content px-[14px] rounded-[12px] border border-(--line-4) text-[14px] cursor-pointer">
+        <input type="checkbox" checked={onAir} onChange={(e) => setOnAir(e.target.checked)} className="size-[18px] accent-accent" />
+        Watched each episode on its release date
+      </label>
+      {!onAir && (
+        <>
+          <div className="flex flex-wrap gap-[18px] items-end">
+            <When id="hist-s" label="Started" value={start} precision={p} onChange={setStart} />
+            <When id="hist-f" label="Finished" value={finish} precision={p} onChange={setFinish} />
+          </div>
+          <Remember value={p} onChange={setP} />
+        </>
+      )}
       <RatingInput value={score} onChange={setScore} />
     </DateDialog>
   );

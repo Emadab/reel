@@ -462,6 +462,7 @@ class HistoryIn(BaseModel):
     finished_on: date | None = None
     date_precision: Precision = "day"
     rating: float | None = Field(default=None, gt=0, le=10)
+    on_air_dates: bool = False  # each episode watched on the day it aired
 
 
 @router.post("/items/{item_id}/history")
@@ -470,7 +471,7 @@ def add_history(item_id: int, body: HistoryIn, s: Session = Depends(get_session)
     item = _item(s, item_id)
     if item.kind != "show":
         raise HTTPException(422, "Only shows have episodes")
-    shows.add_history(s, item, body.upto_season, body.started_on, body.finished_on, body.date_precision, body.rating)
+    shows.add_history(s, item, body.upto_season, body.started_on, body.finished_on, body.date_precision, body.rating, body.on_air_dates)
     return _detail(s, item)
 
 

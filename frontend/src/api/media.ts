@@ -132,7 +132,7 @@ export const mediaApi = {
     request<ItemDetail>("POST", `/media/runs/${runId}/progress`, { body }),
   episodes: (id: number, body: { episode_ids?: number[]; season?: number; watched: boolean; watched_on?: string; date_precision?: RunPrecision }) =>
     request<ItemDetail>("POST", `/media/items/${id}/episodes`, { body }),
-  history: (id: number, body: { upto_season: number | null; started_on?: string; finished_on?: string; date_precision: RunPrecision; rating?: number | null }) =>
+  history: (id: number, body: { upto_season: number | null; started_on?: string; finished_on?: string; date_precision: RunPrecision; rating?: number | null; on_air_dates?: boolean }) =>
     request<ItemDetail>("POST", `/media/items/${id}/history`, { body }),
   upNext: () => request<UpNext[]>("GET", "/media/shows/up-next"),
   notifications: () => request<{ unseen: number; items: Note[] }>("GET", "/notifications"),

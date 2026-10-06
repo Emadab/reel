@@ -169,6 +169,16 @@ def test_add_history_whole_show_or_up_to_a_season(media):
     assert media.post(f"/api/media/items/{item_id}/history", json={"upto_season": 0}).status_code == 422
 
 
+def test_add_history_on_release_dates(media):
+    SHOW.update(status="ended", future_ep=False)
+    item_id = media.post("/api/media/show/items", json={"ext_id": "9"}).json()["id"]
+    d = media.post(f"/api/media/items/{item_id}/history", json={"on_air_dates": True, "date_precision": "day"}).json()
+    regular = [e for s in d["seasons"] if s["number"] > 0 for e in s["episodes"]]
+    assert [e["watched_on"] for e in regular] == ["2020-01-01", "2020-01-08"]
+    run = d["runs"][0]
+    assert d["status"] == "completed" and (run["started_on"], run["finished_on"], run["date_precision"]) == ("2020-01-01", "2020-01-08", "day")
+
+
 def test_run_dates_follow_precision(media):
     item_id = media.post("/api/media/book/items", json={"ext_id": "OL1W", "status": "reading"}).json()["id"]
     run_id = detail(media, item_id)["runs"][0]["id"]
