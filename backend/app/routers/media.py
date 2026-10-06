@@ -180,6 +180,7 @@ def _detail(s: Session, item: Item) -> dict:
         "suggest": _suggest(s, run),
         "external_ids": {e.source: e.ext_id for e in s.exec(select(ExternalId).where(ExternalId.item_id == item.id))},
         "neighbors": recs.neighbors(s, item),
+        "neighbors_pending": item.embedding is None and recs.embed_soon(item.kind),  # the page polls until it's embedded
     }
     if item.kind == "show":
         seen = shows.watched_events(s, run)

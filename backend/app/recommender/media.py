@@ -300,3 +300,17 @@ def neighbors(s: Session, item: Item, k: int = 6) -> list[dict]:
         x = pool[int(i)]
         out.append({"item": items.card(s, x, lib.get(x.id)), "score": round(slate[x.id].score, 3) if x.id in slate else None})  # type: ignore[index]
     return out
+
+
+def embed_soon(kind: str) -> bool:
+    """Embed this medium's new items in the background (a detail page's neighbours need it). False once
+    embedding has failed, so the page stops waiting."""
+    name = f"embed:{kind}"
+    if jobs.status.get(name, {}).get("state") == "error":
+        return False
+
+    async def run() -> None:
+        with Session(db.engine) as s:
+            await embed_missing(s, kind)
+    jobs.enqueue(name, run)
+    return True
