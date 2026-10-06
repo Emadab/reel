@@ -192,7 +192,15 @@ def test_rawg_fetch_endless_and_dlc():
     respx.get(f"{base}/games/3498/additions").mock(return_value=Response(200, json={"results": [{"id": 9, "name": "Online", "released": "2013-10-01"}]}))
     respx.get(f"{base}/games/3498/game-series").mock(return_value=Response(200, json={"results": [{"id": 4, "name": "GTA IV", "released": "2008-04-29"}]}))
     respx.get(f"{base}/games/3498/screenshots").mock(return_value=Response(200, json={"results": [{"image": "https://media.rawg.io/s.jpg"}]}))
+    wiki = "https://en.wikipedia.org/w/api.php"
+    respx.get(wiki, params={"generator": "search"}).mock(return_value=Response(200, json={"query": {"pages": {
+        "1": {"title": "Grand Theft Auto IV", "index": 1, "pageprops": {"page_image": "GTA4.jpg"}},
+        "2": {"title": "Grand Theft Auto V", "index": 2, "pageprops": {"page_image": "GTA5_box.png"}}}}}))
+    respx.get(wiki, params={"prop": "imageinfo"}).mock(return_value=Response(200, json={"query": {"pages": {
+        "-1": {"imageinfo": [{"thumburl": "https://upload.wikimedia.org/gta5.png"}]}}}}))
+    respx.get("https://upload.wikimedia.org/gta5.png").mock(return_value=Response(200, content=b"png", headers={"content-type": "image/png"}))
     d = run(rawg.fetch("3498"))
+    assert d.cover_url == "https://upload.wikimedia.org/gta5.png"  # box art from Wikipedia, not RAWG's screenshot
     assert d.status == "released" and not d.endless and d.details["playtime_hours"] == 74
     assert d.details["dlc"][0]["name"] == "Online" and d.recommendations[0].title == "GTA IV"
     assert d.details["platforms"] == ["PC"] and d.people[0].role == "developer"
@@ -227,3 +235,13 @@ def test_openlibrary_search_keeps_the_richest_copy_of_a_book_and_ranks_it_first(
     kept = ol.dedupe(docs)
     assert [d["key"] for d in kept] == ["/works/C", "/works/B", "/works/E"]
     assert ol.rank("the hobbit", kept)[0]["key"] == "/works/C"
+
+
+def test_box_art_article_match_allows_editions_not_other_games():
+    from app.providers.boxart import best_article
+
+    pages = [{"title": "The Witcher (video game)", "index": 1}, {"title": "The Witcher 3: Wild Hunt", "index": 2},
+             {"title": "The Witcher (video game series)", "index": 3}]
+    assert best_article("The Witcher 3 Wild Hunt - Complete Edition", 2015, pages)["title"] == "The Witcher 3: Wild Hunt"
+    assert best_article("The Witcher: Remake", None, pages) is None  # a remake is another game, not an edition
+    assert best_article("The Witcher", 2007, pages)["title"] == "The Witcher (video game)"  # never the series logo

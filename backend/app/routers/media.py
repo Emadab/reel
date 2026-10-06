@@ -166,7 +166,8 @@ async def detail(item_id: int, s: Session = Depends(get_session)):
         item = await items.refresh(s, item)
     if item.kind == "show":
         await shows.ensure_collection(s, item)
-    return _detail(s, item)
+    pending = item.kind == "game" and await games.ensure_collection(s, item)
+    return {**_detail(s, item), "collection_pending": pending}
 
 
 @router.post("/items/{item_id}/refresh")
@@ -214,6 +215,7 @@ def _detail(s: Session, item: Item) -> dict:
         out["scores_pending"] = shows.scores_pending(s, item)
     if item.kind == "game":
         out["time_left"] = games.time_left(item, run)
+        out["collection"] = shows.collection_out(s, item)  # same shape as a show's
     from ..flags import enabled
 
     if enabled(s, "announcements"):

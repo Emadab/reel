@@ -15,7 +15,7 @@ import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/Wh
 import { onColor } from "../../lib/color";
 import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today } from "../../lib/format";
 import { backTarget } from "../../lib/history";
-import { MODES, START, STATUS_LABEL, statusLabel } from "../../lib/mode";
+import { MODES, SHELF_LABEL, START, STATUS_LABEL, statusLabel } from "../../lib/mode";
 import { ScoreGrid, Scores, votes } from "../FilmDetail";
 import { applyChoice, asFilm, FINAL, fraction, itemPath, Meter, pagePad, progressText, statusChoices, type StatusChoice } from "./parts";
 
@@ -914,25 +914,26 @@ function Collection({ item }: { item: ItemDetail }) {
   const c = item.collection;
   if (!c) return null;
   const seen = c.items.filter((n) => n.run_no > 0).length;
+  const verb = { show: "seen", book: "read", game: "played" }[item.kind];
   return (
     <section data-extension className={cx("flex flex-col gap-[18px]", pagePad)}>
       <div className="flex justify-between items-baseline gap-4 flex-wrap">
         <SectionTitle>{c.name}</SectionTitle>
-        <span className="font-mono text-[12px] text-ink-3">seen {seen} of {c.items.length}</span>
+        <span className="font-mono text-[12px] text-ink-3">{verb} {seen} of {c.items.length}</span>
       </div>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(130px,100%),1fr))] gap-[18px]">
         {c.items.map((n) => {
           const here = n.id === item.id;
           const watched = n.run_no > 0 && n.status;
           const meta = here
-            ? "This show"
+            ? `This ${MODES[item.kind].noun[0]}`
             : watched
               ? [statusLabel(n.kind, n.status!), n.my_rating != null && `★ ${rating(n.my_rating)}`].filter(Boolean).join(" · ")
               : n.shelf === "wishlist"
-                ? "On your watchlist"
+                ? `On your ${SHELF_LABEL[item.kind].wishlist.toLowerCase()}`
                 : n.year
-                  ? `${n.year} · not seen`
-                  : "Not seen";
+                  ? `${n.year} · not ${verb}`
+                  : `Not ${verb}`;
           return (
             <Link
               key={n.id}

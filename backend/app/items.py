@@ -1,5 +1,6 @@
 """Shows, books and games: ingest from providers (deduplicated through external ids), library entries,
 runs, and the card shape every list returns."""
+import asyncio
 from datetime import UTC, datetime, timedelta
 from urllib.parse import quote, urlparse
 
@@ -7,7 +8,17 @@ from fastapi import HTTPException
 from sqlmodel import Session, col, delete, select
 
 from . import jobs, media
-from .models_media import Episode, Event, ExternalId, Item, ItemPerson, LibraryEntry, Person, Run, Season
+from .models_media import (
+    Episode,
+    Event,
+    ExternalId,
+    Item,
+    ItemPerson,
+    LibraryEntry,
+    Person,
+    Run,
+    Season,
+)
 from .providers import PRIMARY
 from .providers.base import ItemData, Kind
 from .status import FINISHED, STICKY, allowed
@@ -88,7 +99,7 @@ async def upsert(s: Session, d: ItemData, item: Item | None = None) -> Item:
     cover = await media.store_image(d.kind, d.cover_url)
     if cover and cover != item.cover_path:
         item.cover_path = cover
-        item.palette, item.dominant = media.palette_for(cover)
+        item.palette, item.dominant = await asyncio.to_thread(media.palette_for, cover)  # CPU-bound: keep the event loop free
     item.backdrop_path = await media.store_image(f"{d.kind}-backdrop", d.backdrop_url) or item.backdrop_path
     item.refreshed_at = datetime.now(UTC)
     item.embedding = None  # re-embed with the new text

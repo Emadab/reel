@@ -71,6 +71,7 @@ export type ItemDetail = ItemCard & {
   external_ids: Record<string, string>;
   neighbors: { item: ItemCard; score: number | null }[];
   neighbors_pending: boolean;
+  collection_pending?: boolean; // games: box art for the rest of the series is being fetched
   scores_pending?: boolean; // shows: IMDb / RT / Metacritic are being fetched
 };
 
@@ -168,7 +169,7 @@ export const useMediaLibrary = (kind: Kind, p: { status?: string[]; genre?: stri
 export const useMediaSearch = (kind: Kind, q: string) =>
   useQuery({ queryKey: ["media", kind, "search", q], queryFn: () => mediaApi.search(kind, q), enabled: q.trim().length >= 2, placeholderData: keepPreviousData, retry: false });
 export const useItem = (id: number) =>
-  useQuery({ queryKey: ["media", "item", id], queryFn: () => mediaApi.item(id), enabled: id > 0, refetchInterval: (q) => (q.state.data?.neighbors_pending || q.state.data?.scores_pending ? 3000 : false) });
+  useQuery({ queryKey: ["media", "item", id], queryFn: () => mediaApi.item(id), enabled: id > 0, refetchInterval: (q) => (q.state.data?.neighbors_pending || q.state.data?.scores_pending || q.state.data?.collection_pending ? 3000 : false) });
 export const useNotifications = (enabled: boolean) =>
   useQuery({ queryKey: ["media", "notifications"], queryFn: mediaApi.notifications, enabled, refetchInterval: 60_000 });
 export const useCalendar = (kind: Kind) => useQuery({ queryKey: ["media", kind, "calendar"], queryFn: () => mediaApi.calendar(kind) });

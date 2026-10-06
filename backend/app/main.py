@@ -6,10 +6,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import db, jobs, omdb, scheduler
+from . import db, games, jobs, omdb, scheduler
 from .config import settings
 from .recommender import service
-from .routers import announcements, history, imports, library, media, media_imports, media_stats, movies, recs, search, system, watches
+from .routers import (
+    announcements,
+    history,
+    imports,
+    library,
+    media,
+    media_imports,
+    media_stats,
+    movies,
+    recs,
+    search,
+    system,
+    watches,
+)
 
 FRONTEND = Path(__file__).parent.parent.parent / "frontend" / "dist"
 
@@ -20,6 +33,7 @@ async def lifespan(_: FastAPI):
     worker = jobs.start()
     service.on_startup()
     jobs.enqueue("scores:library", omdb.fill_scores)  # IMDb / RT / Metacritic for films that have none yet
+    games.request_box_art()  # box art instead of RAWG screenshots for games that haven't had it tried
     ticker = scheduler.start()  # announcements and show re-derivation; idle while their flags are off
     yield
     ticker.cancel()

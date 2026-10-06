@@ -46,6 +46,11 @@ def media(client, monkeypatch):
     monkeypatch.setattr(shows, "fetch_show", fake_show)
     monkeypatch.setattr(books, "fetch_book", fake_book)
     monkeypatch.setattr(rawg, "fetch", fake_game)
+
+    async def no_series(s, item):
+        return False
+
+    monkeypatch.setattr(games, "ensure_collection", no_series)  # series lists come from RAWG (tested on their own)
     client.put("/api/settings", json={"flags": {"media.shows": True, "media.books": True, "media.games": True}})
     return client
 
@@ -382,3 +387,9 @@ def test_library_filters_and_watch_date_sort(media):
     assert set(lib(status="reading")) == {old, new} and lib(status="wishlist") == [wish]
     assert set(lib(genre="Fantasy")) == {old, new, wish} and lib(genre="Comedy") == []
     assert lib(sort="watched") == [new, old, wish]  # never started goes last
+
+
+def test_game_series_name_from_titles():
+    assert games.series_name("Grand Theft Auto V", ["Grand Theft Auto", "San Andreas Multiplayer (SA-MP)", "Grand Theft Auto IV"]) == "Grand Theft Auto"
+    assert games.series_name("The Witcher 3: Wild Hunt", ["The Witcher", "The Witcher 2: Assassins of Kings"]) == "The Witcher"
+    assert games.series_name("Hades", ["Hades"]) is None

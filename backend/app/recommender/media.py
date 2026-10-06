@@ -13,7 +13,14 @@ import numpy as np
 from sqlmodel import Session, col, delete, select
 
 from .. import db, items, jobs, media, tmdb
-from ..models_media import ExternalId, Item, LibraryEntry, MediaCandidate, MediaFeedback, Run
+from ..models_media import (
+    ExternalId,
+    Item,
+    LibraryEntry,
+    MediaCandidate,
+    MediaFeedback,
+    Run,
+)
 from ..providers import openlibrary, rawg
 from ..providers.base import SearchHit
 from ..status import FINISHED
@@ -118,7 +125,7 @@ async def _light(s: Session, kind: str, h: SearchHit, overview: str | None = Non
         return item
     item = Item(kind=kind, title=h.title, year=h.year, overview=overview, genres=genres or [], details={"light": True})
     item.cover_path = await media.store_image(kind, h.cover_url)
-    item.palette, item.dominant = media.palette_for(item.cover_path)
+    item.palette, item.dominant = await asyncio.to_thread(media.palette_for, item.cover_path)  # CPU-bound: keep requests flowing
     s.add(item)
     s.flush()
     s.add(ExternalId(source=h.source, ext_id=h.ext_id, item_id=item.id))  # type: ignore[arg-type]
@@ -276,6 +283,10 @@ def request(kind: str) -> None:
     async def run() -> None:
         with Session(db.engine) as s:
             await recompute(s, kind)
+        if kind == "game":
+            from .. import games  # late import: games imports this module
+
+            games.request_box_art()  # new suggestions arrive with RAWG screenshots
     jobs.enqueue(f"recs:{kind}", run)
 
 
