@@ -42,24 +42,6 @@ export function Meter({ value, className }: { value: number; className?: string 
   );
 }
 
-/** Progress ring for the up-next rail. */
-export function Ring({ value, size = 44, label }: { value: number; size?: number; label?: string }) {
-  const r = size / 2 - 3;
-  const c = 2 * Math.PI * r;
-  return (
-    <span className="relative grid place-items-center shrink-0" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={3} />
-        <circle
-          cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-accent)" strokeWidth={3} strokeLinecap="round"
-          strokeDasharray={c} strokeDashoffset={c * (1 - value)} style={{ filter: "drop-shadow(0 0 4px var(--color-accent))", transition: "stroke-dashoffset .7s ease-out" }}
-        />
-      </svg>
-      {label && <span className="absolute font-mono text-[10.5px] text-ink-2 tabular-nums">{label}</span>}
-    </span>
-  );
-}
-
 export function MediaCard({ item }: { item: ItemCard }) {
   const f = fraction(item.kind, item.progress);
   const active = item.status && !["completed", "finished", "beaten", "wishlist", "backlog"].includes(item.status);

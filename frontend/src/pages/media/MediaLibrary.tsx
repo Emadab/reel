@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useId, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { mediaApi, useMediaLibrary, useMediaMut, useUpNext, type ItemCard, type Kind, type MediaSort, type UpNext } from "../../api/media";
 import { FilterChip } from "../../components/FilterChip";
@@ -10,7 +11,7 @@ import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx } from "../..
 import { usePalette } from "../../features/search/palette";
 import { num } from "../../lib/format";
 import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
-import { asFilm, fraction, itemPath, MediaCard, Meter, pagePad, progressText, Ring, wallGrid } from "./parts";
+import { asFilm, fraction, itemPath, MediaCard, Meter, pagePad, progressText, wallGrid } from "./parts";
 import { BacklogPlanner } from "./BacklogPlanner";
 
 const WATCHED: Record<Kind, string> = { show: "last watched", book: "last read", game: "last played" };
@@ -27,43 +28,124 @@ function chipLabel(name: string, values: string[]) {
   return values.length === 1 ? `${name}: ${values[0]}` : `${name} · ${values.length}`;
 }
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * The tick button and the progress ring in one: a segmented HUD track, a neon arc for how much you've watched,
+ * a check in the middle. The glow is an SVG filter with room to spread, so it never stops at the svg's box.
+ */
+function NeonRing({ value, label, busy, onClick }: { value: number; label: string; busy: boolean; onClick: () => void }) {
+  const id = useId().replace(/:/g, "");
+  const size = 56, r = 23, c = 2 * Math.PI * r;
+  return (
+    <button
+      type="button" aria-label={label} title="Mark watched" disabled={busy} onClick={onClick}
+      className="group relative size-14 shrink-0 grid place-items-center rounded-full bg-transparent border-0 p-0 cursor-pointer disabled:cursor-wait"
+    >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden className="absolute inset-0 -rotate-90 overflow-visible">
+        <defs>
+          <filter id={`glow-${id}`} x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="2.6" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <linearGradient id={`arc-${id}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="var(--color-accent)" />
+            <stop offset="100%" stopColor="var(--color-wild)" />
+          </linearGradient>
+        </defs>
+        {/* HUD track: 46 short segments */}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.13)" strokeWidth={3} strokeDasharray={`${c / 46 - 1.4} 1.4`} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none" stroke={`url(#arc-${id})`} strokeWidth={3} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - Math.max(value, 0.015))} filter={`url(#glow-${id})`}
+          className="transition-[stroke-dashoffset] duration-700 ease-out"
+        />
+      </svg>
+      <span
+        className={cx(
+          "relative size-9 rounded-full grid place-items-center border transition-[background-color,color,box-shadow] duration-200",
+          "border-[color-mix(in_oklch,var(--color-accent)_45%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_10%,transparent)] text-accent",
+          "group-hover:bg-accent group-hover:text-on-accent group-hover:shadow-[0_0_18px_-2px_var(--color-accent)] group-focus-visible:bg-accent group-focus-visible:text-on-accent",
+          busy && "animate-pulse",
+        )}
+      >
+        <IconCheck size={16} strokeWidth={2.4} />
+      </span>
+    </button>
+  );
+}
+
 /** Shows: the next aired episode of everything you're watching, ticked off right here. */
 function UpNextRail() {
   const up = useUpNext(true);
   const tick = useMediaMut((u: UpNext) => mediaApi.episodes(u.item.id, { episode_ids: [u.episode.id], watched: true }));
   const toast = useToast();
+  const [pulse, setPulse] = useState<{ id: number; k: number } | null>(null);
   if (!up.data?.length) return null;
   return (
     <section className="flex flex-col gap-4" aria-label="Up next">
       <SectionTitle>Up next</SectionTitle>
-      <div className="flex gap-4 overflow-x-auto scroll-quiet pb-2 -mb-2">
+      <div className="flex gap-4 overflow-x-auto scroll-quiet py-2 -my-2 px-1 -mx-1">
         {up.data.map((u) => {
-          const code = `S${u.episode.season} · E${u.episode.number}`;
+          const code = `S${pad(u.episode.season)} · E${pad(u.episode.number)}`;
           const f = fraction("show", u.progress) ?? 0;
+          const glow = u.item.palette[0] ?? "var(--color-accent)";
           return (
-            <div key={u.item.id} className="shrink-0 w-[360px] max-[639px]:w-[300px] flex items-center gap-4 p-[14px] rounded-[22px] bg-(--fill-glass) border border-(--line-2) backdrop-blur-[24px]">
-              <Link to={itemPath(u.item)} className="mini-poster shrink-0" aria-label={u.item.title}>
-                <Poster film={asFilm(u.item)} size="rec" className="w-[64px]" layout={false} shadow={false} />
+            <div
+              key={u.item.id}
+              className="group/card relative shrink-0 w-[372px] max-[639px]:w-[312px] flex items-center gap-4 py-[14px] pl-[14px] pr-[12px] rounded-[18px] overflow-hidden border border-(--line-2) bg-(--fill-glass) backdrop-blur-[24px] transition-[border-color,box-shadow] duration-300 hover:border-[color-mix(in_oklch,var(--color-accent)_45%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--color-accent)_18%,transparent),0_18px_44px_-22px_var(--color-accent)]"
+            >
+              {/* neon edge, the show's own colour behind its poster, scanlines and HUD corner brackets */}
+              <span aria-hidden className="absolute inset-x-[18px] top-0 h-px bg-[linear-gradient(90deg,transparent,var(--color-accent)_30%,var(--color-wild)_70%,transparent)] opacity-60 group-hover/card:opacity-100 transition-opacity" />
+              <span aria-hidden className="absolute -left-10 -top-10 size-[150px] rounded-full pointer-events-none opacity-50" style={{ background: `radial-gradient(closest-side, color-mix(in oklch, ${glow} 55%, transparent), transparent)` }} />
+              <span aria-hidden className="absolute inset-0 pointer-events-none opacity-[0.35] bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.035)_0_1px,transparent_1px_3px)]" />
+              <span aria-hidden className="absolute right-[8px] top-[8px] size-[10px] border-t border-r border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] rounded-tr-[3px]" />
+              <span aria-hidden className="absolute left-[8px] bottom-[8px] size-[10px] border-b border-l border-[color-mix(in_oklch,var(--color-wild)_45%,transparent)] rounded-bl-[3px]" />
+
+              <Link to={itemPath(u.item)} className="mini-poster relative shrink-0" aria-label={u.item.title}>
+                <Poster film={asFilm(u.item)} size="rec" className="w-[62px] rounded-[10px]" layout={false} shadow={`0 12px 28px -14px ${glow}`} />
               </Link>
-              <div className="flex-1 min-w-0 flex flex-col gap-[6px]">
-                <Link to={itemPath(u.item)} className="text-[15px] font-medium truncate no-underline">{u.item.title}</Link>
-                <span className="font-mono text-[12px] tracking-[0.06em] text-accent">{code}</span>
-                <span className="text-[13px] text-ink-3 truncate">{u.episode.title ?? "Untitled episode"}</span>
+              <div className="relative flex-1 min-w-0 flex flex-col gap-[7px]">
+                <Link to={itemPath(u.item)} className="text-[15px] font-medium leading-[1.2] truncate no-underline">{u.item.title}</Link>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="shrink-0 font-mono text-[11px] tracking-[0.14em] px-[6px] py-[2px] rounded-[4px] text-accent border border-[color-mix(in_oklch,var(--color-accent)_40%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_10%,transparent)] shadow-[0_0_10px_-4px_var(--color-accent)]">
+                    {code}
+                  </span>
+                  <span className="text-[13px] text-ink-3 truncate">{u.episode.title ?? "Untitled episode"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="relative flex-1 h-[3px] rounded-full bg-white/8 overflow-hidden">
+                    <span className="absolute inset-y-0 left-0 rounded-full bg-[linear-gradient(90deg,var(--color-accent),var(--color-wild))] transition-[width] duration-700 ease-out" style={{ width: `${Math.round(f * 100)}%` }} />
+                  </span>
+                  <span className="shrink-0 font-mono text-[10.5px] tracking-[0.06em] text-ink-4 tabular-nums">{u.progress.watched}/{u.progress.aired} · {Math.round(f * 100)}%</span>
+                </div>
               </div>
-              <Ring value={f} label={`${u.progress.watched}/${u.progress.aired}`} />
-              <button
-                type="button"
-                aria-label={`Mark ${u.item.title} ${code} watched`}
-                title="Mark watched"
-                disabled={tick.isPending}
-                onClick={async () => {
-                  await tick.mutateAsync(u);
-                  toast({ text: <>Watched <em>{u.item.title}</em> {code}</> });
-                }}
-                className="size-11 shrink-0 rounded-full grid place-items-center border border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_12%,transparent)] text-accent hover:bg-accent hover:text-on-accent"
-              >
-                <IconCheck size={17} />
-              </button>
+              <div className="relative">
+                <NeonRing
+                  value={f}
+                  label={`Mark ${u.item.title} ${code} watched`}
+                  busy={tick.isPending && tick.variables?.item.id === u.item.id}
+                  onClick={async () => {
+                    await tick.mutateAsync(u);
+                    setPulse({ id: u.item.id, k: Date.now() });
+                    toast({ text: <>Watched <em>{u.item.title}</em> {code}</> });
+                  }}
+                />
+                <AnimatePresence>
+                  {pulse?.id === u.item.id && (
+                    <motion.span
+                      key={pulse.k}
+                      aria-hidden
+                      initial={{ scale: 0.7, opacity: 0.9 }}
+                      animate={{ scale: 1.9, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.7, ease: "easeOut" }}
+                      onAnimationComplete={() => setPulse(null)}
+                      className="absolute inset-0 rounded-full border-2 border-accent pointer-events-none"
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           );
         })}
