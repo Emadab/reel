@@ -123,3 +123,7 @@ Reel also snapshots the database and images automatically (`<timestamp>-pre-migr
 ## Credits
 
 This product uses the TMDB API but is not endorsed or certified by TMDB. Show air times from [TVmaze](https://www.tvmaze.com) (CC BY-SA). Book data from [Open Library](https://openlibrary.org), [Hardcover](https://hardcover.app) and Google Books. Game data from [RAWG](https://rawg.io). Scores from [OMDb](https://www.omdbapi.com).
+
+## License
+
+[MIT](LICENSE). The API keys and the data they return are covered by each service's own terms.
