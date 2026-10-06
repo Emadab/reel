@@ -212,3 +212,18 @@ def test_cache_write_never_fails_a_request_while_the_caller_holds_the_write_lock
         s.flush()  # the caller's write transaction is open
         assert run(c.get("/busy")) == {"ok": 1}
         s.rollback()
+
+
+def test_openlibrary_search_keeps_the_richest_copy_of_a_book_and_ranks_it_first():
+    from app.providers import openlibrary as ol
+
+    docs = [
+        {"key": "/works/A", "title": "The Hobbit", "author_name": ["J.R.R. Tolkien"], "edition_count": 3},
+        {"key": "/works/B", "title": "The Hobbit: companion", "author_name": ["David Day"], "edition_count": 2},
+        {"key": "/works/C", "title": "The hobbit", "author_name": ["J.R.R. Tolkien"], "edition_count": 480, "cover_i": 1},
+        {"key": "/works/D", "title": "The Hobbit", "edition_count": 1},  # no author: the same book
+        {"key": "/works/E", "title": "The Hobbit", "author_name": ["Charles Dixon"], "edition_count": 10},
+    ]
+    kept = ol.dedupe(docs)
+    assert [d["key"] for d in kept] == ["/works/C", "/works/B", "/works/E"]
+    assert ol.rank("the hobbit", kept)[0]["key"] == "/works/C"

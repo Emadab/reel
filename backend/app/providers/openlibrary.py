@@ -1,5 +1,6 @@
 """Open Library: canonical books (work key), authors, covers. No key; identify with a contact email
 in the User-Agent (CONTACT_EMAIL), which raises the limit from 1 to 3 requests per second."""
+from math import log1p
 from statistics import median
 
 from ..config import settings
@@ -9,6 +10,7 @@ from .http import DAY, Client
 COVERS = "https://covers.openlibrary.org/b/id"
 api = Client("Open Library", "https://openlibrary.org", rate=2.5 if settings.contact_email else 0.9, ttl=7 * DAY)
 FIELDS = "key,title,author_name,author_key,first_publish_year,cover_i,isbn,number_of_pages_median,subject"
+SEARCH_FIELDS = FIELDS + ",edition_count,ratings_count,already_read_count"
 
 name = "openlibrary"
 kinds = {"book"}
@@ -44,9 +46,41 @@ def _hit(d: dict) -> SearchHit:
                      ", ".join(d.get("author_name", [])[:2]) or None, cover(d.get("cover_i"), "M"))
 
 
+def norm(s: str | None) -> str:
+    return " ".join("".join(c for c in (s or "").lower() if c.isalnum() or c.isspace()).split())
+
+
+def _richness(d: dict) -> float:
+    """How much Open Library knows about a work: editions, ratings and readers, plus a cover, page count and year."""
+    return ((d.get("edition_count") or 0) + (d.get("ratings_count") or 0) + (d.get("already_read_count") or 0)
+            + 5 * bool(d.get("cover_i")) + 2 * bool(d.get("number_of_pages_median")) + bool(d.get("first_publish_year")))
+
+
+def dedupe(docs: list[dict]) -> list[dict]:
+    """Open Library often has several works for one book. Same title and first author is one book (a copy with no
+    author joins the first authored one of that title): keep its richest work, where the book first appeared."""
+    first_author: dict[str, str] = {}
+    for d in docs:
+        if d.get("author_name"):
+            first_author.setdefault(norm(d.get("title")), norm(d["author_name"][0]))
+    best: dict[tuple[str, str], dict] = {}  # insertion order: where each book first appeared
+    for d in docs:
+        title = norm(d.get("title"))
+        key = (title, norm(d["author_name"][0]) if d.get("author_name") else first_author.get(title, ""))
+        if key not in best or _richness(d) > _richness(best[key]):
+            best[key] = d
+    return list(best.values())
+
+
+def rank(q: str, docs: list[dict]) -> list[dict]:
+    """Open Library's relevance order, nudged towards the works it knows best and the titles you typed exactly."""
+    score = {id(d): log1p(_richness(d)) + 1.5 * (norm(d.get("title")) == norm(q)) - 0.35 * i for i, d in enumerate(docs)}
+    return sorted(docs, key=lambda d: score[id(d)], reverse=True)
+
+
 async def search(q: str, kind="book") -> list[SearchHit]:
-    d = await api.get("/search.json", {"q": q, "fields": FIELDS, "limit": 20}, ttl=DAY) or {}
-    return [_hit(x) for x in d.get("docs", [])]
+    d = await api.get("/search.json", {"q": q, "fields": SEARCH_FIELDS, "limit": 30}, ttl=DAY) or {}
+    return [_hit(x) for x in rank(q, dedupe(d.get("docs", [])))][:20]
 
 
 async def by_isbn(isbn: str) -> str | None:
