@@ -139,14 +139,15 @@ function RecCard({ rec }: { rec: Rec }) {
       </Link>
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         {wild && <span className="self-start font-mono text-[11px] tracking-[0.08em] px-2 py-[3px] rounded-[6px] border border-dashed border-wild text-wild">WILDCARD</span>}
-        <div className="flex justify-between items-baseline gap-[10px]">
-          <h3 className="m-0 font-display font-medium text-[17px] leading-[1.2]">
+        <div className="flex justify-between items-baseline gap-[10px] min-w-0">
+          <h3 className="m-0 min-w-0 truncate font-display font-medium text-[17px] leading-[1.2]">
             <Link to={`/film/${rec.tmdb_id}?from=recs`} className="no-underline">{rec.title}</Link>
           </h3>
-          <span className="font-mono text-[14px]" style={{ color: wild ? "var(--color-wild)" : "var(--color-score)" }}>{pct(rec.score)}</span>
+          <span className="shrink-0 font-mono text-[14px]" style={{ color: wild ? "var(--color-wild)" : "var(--color-score)" }}>{pct(rec.score)}</span>
         </div>
-        <span className="text-[13px] text-ink-3">{[rec.director, rec.year, runtime(rec.runtime)].filter(Boolean).join(" · ")}</span>
-        <p className="m-0 text-[14px] leading-[1.45] text-ink-body">{why}</p>
+        <span className="truncate text-[13px] text-ink-3">{[rec.director, rec.year, runtime(rec.runtime)].filter(Boolean).join(" · ")}</span>
+        {/* at most two lines, so a long reason can't make one card taller than the rest */}
+        <p className="m-0 line-clamp-2 text-[14px] leading-[1.45] text-ink-body">{why}</p>
         <div className="flex gap-[6px] mt-auto pt-[6px]">
           <IconButton shrink label={saved ? "On your watchlist" : "Add to watchlist"} on={saved} onClick={() => !saved && save()}>
             <IconBookmark size={18} />
@@ -157,7 +158,7 @@ function RecCard({ rec }: { rec: Rec }) {
           <IconButton shrink label="Not interested" aria-pressed={reaction === "not_interested"} onClick={() => toggle("not_interested")}>
             <IconNotInterested size={18} />
           </IconButton>
-          <span className="ml-auto self-center text-[12px] text-ink-4">{status}</span>
+          <span className="ml-auto self-center min-w-0 truncate text-[12px] text-ink-4">{status}</span>
         </div>
       </div>
     </article>
@@ -248,7 +249,7 @@ export default function ForYou() {
       )}
       {data?.top && <TopPick key={data.top.tmdb_id} rec={data.top} />}
       {data && data.items.length > 0 && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] auto-rows-fr gap-4">
           {data.items.map((r) => <RecCard key={r.tmdb_id} rec={r} />)}
         </div>
       )}
