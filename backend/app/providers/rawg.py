@@ -10,7 +10,8 @@ from .base import ItemData, PersonData, SearchHit, parse_date, year_of
 from .http import DAY, Client
 
 api = Client("RAWG", "https://api.rawg.io/api", rate=4.0, ttl=30 * DAY)
-ENDLESS_TAGS = {"mmo", "mmorpg", "massively-multiplayer", "sandbox", "live-service", "endless", "open-ended"}
+# not "sandbox": GTA V, Red Dead and most open-world games carry it and still have an ending
+ENDLESS_TAGS = {"mmo", "mmorpg", "massively-multiplayer", "live-service", "endless", "open-ended"}
 
 name = "rawg"
 kinds = {"game"}

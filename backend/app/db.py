@@ -1,3 +1,4 @@
+import json
 from collections.abc import Iterator
 
 from sqlalchemy import event, inspect
@@ -47,6 +48,13 @@ def migrate() -> None:
         if conn.exec_driver_sql("SELECT 1 FROM setting WHERE key = 'rating_scale'").first() is None:
             conn.exec_driver_sql("UPDATE watch SET rating = rating * 2 WHERE rating IS NOT NULL")
             conn.exec_driver_sql("INSERT INTO setting (key, value) VALUES ('rating_scale', '10')")
+        # "sandbox" used to mark a game endless (GTA V): clear the flag where that tag was the only reason (once)
+        if conn.exec_driver_sql("SELECT 1 FROM setting WHERE key = 'endless_sandbox'").first() is None:
+            for item_id, tags, genres in conn.exec_driver_sql("SELECT id, tags, genres FROM item WHERE kind = 'game' AND endless = 1").all():
+                names = {x.lower() for x in json.loads(tags or "[]") + json.loads(genres or "[]")}
+                if "sandbox" in names and not names & {"mmo", "mmorpg", "massively multiplayer", "live service", "endless", "open-ended"}:
+                    conn.exec_driver_sql("UPDATE item SET endless = 0 WHERE id = ?", (item_id,))
+            conn.exec_driver_sql("INSERT INTO setting (key, value) VALUES ('endless_sandbox', '1')")
 
 
 def reconnect() -> None:

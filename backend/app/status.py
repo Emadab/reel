@@ -16,15 +16,18 @@ TRANSITIONS: dict[str, dict[str | None, set[str]]] = {
              "caught_up": {"watching", "completed", "dropped"},
              "completed": {"caught_up"},
              "on_hold": {"watching", "dropped"}, "dropped": {"watching"}},
+    # an ended run can be picked up again or corrected to another ending (finished ↔ did not finish, …)
     "book": {None: {"reading", "finished", "dipping"},
              "reading": {"paused", "finished", "did_not_finish"},
              "paused": {"reading", "did_not_finish"}, "dipping": {"reading", "finished"},
-             "did_not_finish": {"reading"}},
+             "finished": {"reading", "did_not_finish"}, "did_not_finish": {"reading", "finished"}},
     "game": {None: {"playing", "beaten", "completed"},
              "playing": {"shelved", "beaten", "completed", "abandoned", "retired"},
-             "shelved": {"playing", "abandoned"}, "beaten": {"playing", "completed"},
-             "abandoned": {"playing"}},
+             "shelved": {"playing", "abandoned"}, "beaten": {"playing", "completed", "abandoned"},
+             "completed": {"playing", "beaten"}, "abandoned": {"playing", "beaten", "completed"},
+             "retired": {"playing", "beaten", "completed", "abandoned"}},
 }
+ENDED = {"completed", "finished", "beaten", "dropped", "did_not_finish", "abandoned", "retired"}
 STICKY = {"on_hold", "dropped", "paused", "did_not_finish", "shelved", "abandoned", "retired"}
 FINISHED = {"completed", "finished", "beaten"}
 STARTED = {"watching", "reading", "dipping", "playing"}
@@ -57,6 +60,8 @@ def transition(s: Session, run: Run, kind: str, new: str, source: str = "user", 
         raise HTTPException(409, {"message": f"Can't go from {old or 'not started'} to {new}",
                                   "allowed": allowed(kind, old, endless)})
     today = when or date.today()
+    if old in ENDED and new not in ENDED:
+        run.finished_on = None  # picked up again: it hasn't finished yet
     if new in STARTED and run.started_on is None:
         run.started_on = today
     if new in FINISHED and run.finished_on is None:

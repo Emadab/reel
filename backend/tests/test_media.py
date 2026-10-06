@@ -70,7 +70,9 @@ def test_transition_table():
     assert allowed("show", None) == ["watching"]
     assert allowed("game", "playing", endless=True) == ["abandoned", "retired", "shelved"]
     assert allowed("game", "playing") == ["abandoned", "beaten", "completed", "shelved"]  # retired: endless games only
-    assert allowed("book", "did_not_finish") == ["reading"]
+    assert allowed("game", "retired") == ["abandoned", "beaten", "completed", "playing"]  # an ended run can be corrected
+    assert allowed("book", "finished") == ["did_not_finish", "reading"]
+    assert allowed("book", "did_not_finish") == ["finished", "reading"]
     with Session(db.engine) as s:
         run = Run(item_id=1, status="reading")
         with pytest.raises(HTTPException) as e:
@@ -319,7 +321,7 @@ def test_game_hours_goal_and_time_left(media):
     d = media.post(f"/api/media/runs/{run_id}/progress", json={"hours": 12.5}).json()
     assert d["time_left"] == 39.5 and d["progress"]["hours"] == 12.5
     d = media.post(f"/api/media/items/{item_id}/status", json={"status": "beaten"}).json()
-    assert d["allowed"] == ["completed", "playing"]
+    assert d["allowed"] == ["abandoned", "completed", "playing"]
 
 
 def test_endless_game_and_sticky_states_survive_hours(media):
