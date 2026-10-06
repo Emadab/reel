@@ -376,18 +376,20 @@ function Episodes({ item }: { item: ItemDetail }) {
   const current = item.next_episode?.season ?? seasons.find((s) => s.number > 0)?.number ?? 0;
   const [pick, setPick] = useState<number | null>(null);
   const shown = seasons.find((s) => s.number === (pick ?? current)) ?? seasons[0];
-  const tick = useMediaMut((b: { episode_ids?: number[]; season?: number; watched: boolean }) => mediaApi.episodes(item.id, b));
+  const tick = useMediaMut((b: { episode_ids?: number[]; season?: number; watched: boolean; on_air_dates?: boolean }) => mediaApi.episodes(item.id, b));
   const [dating, setDating] = useState<Episode | null>(null);
   const [history, setHistory] = useState(false);
   // fill handle: drag a watched episode's date onto the episodes after it (like a spreadsheet)
   const [fill, setFill] = useState<{ from: number; to: number; x: number; y: number } | null>(null);
   const [landed, setLanded] = useState<{ ids: Set<number>; from: number; k: number } | null>(null);
-  const stamp = useMediaMut((b: { episode_ids: number[]; watched: boolean; watched_on?: string; date_precision: RunPrecision }) => mediaApi.episodes(item.id, b));
+  const stamp = useMediaMut((b: { episode_ids: number[]; watched: boolean; watched_on?: string; date_precision: RunPrecision; on_air_dates?: boolean }) => mediaApi.episodes(item.id, b));
   const toast = useToast();
   if (!shown) return null;
   const eps = shown.episodes;
   const dateOf = (e: Episode) => formatWatchDate(e.watched_on!, e.watched_precision ?? "day");
   const fillable = (e: Episode) => e.aired || e.watched;
+  // watched on the day it aired: a fill from it gives every episode its own release date
+  const onAir = (e: Episode) => e.watched && e.watched_precision === "day" && e.airstamp != null && e.watched_on === e.airstamp.slice(0, 10);
   const inFill = (i: number) => fill != null && i > fill.from && i <= fill.to && fillable(eps[i]);
   const applyFill = async (f: NonNullable<typeof fill>) => {
     setFill(null);
@@ -395,9 +397,12 @@ function Episodes({ item }: { item: ItemDetail }) {
     const ids = eps.slice(f.from + 1, f.to + 1).filter(fillable).map((x) => x.id);
     if (!ids.length) return;
     const p = src.watched_precision ?? "day";
-    await stamp.mutateAsync({ episode_ids: ids, watched: true, date_precision: p, ...(p === "unknown" ? {} : { watched_on: src.watched_on! }) });
+    const air = onAir(src);
+    await stamp.mutateAsync(air
+      ? { episode_ids: ids, watched: true, date_precision: "day", on_air_dates: true }
+      : { episode_ids: ids, watched: true, date_precision: p, ...(p === "unknown" ? {} : { watched_on: src.watched_on! }) });
     setLanded({ ids: new Set(ids), from: f.from, k: Date.now() });
-    toast({ text: `${dateOf(src)} → ${ids.length} episode${ids.length > 1 ? "s" : ""}` });
+    toast({ text: `${air ? "Release dates" : dateOf(src)} → ${ids.length} episode${ids.length > 1 ? "s" : ""}` });
   };
   const fillTo = (x: number, y: number) => {
     const el = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-ep]");
@@ -457,6 +462,11 @@ function Episodes({ item }: { item: ItemDetail }) {
               {all ? "Unmark season" : <><IconCheck size={15} /> Mark season watched</>}
             </Button>
           )}
+          {aired.length > 0 && !all && (
+            <Button onClick={() => tick.mutate({ season: shown.number, watched: true, on_air_dates: true })} disabled={tick.isPending}>
+              <IconCalendar size={15} /> Watched on release dates
+            </Button>
+          )}
         </span>
       </div>
       {history && <HistoryDialog item={item} onClose={() => setHistory(false)} />}
@@ -507,7 +517,7 @@ function Episodes({ item }: { item: ItemDetail }) {
                 <span className="flex-1 min-w-0 flex flex-col gap-[3px]">
                   <span className="text-[14px] truncate">{e.title ?? "Untitled episode"}</span>
                   <span className={cx("font-mono text-[11px] truncate", lit ? "text-accent" : "text-ink-4")}>
-                    {lit ? `→ ${dateOf(eps[fill!.from])}` : e.watched && e.watched_on ? `Watched ${dateOf(e)}` : airLabel(e)}
+                    {lit ? `→ ${onAir(eps[fill!.from]) ? (e.airstamp ? formatWatchDate(e.airstamp.slice(0, 10), "day") : "release date") : dateOf(eps[fill!.from])}` : e.watched && e.watched_on ? `Watched ${dateOf(e)}` : airLabel(e)}
                     {!lit && e.runtime ? ` · ${e.runtime} min` : ""}
                   </span>
                 </span>

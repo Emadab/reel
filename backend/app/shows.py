@@ -161,15 +161,23 @@ def active_run(s: Session, item: Item) -> Run:
     return run or items.new_run(s, item)
 
 
+def air_time(e: Episode) -> datetime | None:
+    """Watched on its release date, stored like any other day-precision watch."""
+    return event_time(items.utc(e.airstamp_utc).date(), "day") if e.airstamp_utc else None
+
+
 def set_watched(s: Session, item: Item, episode_ids: list[int], watched: bool, when: datetime | None = None,
-                precision: str = "day", run: Run | None = None) -> Run:
-    """Tick or untick episodes. With `when`, an episode that's already ticked gets its date changed."""
+                precision: str = "day", run: Run | None = None, on_air: bool = False) -> Run:
+    """Tick or untick episodes. With `when` (or `on_air`: each on the day it aired), an episode that's already
+    ticked gets its date changed."""
     run = run or active_run(s, item)
     eps = {e.id: e for e in episodes(s, item.id)}  # type: ignore[arg-type]
     if any(i not in eps for i in episode_ids):
         raise HTTPException(404, "Episode not found")
     seen = watched_events(s, run)
     for i in episode_ids:
+        if on_air:
+            when, precision = air_time(eps[i]), "day"
         if watched and i in seen and when:
             seen[i].occurred_at, seen[i].date_precision = when, precision
             s.add(seen[i])
@@ -221,17 +229,8 @@ def add_history(s: Session, item: Item, upto_season: int | None, started_on: dat
         run, seen = items.new_run(s, item), set()
     fresh = not seen
     new = [e for e in target if e.id not in seen]
-    if on_air_dates:  # each episode on the day it aired; the run's dates follow from them
-        set_watched(s, item, [e.id for e in new], True, None, "day", run=run)  # type: ignore[misc]
-        evs = watched_events(s, run)
-        for e in new:
-            evs[e.id].occurred_at = event_time(items.utc(e.airstamp_utc).date(), "day")  # type: ignore[index, union-attr]
-            s.add(evs[e.id])  # type: ignore[index]
-        s.flush()
-        sync_dates(s, run)
-    else:
-        at = event_time(finished_on or started_on, precision)
-        set_watched(s, item, [e.id for e in new], True, at, precision, run=run)  # type: ignore[misc]
+    at = event_time(finished_on or started_on, precision)
+    set_watched(s, item, [e.id for e in new], True, at, precision, run=run, on_air=on_air_dates)  # type: ignore[misc]
     if fresh and not on_air_dates:  # the dates describe this run; a partly watched run keeps its own
         run.date_precision = precision
         run.started_on = normalize(started_on or finished_on or date.min, precision) if (started_on or finished_on or precision == "unknown") else None

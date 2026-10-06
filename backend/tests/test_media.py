@@ -179,6 +179,19 @@ def test_add_history_on_release_dates(media):
     assert d["status"] == "completed" and (run["started_on"], run["finished_on"], run["date_precision"]) == ("2020-01-01", "2020-01-08", "day")
 
 
+def test_season_and_fill_on_release_dates(media):
+    item_id = media.post("/api/media/show/items", json={"ext_id": "10"}).json()["id"]
+    d = media.post(f"/api/media/items/{item_id}/episodes", json={"season": 1, "watched": True, "on_air_dates": True}).json()
+    s1 = next(s for s in d["seasons"] if s["number"] == 1)["episodes"]
+    assert [e["watched_on"] for e in s1] == ["2020-01-01", "2020-01-08"]
+    # a fill from another date re-dates them to that exact date; a fill from a release date gives each its own again
+    ids = [e["id"] for e in s1]
+    d = media.post(f"/api/media/items/{item_id}/episodes", json={"episode_ids": ids, "watched": True, "watched_on": "2024-03-05"}).json()
+    assert {e["watched_on"] for s in d["seasons"] if s["number"] == 1 for e in s["episodes"]} == {"2024-03-05"}
+    d = media.post(f"/api/media/items/{item_id}/episodes", json={"episode_ids": ids, "watched": True, "on_air_dates": True}).json()
+    assert [e["watched_on"] for s in d["seasons"] if s["number"] == 1 for e in s["episodes"]] == ["2020-01-01", "2020-01-08"]
+
+
 def test_run_dates_follow_precision(media):
     item_id = media.post("/api/media/book/items", json={"ext_id": "OL1W", "status": "reading"}).json()["id"]
     run_id = detail(media, item_id)["runs"][0]["id"]

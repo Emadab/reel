@@ -130,7 +130,7 @@ export const mediaApi = {
   deleteRun: (runId: number) => request<void>("DELETE", `/media/runs/${runId}`),
   progress: (runId: number, body: Partial<{ unit: string; current: number; total: number; hours: number; percent: number }>) =>
     request<ItemDetail>("POST", `/media/runs/${runId}/progress`, { body }),
-  episodes: (id: number, body: { episode_ids?: number[]; season?: number; watched: boolean; watched_on?: string; date_precision?: RunPrecision }) =>
+  episodes: (id: number, body: { episode_ids?: number[]; season?: number; watched: boolean; watched_on?: string; date_precision?: RunPrecision; on_air_dates?: boolean }) =>
     request<ItemDetail>("POST", `/media/items/${id}/episodes`, { body }),
   history: (id: number, body: { upto_season: number | null; started_on?: string; finished_on?: string; date_precision: RunPrecision; rating?: number | null; on_air_dates?: boolean }) =>
     request<ItemDetail>("POST", `/media/items/${id}/history`, { body }),

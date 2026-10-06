@@ -399,6 +399,7 @@ class EpisodesIn(BaseModel):
     watched: bool = True
     watched_on: date | None = None  # with a date (or unknown), ticked episodes get it; ticked ones are re-dated
     date_precision: Precision = "day"
+    on_air_dates: bool = False  # each episode watched (or re-dated to) the day it aired
 
 
 @router.post("/items/{item_id}/episodes")
@@ -411,7 +412,7 @@ def tick(item_id: int, body: EpisodesIn, s: Session = Depends(get_session)):
         ids += [e.id for e in shows.episodes(s, item.id) if e.season == body.season and (shows.aired(e) or not body.watched)]  # type: ignore[arg-type, misc]
     dated = body.watched_on is not None or body.date_precision == "unknown"
     shows.set_watched(s, item, ids, body.watched, shows.event_time(body.watched_on, body.date_precision) if dated else None,
-                      body.date_precision if dated else "day")
+                      body.date_precision if dated else "day", on_air=body.watched and body.on_air_dates)
     return _detail(s, item)
 
 
