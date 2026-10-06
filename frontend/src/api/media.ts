@@ -65,6 +65,7 @@ export type ItemDetail = ItemCard & {
   seasons?: { number: number; name: string | null; premiere: string | null; episodes: Episode[] }[];
   next_episode?: Episode | null;
   upcoming_episode?: Episode | null;
+  collection?: { name: string; items: ItemCard[] } | null;
   time_left?: number | null;
   follow?: FollowState;
   external_ids: Record<string, string>;

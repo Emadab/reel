@@ -3,23 +3,67 @@
 Derived states (§5.3): watching while aired regular episodes remain unwatched; caught_up when all aired
 episodes are watched and the show continues; completed when it has ended or been canceled. Specials
 (season 0) never count. Sticky states (on_hold, dropped) are never overridden."""
+import asyncio
 from datetime import UTC, date, datetime, time
 
 from fastapi import HTTPException
 from sqlmodel import Session, col, select
 
-from . import items
+from . import items, tmdb
 from .cards import normalize
 from .models_media import Episode, Event, Item, Run
-from .providers import tvmaze
-from .providers.base import ItemData
+from .providers import tvmaze, wikidata
+from .providers.base import ItemData, SearchHit
 from .providers.http import ProviderUnavailable
+from .providers.tmdb_tv import _hit
 from .providers.tmdb_tv import provider as tmdb_tv
 from .status import FINISHED, STICKY, transition
 
 
+async def collection(tmdb_id: str, title: str) -> dict | None:
+    """The shows it belongs with (Breaking Bad and Better Call Saul, every Star Trek), oldest first, like a
+    film's collection. None when it stands alone."""
+    name, ids = await wikidata.related_shows(tmdb_id)
+    if len(ids) < 2:
+        return None
+    found = await asyncio.gather(*(tmdb.get(f"/tv/{i}") for i in ids), return_exceptions=True)
+    parts = [_hit(d).__dict__ for d in found if isinstance(d, dict)]
+    parts.sort(key=lambda h: h["year"] or 9999)
+    return {"name": name or title, "parts": parts} if len(parts) > 1 else None
+
+
+async def ensure_collection(s: Session, item: Item) -> None:
+    """Look up a show's collection once (shows cached before collections existed), and cache its other
+    shows the way suggestions are cached, so each one opens like any other show."""
+    from .recommender.media import _light  # late import: the recommender imports this module
+
+    if "collection" not in item.details:
+        try:
+            col = await collection(items.primary_id(s, item), item.title)
+        except HTTPException:
+            return  # offline or a provider is down: try again next time the page opens
+        item.details = {**item.details, "collection": col}
+        s.add(item)
+        s.commit()
+    for h in (item.details["collection"] or {}).get("parts", []):
+        await _light(s, "show", SearchHit(**h))
+
+
+def collection_out(s: Session, item: Item) -> dict | None:
+    col = item.details.get("collection")
+    if not col:
+        return None
+    shown = [x for h in col["parts"] if (x := items.find(s, h["source"], h["ext_id"]))]
+    return {"name": col["name"], "items": [items.card(s, x) for x in shown]} if len(shown) > 1 else None
+
+
 async def fetch_show(tmdb_id: str) -> ItemData | None:
     data = await tmdb_tv.fetch(tmdb_id)
+    if data is not None:
+        try:
+            data.details["collection"] = await collection(tmdb_id, data.title)
+        except HTTPException:
+            pass  # keeps the collection it had
     if data is None or not (imdb := data.external_ids.get("imdb")):
         return data
     try:

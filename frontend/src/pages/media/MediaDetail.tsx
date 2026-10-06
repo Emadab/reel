@@ -842,6 +842,47 @@ function People({ item }: { item: ItemDetail }) {
   );
 }
 
+/** Like a film's collection: the other shows in its franchise, oldest first. */
+function Collection({ item }: { item: ItemDetail }) {
+  const c = item.collection;
+  if (!c) return null;
+  const seen = c.items.filter((n) => n.run_no > 0).length;
+  return (
+    <section data-extension className={cx("flex flex-col gap-[18px]", pagePad)}>
+      <div className="flex justify-between items-baseline gap-4 flex-wrap">
+        <SectionTitle>{c.name}</SectionTitle>
+        <span className="font-mono text-[12px] text-ink-3">seen {seen} of {c.items.length}</span>
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(130px,100%),1fr))] gap-[18px]">
+        {c.items.map((n) => {
+          const here = n.id === item.id;
+          const watched = n.run_no > 0 && n.status;
+          const meta = here
+            ? "This show"
+            : watched
+              ? [statusLabel(n.kind, n.status!), n.my_rating != null && `★ ${rating(n.my_rating)}`].filter(Boolean).join(" · ")
+              : n.shelf === "wishlist"
+                ? "On your watchlist"
+                : n.year
+                  ? `${n.year} · not seen`
+                  : "Not seen";
+          return (
+            <Link
+              key={n.id}
+              to={itemPath(n)}
+              aria-current={here ? "page" : undefined}
+              className={cx("mini-poster flex flex-col gap-2 no-underline text-inherit hover:text-inherit", !here && !watched && "opacity-60 hover:opacity-100 transition-opacity")}
+            >
+              <Poster film={asFilm(n)} size="mini" shadow={here ? "0 0 0 2px var(--glow), 0 20px 40px -20px var(--glow)" : false} layout={false} />
+              <span className={cx("text-[12px]", here ? "text-ink" : "text-ink-3")}>{meta}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 /** Like a film page: the closest of your own items and your suggestions on the taste map. */
 function Neighbours({ item }: { item: ItemDetail }) {
   if (!item.neighbors?.length) return null;
@@ -1039,6 +1080,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
           <span className="font-mono text-[11px] text-ink-4 px-1">{item.added_at ? `added ${relativeTime(item.added_at)}` : "not in your library yet"}</span>
         </aside>
       </div>
+      <Collection item={item} />
       <Neighbours item={item} />
     </main>
   );

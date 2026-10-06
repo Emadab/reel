@@ -112,6 +112,19 @@ def test_show_states_watching_caught_up_and_new_episode(media, monkeypatch):
     assert detail(media, card["id"])["status"] == "watching"
 
 
+def test_show_collection_lists_its_franchise(media, monkeypatch):
+    async def fake_collection(tmdb_id, title):
+        hit = lambda i, name, year: {"kind": "show", "source": "tmdb_tv", "ext_id": i, "title": name, "year": year, "subtitle": None, "cover_url": None}  # noqa: E731
+        return {"name": "Breaking Bad", "parts": [hit("1396", "Breaking Bad", 2008), hit(tmdb_id, title, 2015)]}
+
+    monkeypatch.setattr(shows, "collection", fake_collection)
+    card = media.post("/api/media/show/items", json={"ext_id": "60059"}).json()
+    c = detail(media, card["id"])["collection"]
+    assert c["name"] == "Breaking Bad" and [i["title"] for i in c["items"]] == ["Breaking Bad", "Severance"]
+    other = c["items"][0]
+    assert not other["in_library"] and detail(media, other["id"])["title"] == "Severance"  # a light item opens in full
+
+
 def test_show_completed_revival_and_season_ticks(media):
     SHOW.update(status="ended", future_ep=False)
     item_id = media.post("/api/media/show/items", json={"ext_id": "1"}).json()["id"]

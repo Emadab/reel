@@ -164,6 +164,8 @@ async def detail(item_id: int, s: Session = Depends(get_session)):
     item = _item(s, item_id)
     if item.details.get("light"):  # a recommendation cached from a list: fetch its full record on first open
         item = await items.refresh(s, item)
+    if item.kind == "show":
+        await shows.ensure_collection(s, item)
     return _detail(s, item)
 
 
@@ -171,6 +173,8 @@ async def detail(item_id: int, s: Session = Depends(get_session)):
 async def refresh(item_id: int, s: Session = Depends(get_session)):
     item = _item(s, item_id)
     item = await items.refresh(s, item)
+    if item.kind == "show":
+        await shows.ensure_collection(s, item)
     if item.kind == "show" and (run := items.current_run(s, item.id)):  # type: ignore[arg-type]
         shows.derive(s, item, run)
         s.commit()
@@ -204,6 +208,7 @@ def _detail(s: Session, item: Item) -> dict:
         nxt, upcoming = shows.next_episode(s, item, run), shows.upcoming_episode(s, item)
         out["next_episode"] = shows.episode_out(nxt, seen) if nxt else None
         out["upcoming_episode"] = shows.episode_out(upcoming, seen) if upcoming else None
+        out["collection"] = shows.collection_out(s, item)
     if item.kind == "game":
         out["time_left"] = games.time_left(item, run)
     from ..flags import enabled
