@@ -46,7 +46,7 @@ class TmdbTV:
                     provider_ids={"tmdb": str(e["id"])}))
         ext = d.get("external_ids") or {}
         ids = {"tmdb_tv": str(d["id"])} | {k: str(ext[v]) for k, v in (("imdb", "imdb_id"), ("tvdb", "tvdb_id")) if ext.get(v)}
-        people = [PersonData(c["name"], "creator", ext_id=str(c["id"])) for c in d.get("created_by", [])]
+        people = [PersonData(c["name"], "creator", ext_id=str(c["id"]), photo_url=img(c.get("profile_path"), "w185")) for c in d.get("created_by", [])]
         for c in (d.get("aggregate_credits") or {}).get("cast", [])[:12]:
             roles = c.get("roles") or [{}]
             people.append(PersonData(c["name"], "cast", roles[0].get("character"), str(c["id"]), img(c.get("profile_path"), "w185")))

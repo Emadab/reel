@@ -1,6 +1,7 @@
 """Shows, books and games: ingest from providers (deduplicated through external ids), library entries,
 runs, and the card shape every list returns."""
 from datetime import UTC, datetime, timedelta
+from urllib.parse import quote, urlparse
 
 from fastapi import HTTPException
 from sqlmodel import Session, col, delete, select
@@ -106,6 +107,17 @@ async def upsert(s: Session, d: ItemData, item: Item | None = None) -> Item:
     return item
 
 
+def photo_route(url: str | None) -> str | None:
+    """A person's photo as a local, lazily cached route (the UI never hot-links a provider): TMDB through
+    /api/img like movie cast photos, anything else through the thumbnail cache."""
+    if not url:
+        return None
+    u = urlparse(url)
+    if u.hostname == "image.tmdb.org":
+        return "/api/img" + u.path.removeprefix("/t/p")
+    return f"/api/media/thumb?u={quote(url, safe='')}"
+
+
 def _people(s: Session, item: Item, d: ItemData) -> None:
     s.exec(delete(ItemPerson).where(col(ItemPerson.item_id) == item.id))  # type: ignore[call-overload]
     for i, p in enumerate(d.people):
@@ -115,8 +127,10 @@ def _people(s: Session, item: Item, d: ItemData) -> None:
             person = next((x for x in s.exec(select(Person).where(Person.name == p.name)) if x.external_ids.get("key") == key), None)
         if not person:
             person = Person(name=p.name, external_ids={"key": key} if key else {})
-            s.add(person)
-            s.flush()
+        if photo := photo_route(p.photo_url):
+            person.photo_path = photo
+        s.add(person)
+        s.flush()
         s.add(ItemPerson(item_id=item.id, person_id=person.id, role=p.role, character=p.character, ord=i))  # type: ignore[arg-type]
 
 

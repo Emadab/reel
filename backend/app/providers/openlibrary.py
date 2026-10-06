@@ -64,7 +64,8 @@ async def fetch(work_id: str, kind="book") -> ItemData | None:
     for a in w.get("authors", [])[:4]:
         key = (a.get("author") or {}).get("key")
         if key and (ad := await api.get(f"{key}.json", ttl=30 * DAY)):
-            authors.append(PersonData(ad.get("name") or "?", "author", ext_id=_work_id(key)))
+            authors.append(PersonData(ad.get("name") or "?", "author", ext_id=_work_id(key),
+                                      photo_url=f"https://covers.openlibrary.org/a/olid/{_work_id(key)}-M.jpg?default=false"))
     eds = (await api.get(f"/works/{work_id}/editions.json", {"limit": 50}, ttl=30 * DAY) or {}).get("entries", [])
     pages = [e["number_of_pages"] for e in eds if isinstance(e.get("number_of_pages"), int) and e["number_of_pages"] > 0]
     isbn13 = next((i for e in eds for i in e.get("isbn_13", [])), None)

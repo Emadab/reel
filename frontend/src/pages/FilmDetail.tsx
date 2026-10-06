@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from "reac
 import { api } from "../api/client";
 import { useDeleteAllWatches, useMovie, useRefreshMovie, useWatchlistToggle } from "../api/hooks";
 import type { MovieDetail, Neighbor, WatchOut } from "../api/types";
+import { CastPhoto } from "../components/CastPhoto";
 import { Dialog } from "../components/Dialog";
 import { mix } from "../components/Glow";
 import { IconChevronLeft, IconClose, IconMore, IconPlay, IconPlus } from "../components/Icons";
@@ -11,7 +12,7 @@ import { useToast } from "../components/Toasts";
 import { ErrorLine, Eyebrow, MonoTag, SectionTitle, TagChip, cx } from "../components/ui";
 import { usePalette } from "../features/search/palette";
 import { onColor } from "../lib/color";
-import { formatFullDate, formatWatchDate, initials, language, pct, rating, relativeTime, runtime } from "../lib/format";
+import { formatFullDate, formatWatchDate, language, pct, rating, relativeTime, runtime } from "../lib/format";
 import { backTarget } from "../lib/history";
 
 const PRECISION = { day: "exact day", month: "month only", year: "year only", unknown: "date unknown" } as const;
@@ -153,17 +154,6 @@ function History({ film, glow, glow2 }: { film: MovieDetail; glow: string; glow2
 
 const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
 const money = (n: number | null | undefined) => (n ? `$${compact.format(n)}` : null);
-
-/** A cast photo that falls back to initials if it's missing or fails to load. */
-function CastPhoto({ name, src }: { name: string; src?: string | null }) {
-  const [failed, setFailed] = useState(false);
-  const box = "size-[72px] box-content rounded-full border border-(--line-3)";
-  return src && !failed ? (
-    <img src={src} alt="" loading="lazy" onError={() => setFailed(true)} className={cx(box, "object-cover bg-(--color-bg-avatar)")} />
-  ) : (
-    <div className={cx(box, "bg-(--color-bg-avatar) grid place-items-center font-display text-[18px] text-ink-4")}>{initials(name)}</div>
-  );
-}
 
 function Crew({ film }: { film: MovieDetail }) {
   const c = film.crew_highlights;

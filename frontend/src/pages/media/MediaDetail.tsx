@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { mediaApi, useFollows, useItem, useMediaMut, type Episode, type Goal, type ItemDetail, type Kind, type RunOut, type RunPrecision } from "../../api/media";
+import { CastPhoto } from "../../components/CastPhoto";
 import { Dialog } from "../../components/Dialog";
 import { mix } from "../../components/Glow";
 import { IconCalendar, IconCheck, IconChevronDown, IconChevronLeft, IconMore, IconPlus } from "../../components/Icons";
@@ -360,7 +362,46 @@ function Episodes({ item }: { item: ItemDetail }) {
   const tick = useMediaMut((b: { episode_ids?: number[]; season?: number; watched: boolean }) => mediaApi.episodes(item.id, b));
   const [dating, setDating] = useState<Episode | null>(null);
   const [history, setHistory] = useState(false);
+  // fill handle: drag a watched episode's date onto the episodes after it (like a spreadsheet)
+  const [fill, setFill] = useState<{ from: number; to: number; x: number; y: number } | null>(null);
+  const [landed, setLanded] = useState<{ ids: Set<number>; from: number; k: number } | null>(null);
+  const stamp = useMediaMut((b: { episode_ids: number[]; watched: boolean; watched_on?: string; date_precision: RunPrecision }) => mediaApi.episodes(item.id, b));
+  const toast = useToast();
   if (!shown) return null;
+  const eps = shown.episodes;
+  const dateOf = (e: Episode) => formatWatchDate(e.watched_on!, e.watched_precision ?? "day");
+  const fillable = (e: Episode) => e.aired || e.watched;
+  const inFill = (i: number) => fill != null && i > fill.from && i <= fill.to && fillable(eps[i]);
+  const applyFill = async (f: NonNullable<typeof fill>) => {
+    setFill(null);
+    const src = eps[f.from];
+    const ids = eps.slice(f.from + 1, f.to + 1).filter(fillable).map((x) => x.id);
+    if (!ids.length) return;
+    const p = src.watched_precision ?? "day";
+    await stamp.mutateAsync({ episode_ids: ids, watched: true, date_precision: p, ...(p === "unknown" ? {} : { watched_on: src.watched_on! }) });
+    setLanded({ ids: new Set(ids), from: f.from, k: Date.now() });
+    toast({ text: `${dateOf(src)} → ${ids.length} episode${ids.length > 1 ? "s" : ""}` });
+  };
+  const fillTo = (x: number, y: number) => {
+    const el = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-ep]");
+    setFill((f) => f && { ...f, x, y, to: el ? Math.max(f.from, Number(el.dataset.ep)) : f.to });
+  };
+  const handleDown = (ev: ReactPointerEvent<HTMLButtonElement>, i: number) => {
+    if (ev.button !== 0) return;
+    ev.preventDefault();
+    ev.currentTarget.setPointerCapture(ev.pointerId);
+    setFill({ from: i, to: i, x: ev.clientX, y: ev.clientY });
+  };
+  const handleKey = (ev: ReactKeyboardEvent<HTMLButtonElement>, i: number) => {
+    const f = fill ?? { from: i, to: i, x: 0, y: 0 };
+    if (ev.key === "ArrowRight" || ev.key === "ArrowDown") setFill({ ...f, to: Math.min(eps.length - 1, f.to + 1) });
+    else if (ev.key === "ArrowLeft" || ev.key === "ArrowUp") setFill({ ...f, to: Math.max(f.from, f.to - 1) });
+    else if (ev.key === "Enter" && fill) void applyFill(fill);
+    else if (ev.key === "Escape") setFill(null);
+    else return;
+    ev.preventDefault();
+  };
+  const fillCount = fill ? eps.filter((_, i) => inFill(i)).length : 0;
   const aired = shown.episodes.filter((e) => e.aired);
   const done = aired.filter((e) => e.watched).length;
   const all = aired.length > 0 && done === aired.length;
@@ -403,20 +444,39 @@ function Episodes({ item }: { item: ItemDetail }) {
       </div>
       {history && <HistoryDialog item={item} onClose={() => setHistory(false)} />}
       {dating && <EpisodeDateDialog item={item} ep={dating} onClose={() => setDating(null)} />}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-3">
-        {shown.episodes.map((e) => {
+      <div className={cx("grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-3", fill && "cursor-grabbing select-none [&_*]:cursor-grabbing")}>
+        {shown.episodes.map((e, i) => {
           const code = `${e.special ? "SP" : "E"}${String(e.number).padStart(2, "0")}`;
+          const lit = inFill(i);
+          const step = fill ? i - fill.from : 0;
+          const pop = landed?.ids.has(e.id) ? i - landed.from : null; // just filled: its check pops in turn
           return (
-            <div
+            <motion.div
               key={e.id}
+              data-ep={i}
+              animate={lit ? { y: -3, scale: 1.02 } : { y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 520, damping: 24, delay: lit ? Math.min(step, 12) * 0.018 : 0 }}
               className={cx(
-                "group min-h-[68px] flex items-center rounded-[14px] border",
-                e.watched
-                  ? "border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_8%,transparent)]"
-                  : "border-(--line-2) bg-(--fill-card) hover:border-(--line-5)",
+                "group relative min-h-[68px] flex items-center rounded-[14px] border transition-[border-color,background-color,box-shadow] duration-200",
+                lit
+                  ? "border-accent bg-[color-mix(in_oklch,var(--color-accent)_16%,transparent)] shadow-[0_10px_30px_-12px_var(--color-accent)]"
+                  : e.watched
+                    ? "border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_8%,transparent)]"
+                    : "border-(--line-2) bg-(--fill-card) hover:border-(--line-5)",
+                fill?.from === i && "ring-2 ring-accent ring-offset-2 ring-offset-(--color-bg)",
                 !e.aired && "opacity-45",
               )}
             >
+              {pop != null && (
+                <motion.span
+                  key={landed!.k}
+                  aria-hidden
+                  initial={{ opacity: 0.55 }}
+                  animate={{ opacity: 0 }}
+                  transition={{ duration: 0.7, delay: Math.min(pop, 12) * 0.045 }}
+                  className="absolute inset-0 rounded-[14px] bg-accent pointer-events-none"
+                />
+              )}
               <button
                 type="button"
                 aria-pressed={e.watched}
@@ -429,19 +489,24 @@ function Episodes({ item }: { item: ItemDetail }) {
                 <span className={cx("font-mono text-[13px] tabular-nums shrink-0", e.watched ? "text-accent" : "text-ink-3")}>{code}</span>
                 <span className="flex-1 min-w-0 flex flex-col gap-[3px]">
                   <span className="text-[14px] truncate">{e.title ?? "Untitled episode"}</span>
-                  <span className="font-mono text-[11px] text-ink-4">
-                    {e.watched && e.watched_on ? `Watched ${formatWatchDate(e.watched_on, e.watched_precision ?? "day")}` : airLabel(e)}{e.runtime ? ` · ${e.runtime} min` : ""}
+                  <span className={cx("font-mono text-[11px] truncate", lit ? "text-accent" : "text-ink-4")}>
+                    {lit ? `→ ${dateOf(eps[fill!.from])}` : e.watched && e.watched_on ? `Watched ${dateOf(e)}` : airLabel(e)}
+                    {!lit && e.runtime ? ` · ${e.runtime} min` : ""}
                   </span>
                 </span>
-                <span
+                <motion.span
+                  key={pop != null ? landed!.k : 0}
                   aria-hidden
+                  initial={pop != null ? { scale: 0.2, rotate: -45 } : false}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 600, damping: 14, delay: Math.min(pop ?? 0, 12) * 0.045 }}
                   className={cx(
                     "size-6 rounded-full grid place-items-center shrink-0 border",
                     e.watched ? "bg-accent border-accent text-on-accent shadow-[0_0_12px_-2px_var(--color-accent)]" : "border-(--line-5) text-transparent group-hover:text-ink-4",
                   )}
                 >
                   <IconCheck size={13} />
-                </span>
+                </motion.span>
               </button>
               {(e.aired || e.watched) && (
                 <button
@@ -454,10 +519,44 @@ function Episodes({ item }: { item: ItemDetail }) {
                   <IconCalendar size={15} />
                 </button>
               )}
-            </div>
+              {e.watched && e.watched_on && i < eps.length - 1 && (
+                <button
+                  type="button"
+                  aria-label={`Copy ${dateOf(e)} to the next episodes: drag, or press the arrow keys then Enter`}
+                  onPointerDown={(ev) => handleDown(ev, i)}
+                  onPointerMove={(ev) => fill && fillTo(ev.clientX, ev.clientY)}
+                  onPointerUp={() => fill && void applyFill(fill)}
+                  onPointerCancel={() => setFill(null)}
+                  onKeyDown={(ev) => handleKey(ev, i)}
+                  onBlur={() => fill && fill.x === 0 && setFill(null)}
+                  className={cx(
+                    "absolute -right-[22px] -bottom-[22px] z-10 size-11 grid place-items-center bg-transparent border-0 p-0 cursor-grab touch-none outline-none",
+                    "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity",
+                    fill?.from === i && "opacity-100",
+                  )}
+                >
+                  <span className="size-[12px] rounded-full bg-accent border-2 border-(--color-bg) shadow-[0_0_12px_var(--color-accent)] transition-transform group-hover:scale-110 [button:active>&]:scale-125" />
+                </button>
+              )}
+            </motion.div>
           );
         })}
       </div>
+      <AnimatePresence>
+        {fill && fill.x > 0 && (
+          <motion.div
+            key="fill-chip"
+            aria-hidden
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1, x: fill.x + 16, y: fill.y + 18 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ type: "spring", stiffness: 700, damping: 40, mass: 0.5 }}
+            className="fixed left-0 top-0 z-50 pointer-events-none px-3 py-[6px] rounded-[10px] bg-accent text-on-accent font-mono text-[12px] whitespace-nowrap shadow-[0_10px_30px_-10px_var(--color-accent)]"
+          >
+            {dateOf(eps[fill.from])} → {fillCount} episode{fillCount === 1 ? "" : "s"}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
@@ -700,22 +799,46 @@ function Details({ item }: { item: ItemDetail }) {
   );
 }
 
+/** Like a film page: who made it as a crew list, then faces (cast, or a book's authors) with photos. */
 function People({ item }: { item: ItemDetail }) {
-  const cast = item.people.filter((p) => p.role === "cast").slice(0, 12);
-  const creators = item.people.filter((p) => p.role === "creator" || p.role === "author");
-  if (!cast.length && !creators.length) return null;
+  const [all, setAll] = useState(false);
+  const creators = item.people.filter((p) => p.role === "creator");
+  const faces = item.people.filter((p) => p.role === (item.kind === "book" ? "author" : "cast"));
   return (
-    <section className="flex flex-col gap-4">
-      <SectionTitle>{item.kind === "book" ? "Written by" : "People"}</SectionTitle>
-      <dl className="m-0 grid grid-cols-[repeat(auto-fill,minmax(min(190px,100%),1fr))] gap-x-6 gap-y-5">
-        {[...creators.map((p) => ({ ...p, character: p.role === "creator" ? "Creator" : "Author" })), ...cast].map((p) => (
-          <div key={`${p.name}-${p.character}`} className="flex flex-col gap-[6px] pl-[14px] border-l border-(--line-3)">
-            <dt className="text-[14px] leading-[1.45]">{p.name}</dt>
-            {p.character && <dd className="m-0"><Eyebrow className="text-[10.5px] text-ink-4 normal-case tracking-normal">{p.character}</Eyebrow></dd>}
+    <>
+      {creators.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <SectionTitle>Crew</SectionTitle>
+          <dl className="m-0 grid grid-cols-[repeat(auto-fill,minmax(min(190px,100%),1fr))] gap-x-6 gap-y-5">
+            <div className="flex flex-col gap-[6px] pl-[14px] border-l border-(--line-3)">
+              <dt><Eyebrow className="text-[10.5px] text-ink-4">Created by</Eyebrow></dt>
+              {creators.map((p) => <dd key={p.name} className="m-0 text-[14px] leading-[1.45]">{p.name}</dd>)}
+            </div>
+          </dl>
+        </section>
+      )}
+      {faces.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <SectionTitle>{item.kind === "book" ? "Written by" : "Cast"}</SectionTitle>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(min(120px,100%),1fr))] gap-5">
+            {faces.slice(0, all ? undefined : 12).map((p) => (
+              <div key={`${p.name}-${p.character}`} className="flex flex-col items-start gap-[10px]">
+                <CastPhoto name={p.name} src={p.photo} />
+                <div className="flex flex-col gap-[2px]">
+                  <span className="text-[14px] font-medium">{p.name}</span>
+                  {p.character && <span className="text-[13px] text-ink-4">{p.character}</span>}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </dl>
-    </section>
+          {faces.length > 12 && (
+            <button type="button" onClick={() => setAll((v) => !v)} className="self-start h-9 px-4 rounded-[10px] bg-transparent border border-(--line-4) text-[13px] text-ink-2 cursor-pointer hover:bg-(--fill-ctl) hover:text-ink-hi">
+              {all ? "Show fewer" : `Show all ${faces.length}`}
+            </button>
+          )}
+        </section>
+      )}
+    </>
   );
 }
 

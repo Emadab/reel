@@ -172,7 +172,7 @@ def _detail(s: Session, item: Item) -> dict:
         **items.card(s, item, entry, run),
         "original_title": item.original_title, "overview": item.overview, "tagline": item.tagline, "tags": item.tags,
         "release_date": item.release_date.isoformat() if item.release_date else None, "details": item.details,
-        "people": [{"name": p.name, "role": ip.role, "character": ip.character} for ip, p in people],
+        "people": [{"name": p.name, "role": ip.role, "character": ip.character, "photo": p.photo_path} for ip, p in people],
         "owned": entry.owned if entry else False, "platforms": entry.platforms if entry else [],
         "runs": [_run_out(r) for r in items.runs(s, item.id)],  # type: ignore[arg-type]
         "allowed": allowed(item.kind, run.status if run else None, item.endless),

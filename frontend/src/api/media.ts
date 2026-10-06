@@ -56,7 +56,7 @@ export type ItemDetail = ItemCard & {
   tags: string[];
   release_date: string | null;
   details: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-  people: { name: string; role: string; character: string | null }[];
+  people: { name: string; role: string; character: string | null; photo: string | null }[];
   owned: boolean;
   platforms: string[];
   runs: RunOut[];
