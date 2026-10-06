@@ -121,8 +121,8 @@ function RecCard({ r, kind }: { r: MediaRec; kind: Kind }) {
       className="flex gap-[18px] p-[18px] rounded-[22px] bg-(--fill-card) border transition-opacity duration-300"
       style={{ borderColor: wild ? "rgba(240,182,218,0.35)" : "var(--line-1)", opacity: a.hidden ? 0.4 : 1 }}
     >
-      <Link to={itemPath(r)} aria-label={r.title} className="w-[92px] shrink-0 flex no-underline">
-        <Poster film={asFilm(r)} size="rec" className="w-[92px]" layout={false} style={{ aspectRatio: "auto", minHeight: 138 }} />
+      <Link to={itemPath(r)} aria-label={r.title} className="w-[116px] shrink-0 self-start no-underline">
+        <Poster film={asFilm(r)} size="rec" className="w-[116px]" layout={false} />
       </Link>
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         {wild && <span className="self-start font-mono text-[11px] tracking-[0.08em] px-2 py-[3px] rounded-[6px] border border-dashed border-wild text-wild">WILDCARD</span>}

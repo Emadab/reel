@@ -133,9 +133,9 @@ function RecCard({ rec }: { rec: Rec }) {
       className="flex gap-[18px] p-[18px] rounded-[22px] bg-(--fill-card) border transition-opacity duration-300"
       style={{ borderColor: wild ? "rgba(240,182,218,0.35)" : "var(--line-1)", opacity: reaction === "not_interested" ? 0.4 : 1 }}
     >
-      <Link to={`/film/${rec.tmdb_id}?from=recs`} aria-label={rec.title} className="w-[92px] shrink-0 flex no-underline">
-        {/* the reference stretches the poster to the card's height (flex row, align stretch) */}
-        <Poster film={rec} size="rec" className="w-[92px]" style={{ aspectRatio: "auto", minHeight: 138 }} />
+      <Link to={`/film/${rec.tmdb_id}?from=recs`} aria-label={rec.title} className="w-[116px] shrink-0 self-start no-underline">
+        {/* a standard 2:3 poster (116 × 174) that sets the card's height; nothing is stretched */}
+        <Poster film={rec} size="rec" className="w-[116px]" />
       </Link>
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         {wild && <span className="self-start font-mono text-[11px] tracking-[0.08em] px-2 py-[3px] rounded-[6px] border border-dashed border-wild text-wild">WILDCARD</span>}
@@ -219,6 +219,17 @@ function Onboarding() {
 
 export default function ForYou() {
   const [sp, setSp] = useSearchParams();
+  const qc = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = async () => {
+    setRefreshing(true);
+    try {
+      await api.recompute();
+      await qc.invalidateQueries({ queryKey: ["recs"] }); // it polls while the slate is recomputing
+    } finally {
+      setRefreshing(false);
+    }
+  };
   const filter = (sp.get("filter") as Filter) || "all";
   const { data, error, isLoading } = useRecs(filter);
   const m = data?.model;
@@ -237,6 +248,9 @@ export default function ForYou() {
           onChange={(v) => setSp(v === "all" ? {} : { filter: v }, { replace: true })}
           options={[{ id: "all", label: "All" }, { id: "short", label: "Under 2 hours" }, { id: "wild", label: "Wildcards" }]}
         />
+        {!data?.onboarding && (
+          <Button onClick={refresh} disabled={refreshing || data?.computing}>Refresh suggestions</Button>
+        )}
       </PageHeader>
 
       {error && <ErrorLine error={error} onSettings />}

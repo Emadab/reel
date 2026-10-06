@@ -75,6 +75,7 @@ export const api = {
   years: () => request<YearBar[]>("GET", "/timeline/years"),
   stats: (range: string) => request<Stats>("GET", "/stats", { params: { range } }),
   recommendations: (filter: string) => request<Recommendations>("GET", "/recommendations", { params: { filter } }),
+  recompute: () => request<{ queued: boolean }>("POST", "/recommendations/recompute"),
   feedback: (tmdb_id: number, signal: Exclude<Reaction, null> | "dislike" | "opened" | "seen_rated") =>
     request<void>("POST", "/feedback", { body: { tmdb_id, signal } }),
   undoFeedback: (tmdb_id: number, signal: string) => request<void>("DELETE", `/feedback/${tmdb_id}/${signal}`),
