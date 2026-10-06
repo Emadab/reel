@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import type { Kind } from "./api/media";
 import { MediaGate } from "./components/MediaGate";
+import { RouteError, reloadOnceForNewBuild } from "./components/RouteError";
 import { Shell } from "./components/Shell";
 import { ToastProvider } from "./components/Toasts";
 import { PaletteProvider } from "./features/search/palette";
@@ -30,6 +31,7 @@ const MediaTasteMap = lazy(() => import("./pages/media/MediaTasteMap"));
 const MediaImport = lazy(() => import("./pages/media/MediaImport"));
 
 installDesktopBehaviour();
+window.addEventListener("vite:preloadError", (e) => reloadOnceForNewBuild() && e.preventDefault());
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 } } });
 
@@ -56,7 +58,8 @@ const router = createBrowserRouter([
         <Shell />
       </PaletteProvider>
     ),
-    children: [
+    errorElement: <RouteError />,
+    children: [{ errorElement: <RouteError />, children: [
       { path: "/", element: movies(<Library />) },
       { path: "/film/:tmdbId", element: movies(<FilmDetail />) },
       { path: "/timeline/:year?", element: movies(<Timeline />) },
@@ -69,7 +72,7 @@ const router = createBrowserRouter([
       ...media("book", "/books"),
       ...media("game", "/games"),
       { path: "*", element: movies(<Library />) },
-    ],
+    ] }],
   },
 ]);
 

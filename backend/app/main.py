@@ -38,4 +38,7 @@ if FRONTEND.exists():  # packaged builds serve the built UI; in dev Vite does
     @app.get("/{path:path}", include_in_schema=False)
     def spa(path: str):
         f = FRONTEND / path
-        return FileResponse(f if path and f.is_file() else FRONTEND / "index.html")
+        if path and f.is_file():
+            return FileResponse(f)
+        # always revalidated: a reload after a rebuild must get the new chunk names, not a cached page
+        return FileResponse(FRONTEND / "index.html", headers={"Cache-Control": "no-cache"})
