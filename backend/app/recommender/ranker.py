@@ -47,7 +47,7 @@ def build_profile(s: Session, exclude: set[int] = frozenset(), today: date | Non
             continue
         films.append(m)
         ratings[i] = st.my_rating
-        ages[i] = (today - st.latest.watched_on).days
+        ages[i] = 730 if st.latest.date_precision == "unknown" else (today - st.latest.watched_on).days  # unknown: as if two years ago
     if not films:
         return None
     rated = [r for r in ratings.values() if r is not None]

@@ -14,7 +14,7 @@ import { onColor } from "../lib/color";
 import { formatFullDate, formatWatchDate, initials, language, pct, rating, relativeTime, runtime } from "../lib/format";
 import { backTarget } from "../lib/history";
 
-const PRECISION = { day: "exact day", month: "month only", year: "year only" } as const;
+const PRECISION = { day: "exact day", month: "month only", year: "year only", unknown: "date unknown" } as const;
 
 function MoreMenu({ film }: { film: MovieDetail }) {
   const [open, setOpen] = useState(false);

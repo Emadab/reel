@@ -9,8 +9,13 @@ from . import media
 from .models import Movie, Watch, WatchlistItem
 
 
+UNKNOWN_DATE = date.min  # an unknown watch date sorts before every real one and never reaches a timeline
+
+
 def normalize(d: date, precision: str) -> date:
-    """Month precision stores the 1st, year precision stores Jan 1."""
+    """Month precision stores the 1st, year precision stores Jan 1, unknown stores 0001-01-01."""
+    if precision == "unknown":
+        return UNKNOWN_DATE
     if precision == "year":
         return d.replace(month=1, day=1)
     if precision == "month":

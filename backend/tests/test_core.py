@@ -86,6 +86,17 @@ def test_timeline_places_imprecise_dates(client):
     assert years[-1]["year"] >= 2026 and next(y for y in years if y["year"] == 2026) == {"year": 2026, "total": 3, "approx": 2}
 
 
+def test_unknown_date_counts_but_never_reaches_a_timeline(client):
+    first = log(client, 1398, "2026-05-05", 4, precision="unknown")
+    log(client, 1398, "2026-08-23", 5)
+    log(client, 329865, "2026-08-23", 4.5)
+    assert first["watched_on"] == "0001-01-01" and first["date_precision"] == "unknown" and not first["is_rewatch"]
+    assert client.get("/api/timeline", params={"year": 2026}).json()["totals"]["watches"] == 2
+    assert [y["year"] for y in client.get("/api/timeline/years").json()][0] == 2026
+    k = client.get("/api/stats").json()["kpis"]
+    assert k["watches"] == 3 and k["rewatched"] == 1 and k["first_year"] == 2026
+
+
 def test_stats_maths(client):
     log(client, 329865, "2026-08-23", 4.5)
     log(client, 335984, "2026-08-23", 5)

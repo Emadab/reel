@@ -402,8 +402,9 @@ function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: str
   const rate = useMediaMut((v: number | null) => mediaApi.patchRun(run.id, v == null ? { clear_rating: true } : { rating: v }));
   const f = fraction(item.kind, run.progress);
   const text = progressText(item.kind, run.progress);
-  const dates = [run.started_on && `started ${formatWatchDate(run.started_on, run.date_precision === "unknown" ? "year" : run.date_precision)}`,
-    run.finished_on && `finished ${formatWatchDate(run.finished_on, run.date_precision === "unknown" ? "year" : run.date_precision)}`].filter(Boolean).join(" · ");
+  const dates = run.date_precision === "unknown" ? (run.started_on || run.finished_on ? "date unknown" : "")
+    : [run.started_on && `started ${formatWatchDate(run.started_on, run.date_precision)}`,
+      run.finished_on && `finished ${formatWatchDate(run.finished_on, run.date_precision)}`].filter(Boolean).join(" · ");
   return (
     <section className="p-6 rounded-[22px] bg-(--fill-glass) border border-(--line-2) backdrop-blur-[24px] flex flex-col gap-5" aria-label="Your run">
       <div className="flex justify-between items-baseline gap-3">
@@ -455,7 +456,7 @@ function Runs({ item, glow, glow2 }: { item: ItemDetail; glow: string; glow2: st
               </div>
               <div className="flex flex-wrap gap-[6px]">
                 <MonoTag>{ordinal(r.run_no)} time</MonoTag>
-                {r.finished_on && <MonoTag>{formatWatchDate(r.finished_on, r.date_precision === "unknown" ? "year" : r.date_precision)}</MonoTag>}
+                {r.finished_on && <MonoTag>{formatWatchDate(r.finished_on, r.date_precision)}</MonoTag>}
                 {r.goal && <MonoTag>{GOALS.find((g) => g.id === r.goal)?.label}</MonoTag>}
                 {r.variant.format && <MonoTag>{FORMATS.find((f) => f.id === r.variant.format)?.label}</MonoTag>}
                 {r.variant.platform && <MonoTag>{r.variant.platform}</MonoTag>}

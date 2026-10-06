@@ -19,7 +19,7 @@ Reel has four **modes**: Movies, Shows, Books and Games. Switch between them in 
 - **Log fast.** `Ctrl K` → type → `↵` → press `1`–`5` for stars → `↵`. Or hover any poster and press the check: one tap on a star logs it for today.
 - **Library**: poster wall (or a 3D carousel for films) with status, genre, decade and rating filters. Shows track episodes and "up next", books track reading progress and shelves, games track playthroughs and hours.
 - **Detail pages** glow in each title's own cover colours: people, trailer, scores and your full history (click an entry to edit it).
-- **Timeline** of every month and year, including things you only remember as "sometime in 2019".
+- **Timeline** of every month and year, including things you only remember as "sometime in 2019". A watch can also have no date at all ("Date unknown"): it counts in the library and stats but stays off the timeline.
 - **Stats**: activity heatmap, genre radar, top people, rating histogram, plus an *All media* view.
 - **For you**: recommendations from your ratings with a reason for each ("Because you loved…"), plus wildcards outside your usual taste. "More like this" and "Not interested" teach the model.
 - **Taste map**: every title as a point; see why something is recommended.

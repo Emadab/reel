@@ -1,5 +1,5 @@
 // Response shapes of the FastAPI backend (ARCHITECTURE §3).
-export type DatePrecision = "day" | "month" | "year";
+export type DatePrecision = "day" | "month" | "year" | "unknown";
 export type Motif = "sun" | "band" | "arch";
 export type PosterArtColors = { bg: string; fg?: string; motif?: Motif };
 

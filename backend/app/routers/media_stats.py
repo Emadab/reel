@@ -32,12 +32,12 @@ def _runs(s: Session, kind: str) -> list[tuple[Item, Run]]:
 
 def _finished(s: Session, kind: str, year: int | None = None) -> list[tuple[Item, Run]]:
     out = [(i, r) for i, r in _runs(s, kind) if r.status in FINISHED and r.finished_on]
-    return [(i, r) for i, r in out if year is None or r.finished_on.year == year]  # type: ignore[union-attr]
+    return [(i, r) for i, r in out if year is None or (r.finished_on.year == year and r.date_precision != "unknown")]  # type: ignore[union-attr]
 
 
 def _run_out(r: Run) -> dict:
     return {"id": r.id, "status": r.status, "finished_on": r.finished_on.isoformat() if r.finished_on else None,
-            "precision": r.date_precision if r.date_precision != "unknown" else "year", "rating": r.rating, "run_no": r.run_no}
+            "precision": r.date_precision, "rating": r.rating, "run_no": r.run_no}
 
 
 @router.get("/{kind}/timeline")
@@ -49,7 +49,7 @@ def timeline(kind: Kind, year: int | None = None, s: Session = Depends(get_sessi
     year_only = []
     for item, run in sorted(_finished(s, kind, year), key=lambda x: (x[1].finished_on, x[1].id)):
         entry = {**items.card(s, item, run=run), "run": _run_out(run)}
-        if run.date_precision in ("year", "unknown"):
+        if run.date_precision == "year":
             year_only.append(entry)
         else:
             months[run.finished_on.month - 1]["items" if run.date_precision == "day" else "approx"].append(entry)  # type: ignore[union-attr]
@@ -66,6 +66,8 @@ def years(kind: Kind, s: Session = Depends(get_session)):
     total: Counter[int] = Counter()
     approx: Counter[int] = Counter()
     for _, r in _finished(s, kind):
+        if r.date_precision == "unknown":
+            continue  # finished, but nobody knows when: not on any timeline
         total[r.finished_on.year] += 1  # type: ignore[union-attr]
         approx[r.finished_on.year] += r.date_precision != "day"  # type: ignore[union-attr]
     if not total:

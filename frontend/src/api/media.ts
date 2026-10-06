@@ -82,7 +82,7 @@ export type CalendarEntry = { at: string; day: string; item: ItemCard; label: st
 export type FollowState = { notify: boolean; priority: boolean };
 export type FollowRow = { id: number; target_kind: "author" | "series"; target_id: string; name: string };
 
-export type RunRef = { id: number; status: string; finished_on: string; precision: "day" | "month" | "year"; rating: number | null; run_no: number };
+export type RunRef = { id: number; status: string; finished_on: string; precision: RunPrecision; rating: number | null; run_no: number };
 export type TimelineEntry = ItemCard & { run: RunRef };
 export type MediaTimeline = {
   year: number;

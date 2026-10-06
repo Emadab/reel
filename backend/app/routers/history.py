@@ -61,7 +61,7 @@ def timeline(year: int | None = None, s: Session = Depends(get_session)):
 def years(s: Session = Depends(get_session)):
     total: Counter[int] = Counter()
     approx: Counter[int] = Counter()
-    for w in s.exec(select(Watch)):
+    for w in s.exec(select(Watch).where(Watch.date_precision != "unknown")):
         total[w.watched_on.year] += 1
         approx[w.watched_on.year] += w.date_precision != "day"
     if not total:
@@ -115,7 +115,7 @@ def stats(range_: str = Query("all", alias="range"), s: Session = Depends(get_se
             "rewatched": sum(1 for ws in by_film.values() if any(w.is_rewatch for w in ws)),
             "hours": round(hours(movies, watches), 1),
             "viewing_days": len({w.watched_on for w in watches if w.date_precision == "day"}),
-            "first_year": min((w.watched_on.year for w in watches), default=None),
+            "first_year": min((w.watched_on.year for w in watches if w.date_precision != "unknown"), default=None),
             "avg_rating": avg,
         },
         "genres": [{"name": g, "value": round(n / gmax, 3), "count": n} for g, n in top],

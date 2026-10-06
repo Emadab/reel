@@ -87,7 +87,7 @@ The frontend must support `VITE_FIXTURES=1`. In that mode the API layer returns 
 - The TMDB token lives only in `backend/.env` (`TMDB_TOKEN`). It never reaches the frontend or the logs.
 - Every TMDB/OMDb response is cached in SQLite. A movie is refetched only when `fetched_at` is older than 30 days, or when the user presses Refresh on the detail page.
 - Images are downloaded once into `data/media/` and served from `/media/...`. The UI never hot-links `image.tmdb.org`.
-- Dates are stored as ISO `YYYY-MM-DD` plus `date_precision` (`day|month|year`). Month precision stores the 1st of the month; year precision stores Jan 1. Never display the padded day for imprecise dates.
+- Dates are stored as ISO `YYYY-MM-DD` plus `date_precision` (`day|month|year|unknown`). Month precision stores the 1st of the month; year precision stores Jan 1; unknown stores `0001-01-01` and never appears on a timeline or in "since". Never display the padded day for imprecise dates.
 - Schema changes go through small, idempotent migrations in `db.py`. Never drop user data.
 
 ### Working style

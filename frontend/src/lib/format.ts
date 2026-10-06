@@ -29,8 +29,9 @@ const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "S
 export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-/** ARCHITECTURE §3: day → "Oct 3" this year, "Nov 21, 2025" otherwise; month → "March 2020"; year → "Sometime in 2019". */
+/** ARCHITECTURE §3: day → "Oct 3" this year, "Nov 21, 2025" otherwise; month → "March 2020"; year → "Sometime in 2019"; unknown → "Date unknown". */
 export function formatWatchDate(s: string, precision: DatePrecision, ref: Date = today()): string {
+  if (precision === "unknown") return "Date unknown";
   const d = parseDate(s);
   if (precision === "year") return `Sometime in ${d.getFullYear()}`;
   if (precision === "month") return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;

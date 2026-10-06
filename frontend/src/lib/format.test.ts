@@ -12,6 +12,8 @@ describe("dates by precision", () => {
     expect(formatWatchDate("2020-03-01", "month", ref)).toBe("March 2020");
     expect(formatWatchDate("2019-01-01", "year", ref)).toBe("Sometime in 2019");
     expect(dayLabel("2020-03-01", "month")).toBe("month");
+    expect(formatWatchDate("0001-01-01", "unknown", ref)).toBe("Date unknown");
+    expect(formatLongDate("0001-01-01", "unknown", ref)).toBe("Date unknown");
   });
   it("has a long form", () => {
     expect(formatLongDate("2026-10-03", "day", ref)).toBe("Sat, Oct 3");

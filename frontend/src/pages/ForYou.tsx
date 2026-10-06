@@ -12,7 +12,7 @@ import { QuickLog } from "../components/QuickLog";
 import { RatingInput } from "../components/Rating";
 import { useToast } from "../components/Toasts";
 import { Button, ButtonLink, ErrorLine, IconButton, PageHeader, Segmented, TagChip } from "../components/ui";
-import { pct, rating, relativeTime, runtime, today } from "../lib/format";
+import { iso, pct, rating, relativeTime, runtime, today } from "../lib/format";
 
 type Filter = "all" | "short" | "wild";
 
@@ -174,7 +174,7 @@ function Onboarding() {
     setRatings((x) => ({ ...x, [f.tmdb_id]: r }));
     if (r == null) return;
     await log.mutateAsync({
-      tmdb_id: f.tmdb_id, watched_on: `${today().getFullYear()}-01-01`, date_precision: "year", rating: r,
+      tmdb_id: f.tmdb_id, watched_on: iso(today()), date_precision: "unknown", rating: r,
       is_rewatch: false, location: null, with_whom: null, notes: null, source: "onboarding",
     });
   };

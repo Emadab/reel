@@ -3,7 +3,7 @@ from typing import Literal
 
 from sqlmodel import JSON, Column, Field, LargeBinary, SQLModel, String
 
-Precision = Literal["day", "month", "year"]
+Precision = Literal["day", "month", "year", "unknown"]
 Source = Literal["manual", "letterboxd", "imdb", "onboarding", "notion"]
 Signal = Literal["like", "dislike", "not_interested", "opened", "added_watchlist", "seen_rated"]
 
