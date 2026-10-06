@@ -243,7 +243,9 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
   const sort = (sp.get("sort") as MediaSort) || "recent";
   const all = useMediaLibrary(kind, { sort });
   const lib = useMediaLibrary(kind, { status: tab?.statuses, genre, sort });
-  const items = lib.data?.items ?? [];
+  // games: played (any run, whatever its status or percentage) or not, on top of the tabs
+  const played = kind === "game" ? sp.get("played") : null;
+  const items = (lib.data?.items ?? []).filter((i) => !played || (played === "yes") === i.run_no > 0);
   const everything = all.data?.items ?? [];
   const counts = all.data?.counts ?? {};
   const first = tab ?? null;
@@ -268,7 +270,8 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
 
   const SORTS = sorts(kind);
   const sortLabel = SORTS.find((s) => s.value === sort)?.label ?? SORTS[0].label;
-  const filtered = genre.length > 0;
+  const filtered = genre.length > 0 || !!played;
+  const nPlayed = everything.filter((i) => i.run_no > 0).length;
 
   return (
     <main className={cx("flex flex-col gap-8 pt-9 pb-16 max-[1023px]:pt-7 max-[639px]:pt-5 max-[639px]:pb-24 box-border min-w-0", pagePad)}>
@@ -291,6 +294,13 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
+          {kind === "game" && (
+            <FilterChip
+              label={played === "yes" ? "Played" : played === "no" ? "Not played" : "Played or not"}
+              options={[{ value: "yes", label: `Played (${nPlayed})` }, { value: "no", label: `Not played (${everything.length - nPlayed})` }]}
+              selected={played ? [played] : []} onChange={(v) => update("played", v)}
+            />
+          )}
           <FilterChip label={chipLabel("Genre", genre)} multi options={(all.data?.genres ?? []).map((g) => ({ value: g, label: g }))} selected={genre} onChange={(v) => update("genre", v)} />
           <FilterChip label={`Sort: ${sortLabel}`} align="right" options={SORTS} selected={[sort]} onChange={(v) => update("sort", v[0] && v[0] !== "recent" ? [v[0]] : [])} />
         </div>
@@ -317,7 +327,7 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
                 : `Nothing here yet. Press Ctrl K to find your first ${MODES[kind].noun[0]}.`}
           </p>
           {filtered ? (
-            <Button onClick={() => update("genre", [])}>Clear filters</Button>
+            <Button onClick={() => { const next = new URLSearchParams(sp); next.delete("genre"); next.delete("played"); setSp(next, { replace: true }); }}>Clear filters</Button>
           ) : (
             <Button variant="primary" onClick={() => openPalette()}>
               <IconPlus size={16} />
