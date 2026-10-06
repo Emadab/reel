@@ -182,14 +182,14 @@ function Crew({ film }: { film: MovieDetail }) {
 }
 
 /** Four scores, each with a meter on a shared 0–100 scale, plus the awards line. */
-export function Scores({ film, glow }: { film: Pick<MovieDetail, "scores" | "votes" | "awards">; glow: string }) {
+export function Scores({ film, glow, critics = true }: { film: Pick<MovieDetail, "scores" | "votes" | "awards">; glow: string; critics?: boolean }) {
   const num = (v: string | null) => (v == null ? null : parseFloat(v));
   const rows: { label: string; value: string | null; of: number; sub: string }[] = [
     { label: "TMDB", value: film.scores.tmdb, of: 10, sub: film.votes?.tmdb ? `${compact.format(film.votes.tmdb)} votes` : "users" },
     { label: "IMDb", value: film.scores.imdb, of: 10, sub: film.votes?.imdb ? `${compact.format(film.votes.imdb)} votes` : "users" },
     { label: "Rotten Tomatoes", value: film.scores.rt, of: 100, sub: "Tomatometer" },
     { label: "Metacritic", value: film.scores.metacritic, of: 100, sub: "Metascore" },
-  ];
+  ].slice(0, critics ? 4 : 2);
   return (
     <section aria-label="Scores" className="rounded-[22px] bg-(--fill-glass) border border-(--line-2) overflow-hidden">
       <div className="grid grid-cols-2">
@@ -197,7 +197,7 @@ export function Scores({ film, glow }: { film: Pick<MovieDetail, "scores" | "vot
           const n = num(r.value);
           const fill = n == null ? 0 : Math.min(100, (n / r.of) * 100);
           return (
-            <div key={r.label} className={cx("flex flex-col gap-[10px] p-5", i % 2 === 0 && "border-r border-(--line-2)", i < 2 && "border-b border-(--line-2)")}>
+            <div key={r.label} className={cx("flex flex-col gap-[10px] p-5", i % 2 === 0 && "border-r border-(--line-2)", i < rows.length - 2 && "border-b border-(--line-2)")}>
               <Eyebrow className="text-[10.5px]">{r.label}</Eyebrow>
               <span className={cx("font-display text-[26px] font-medium leading-none tabular-nums", n == null && "text-ink-4")}>
                 {r.value ?? "–"}

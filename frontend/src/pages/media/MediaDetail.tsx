@@ -828,7 +828,8 @@ function Runs({ item, glow, glow2 }: { item: ItemDetail; glow: string; glow2: st
   );
 }
 
-/** A show's scores in the film page's panel: TMDB from its record, the rest fetched like a film's. */
+/** A show's scores in the film page's panel: TMDB from its record, IMDb fetched like a film's (Rotten Tomatoes and
+ * Metacritic are left out: the sources rarely have them for series). */
 function showScores(item: ItemDetail) {
   const d = item.details;
   const o = d.scores ?? {};
@@ -1173,7 +1174,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
         <aside className="flex-[1_1_340px] min-w-0 flex flex-col gap-5">
           {run && run.status && <YourRun item={item} run={run} glow={glow} />}
           <Runs item={item} glow={glow} glow2={glow2} />
-          {kind === "show" && <Scores film={showScores(item)} glow={glow} />}
+          {kind === "show" && <Scores film={showScores(item)} glow={glow} critics={false} />}
           <Details item={item} />
           <span className="font-mono text-[11px] text-ink-4 px-1">{item.added_at ? `added ${relativeTime(item.added_at)}` : "not in your library yet"}</span>
         </aside>
