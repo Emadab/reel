@@ -4,7 +4,7 @@ from typing import Literal
 
 from urllib.parse import quote, urlparse
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlmodel import Session, col, delete, select
@@ -101,8 +101,8 @@ async def add(kind: Kind, body: AddIn, s: Session = Depends(get_session)):
 # ---- library ----
 
 @router.get("/{kind}/library")
-def library(kind: Kind, status: list[str] | None = None, genre: list[str] | None = None,
-            sort: Literal["recent", "rating", "year", "title"] = "recent", s: Session = Depends(get_session)):
+def library(kind: Kind, status: list[str] | None = Query(None), genre: list[str] | None = Query(None),
+            sort: Literal["recent", "watched", "rating", "year", "title"] = "recent", s: Session = Depends(get_session)):
     require_kind(s, kind)
     rows = s.exec(select(Item, LibraryEntry).join(LibraryEntry, col(LibraryEntry.item_id) == col(Item.id)).where(Item.kind == kind)).all()
     cards, counts = [], {"all": 0}
@@ -113,14 +113,27 @@ def library(kind: Kind, status: list[str] | None = None, genre: list[str] | None
         counts["all"] += 1
         if (not status or key in status) and (not genre or set(genre) & set(item.genres)):
             c["_recent"] = _recent(s, item, entry)
+            c["_watched"] = _watched(s, item) if sort == "watched" else ""
             cards.append(c)
-    keys = {"recent": lambda c: c["_recent"], "rating": lambda c: (c["my_rating"] or 0, c["_recent"]),
+    keys = {"recent": lambda c: c["_recent"], "watched": lambda c: (c["_watched"], c["_recent"]),
+            "rating": lambda c: (c["my_rating"] or 0, c["_recent"]),
             "year": lambda c: (c["year"] or 0, c["title"]), "title": lambda c: c["title"].lower()}
-    cards.sort(key=keys[sort], reverse=sort in ("recent", "rating", "year"))
+    cards.sort(key=keys[sort], reverse=sort in ("recent", "watched", "rating", "year"))
     for c in cards:
         c.pop("_recent")
+        c.pop("_watched")
     genres = sorted({g for item, _ in rows for g in item.genres})
     return {"counts": counts, "items": cards, "genres": genres}
+
+
+def _watched(s: Session, item: Item) -> str:
+    """When you last watched it: a show's latest episode, or a run's finish (else start) date. Unknown dates
+    (0001-01-01) sort after every real one; never watched sorts last."""
+    if item.kind == "show":
+        e = s.exec(select(Event).where(Event.item_id == item.id, Event.kind == "episode_watched").order_by(col(Event.occurred_at).desc())).first()
+        return items.utc(e.occurred_at).date().isoformat() if e else ""
+    dates = [d for r in items.runs(s, item.id) if (d := r.finished_on or r.started_on)]  # type: ignore[arg-type]
+    return max(dates).isoformat() if dates else ""
 
 
 def _recent(s: Session, item: Item, entry: LibraryEntry) -> str:

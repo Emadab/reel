@@ -109,7 +109,7 @@ export type MapPoint = { id: number; title: string; x: number; y: number; kind: 
 export type ImportRow = { raw: { title: string; author: string | null; status: string; rating: number | null; date: string | null; precision: string }; status: "pending" | "matched" | "ambiguous" | "unmatched"; ext_id?: string | null; include?: boolean; options?: { ext_id: string; title: string; year: number | string | null; subtitle?: string | null }[] };
 export type MediaImportJob = { id: number; source: string; committed: boolean; state: string; progress: { done: number; total: number }; summary: { matched: number; ambiguous: number; unmatched: number; included: number }; rows: ImportRow[] };
 
-export type MediaSort = "recent" | "rating" | "year" | "title";
+export type MediaSort = "recent" | "watched" | "rating" | "year" | "title";
 
 export const mediaApi = {
   library: (kind: Kind, p: { status?: string[]; genre?: string[]; sort?: MediaSort }) =>

@@ -87,12 +87,15 @@ export function MediaPalette({ kind }: { kind: Kind }) {
   }, [rows, selected]);
 
   const open = async (r: Row, opts: { shelf?: string; status?: string } = {}) => {
+    const known = r.item?.id ?? r.hit?.item_id;
+    // a new one takes a while (details, seasons, episodes): the palette closes at once and the page stays yours;
+    // nothing you do meanwhile cancels it, and the show opens when it's ready
+    const adding = known != null ? null : add.mutateAsync({ hit: r.hit!, ...opts });
+    close();
+    if (adding) toast({ text: <>Adding <em>{r.title}</em>…</>, until: adding });
     try {
-      const id = r.item?.id ?? r.hit?.item_id ?? (await add.mutateAsync({ hit: r.hit!, ...opts })).id;
-      if (r.item || r.hit?.item_id) {
-        if (opts.shelf) await mediaApi.patch(id, { shelf: opts.shelf });
-      }
-      close();
+      const id = known ?? (await adding!).id;
+      if (known != null && opts.shelf) await mediaApi.patch(id, { shelf: opts.shelf });
       if (opts.shelf) toast({ text: <>Added <em>{r.title}</em> to {wish.toLowerCase()}</> });
       else nav(`${MODES[kind].base}/${id}`);
     } catch (err) {
@@ -153,14 +156,14 @@ export function MediaPalette({ kind }: { kind: Kind }) {
         </div>
         <button
           type="button"
-          disabled={add.isPending || !rows.length}
+          disabled={!rows.length}
           onClick={() => {
             const r = rows.find((x) => x.key === selected);
             if (r) void open(r);
           }}
           className="flex items-center gap-[10px] h-11 px-[18px] rounded-[14px] bg-accent text-on-accent font-semibold text-[14px] border-0 cursor-pointer disabled:opacity-60"
         >
-          {add.isPending ? "Adding…" : `Open ${noun}`}
+          {`Open ${noun}`}
           <kbd className="font-mono text-[11px] border border-[rgba(7,8,12,0.35)] rounded-[5px] px-[6px] py-px">↵</kbd>
         </button>
       </div>

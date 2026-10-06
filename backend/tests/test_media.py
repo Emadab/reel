@@ -296,3 +296,14 @@ def test_show_run_dates_follow_first_and_last_episode(media):
     assert (run["started_on"], run["finished_on"], run["date_precision"]) == ("2020-11-01", "2021-04-01", "month")  # the coarser wins
     d = tick(media, item_id, [e2], watched=False)
     assert d["runs"][0]["finished_on"] is None  # no longer finished
+
+
+def test_library_filters_and_watch_date_sort(media):
+    add = lambda ext, **b: media.post("/api/media/book/items", json={"ext_id": ext, **b}).json()["id"]  # noqa: E731
+    old = add("OL1W", status="reading", started_on="2019-05-01")
+    new = add("OL2W", status="reading", started_on="2024-02-02")
+    wish = add("OL3W", shelf="wishlist")
+    lib = lambda **p: [i["id"] for i in media.get("/api/media/book/library", params=p).json()["items"]]  # noqa: E731
+    assert set(lib(status="reading")) == {old, new} and lib(status="wishlist") == [wish]
+    assert set(lib(genre="Fantasy")) == {old, new, wish} and lib(genre="Comedy") == []
+    assert lib(sort="watched") == [new, old, wish]  # never started goes last

@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 
-type Toast = { id: number; text: ReactNode; undo?: () => void };
+/** `until`: stays up while that work runs (an add in the background), then goes. */
+type Toast = { id: number; text: ReactNode; undo?: () => void; until?: Promise<unknown> };
 const Ctx = createContext<(t: Omit<Toast, "id">) => void>(() => {});
 export const useToast = () => useContext(Ctx);
 
@@ -14,7 +15,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (t: Omit<Toast, "id">) => {
       const id = next.current++;
       setToasts((ts) => [...ts.slice(-2), { ...t, id }]);
-      setTimeout(() => dismiss(id), 5000);
+      if (t.until) void t.until.catch(() => {}).finally(() => dismiss(id));
+      else setTimeout(() => dismiss(id), 5000);
     },
     [dismiss],
   );

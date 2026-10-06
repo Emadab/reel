@@ -13,8 +13,10 @@ import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
 import { asFilm, fraction, itemPath, MediaCard, Meter, pagePad, progressText, Ring, wallGrid } from "./parts";
 import { BacklogPlanner } from "./BacklogPlanner";
 
-const SORTS: { value: MediaSort; label: string }[] = [
+const WATCHED: Record<Kind, string> = { show: "last watched", book: "last read", game: "last played" };
+const sorts = (kind: Kind): { value: MediaSort; label: string }[] => [
   { value: "recent", label: "recent activity" },
+  { value: "watched", label: WATCHED[kind] },
   { value: "rating", label: "my rating" },
   { value: "year", label: "release year" },
   { value: "title", label: "title" },
@@ -129,6 +131,7 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
     return parts.join(" · ");
   }, [counts, everything, kind]);
 
+  const SORTS = sorts(kind);
   const sortLabel = SORTS.find((s) => s.value === sort)?.label ?? SORTS[0].label;
   const filtered = genre.length > 0;
 

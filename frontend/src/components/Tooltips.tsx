@@ -16,6 +16,13 @@ export function Tooltips() {
     const find = (t: EventTarget | null) => {
       let el = t instanceof Element ? t : null;
       while (el && el !== document.body) {
+        // text cut off by `truncate` or `line-clamp-*` shows in full; only while it's actually cut off
+        if (el instanceof HTMLElement && /(^|\s)(truncate|line-clamp-\d)/.test(el.className) && !el.hasAttribute("title")) {
+          const cut = el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1;
+          if (cut) el.setAttribute("data-tip", el.textContent ?? "");
+          else if (el.hasAttribute("data-tip-auto")) el.removeAttribute("data-tip");
+          if (cut) el.setAttribute("data-tip-auto", "");
+        }
         if (el.tagName !== "IFRAME" && el.hasAttribute("title") && el.getAttribute("title")) {
           el.setAttribute("data-tip", el.getAttribute("title")!);
           el.removeAttribute("title");

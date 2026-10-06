@@ -126,15 +126,21 @@ function RecCard({ r, kind }: { r: MediaRec; kind: Kind }) {
       </Link>
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         {wild && <span className="self-start font-mono text-[11px] tracking-[0.08em] px-2 py-[3px] rounded-[6px] border border-dashed border-wild text-wild">WILDCARD</span>}
-        <div className="flex justify-between items-baseline gap-[10px]">
-          <h3 className="m-0 font-display font-medium text-[17px] leading-[1.2]">
+        <div className="flex justify-between items-baseline gap-[10px] min-w-0">
+          <h3 className="m-0 min-w-0 truncate font-display font-medium text-[17px] leading-[1.2]">
             <Link to={itemPath(r)} className="no-underline">{r.title}</Link>
           </h3>
-          <span className="font-mono text-[14px]" style={{ color: wild ? "var(--color-wild)" : "var(--color-score)" }}>{pct(r.score)}</span>
+          <span className="shrink-0 font-mono text-[14px]" style={{ color: wild ? "var(--color-wild)" : "var(--color-score)" }}>{pct(r.score)}</span>
         </div>
-        <span className="text-[13px] text-ink-3">{[r.subtitle, r.year, r.genres.slice(0, 2).join(", ")].filter(Boolean).join(" · ")}</span>
-        {why && <p className="m-0 text-[14px] leading-[1.45] text-ink-body">{why}</p>}
-        {rating_ && a.rated == null && <RatingInput compact label="Your rating" value={null} onChange={a.rate} />}
+        <span className="truncate text-[13px] text-ink-3">{[r.subtitle, r.year, r.genres.slice(0, 2).join(", ")].filter(Boolean).join(" · ")}</span>
+        {/* a fixed two-line slot: the reason, or the rating keys while "seen it" is open, so every card keeps one size */}
+        <div className="h-[44px] flex items-start">
+          {rating_ && a.rated == null ? (
+            <div className="w-full"><RatingInput compact hideLabel label={`Rate ${r.title}`} value={null} onChange={a.rate} /></div>
+          ) : (
+            <p className="m-0 line-clamp-2 text-[14px] leading-[1.45] text-ink-body">{why}</p>
+          )}
+        </div>
         <div className="flex gap-[6px] mt-auto pt-[6px]">
           <IconButton shrink label={a.saved ? `On your ${a.wish.toLowerCase()}` : `Add to ${a.wish.toLowerCase()}`} on={a.saved} onClick={() => !a.saved && a.save()}>
             <IconBookmark size={18} />
@@ -148,7 +154,7 @@ function RecCard({ r, kind }: { r: MediaRec; kind: Kind }) {
           <IconButton shrink label="Not interested" aria-pressed={a.hidden} onClick={a.hide}>
             <IconNotInterested size={18} />
           </IconButton>
-          <span className="ml-auto self-center text-[12px] text-ink-4 text-right">{status}</span>
+          <span className="ml-auto self-center min-w-0 truncate text-[12px] text-ink-4 text-right">{status}</span>
         </div>
       </div>
     </article>
@@ -190,7 +196,7 @@ export default function MediaForYou({ kind }: { kind: Kind }) {
         <>
           {top && <TopPick key={top.id} r={top} kind={kind} />}
           {rest.length > 0 && (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] gap-4">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] auto-rows-fr gap-4">
               {rest.map((r) => <RecCard key={r.id} r={r} kind={kind} />)}
             </div>
           )}
