@@ -185,3 +185,21 @@ def test_storygraph_dnf_and_imdb_tv(media, monkeypatch):  # noqa: F811
     assert media.post(f"/api/media/import/{job}/commit").json()["created"] == 1
     show = media.get("/api/media/show/library").json()["items"][0]
     assert show["status"] == "completed" and show["my_rating"] == 9 and show["progress"]["watched"] == 2
+
+
+def test_detail_neighbours_come_from_your_items_and_the_slate(media, monkeypatch):  # noqa: F811
+    async def fake_get(path, **kw):
+        return {"genres": [{"id": 18, "name": "Drama"}, {"id": 9648, "name": "Mystery"}]}
+
+    async def fake_lists(path, **kw):
+        return [{"id": 100 + i, "name": f"Mystery Drama {i}", "overview": "office memory mystery drama", "genre_ids": [18, 9648],
+                 "first_air_date": "2020-01-01", "poster_path": None} for i in range(8)]
+
+    monkeypatch.setattr(tmdb, "get", fake_get)
+    monkeypatch.setattr(tmdb, "lists", fake_lists)
+    item_id = media.post("/api/media/show/items", json={"ext_id": "95396"}).json()["id"]
+    media.post(f"/api/media/items/{item_id}/episodes", json={"season": 1})
+    media.post("/api/media/show/recommendations/recompute")
+    drain(media)
+    n = media.get(f"/api/media/items/{item_id}").json()["neighbors"]
+    assert len(n) == 6 and all(x["score"] is not None and x["item"]["id"] != item_id for x in n)

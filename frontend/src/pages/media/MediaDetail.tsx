@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { mediaApi, useFollows, useItem, useMediaMut, type Episode, type Goal, type ItemDetail, type Kind, type RunOut, type RunPrecision } from "../../api/media";
 import { CastPhoto } from "../../components/CastPhoto";
 import { Dialog } from "../../components/Dialog";
@@ -12,10 +12,10 @@ import { useToast } from "../../components/Toasts";
 import { Button, ErrorLine, Eyebrow, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
 import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
 import { onColor } from "../../lib/color";
-import { formatFullDate, formatWatchDate, iso, rating, relativeTime, today } from "../../lib/format";
+import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today } from "../../lib/format";
 import { backTarget } from "../../lib/history";
 import { MODES, SHELF_LABEL, START, STATUS_LABEL, USER_SET, statusLabel } from "../../lib/mode";
-import { asFilm, fraction, Meter, pagePad, progressText } from "./parts";
+import { asFilm, fraction, itemPath, Meter, pagePad, progressText } from "./parts";
 
 const ITEM_STATUS: Record<string, string> = { released: "Released", upcoming: "Upcoming", returning: "Returning series", ended: "Ended", canceled: "Canceled" };
 const FINAL = new Set(["completed", "finished", "beaten", "dropped", "abandoned", "did_not_finish", "retired"]);
@@ -842,6 +842,32 @@ function People({ item }: { item: ItemDetail }) {
   );
 }
 
+/** Like a film page: the closest of your own items and your suggestions on the taste map. */
+function Neighbours({ item }: { item: ItemDetail }) {
+  if (!item.neighbors?.length) return null;
+  return (
+    <section className={cx("flex flex-col gap-[18px]", pagePad)}>
+      <div className="flex justify-between items-baseline gap-4 flex-wrap">
+        <SectionTitle>Its neighbours on your taste map</SectionTitle>
+        <Link to={`${MODES[item.kind].base}/map?focus=${item.id}`} className="text-[14px] text-ink-2b underline">Open taste map</Link>
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(130px,100%),1fr))] gap-[18px]">
+        {item.neighbors.map(({ item: n, score }) => {
+          const meta = n.status
+            ? [statusLabel(n.kind, n.status), n.my_rating != null && `★ ${rating(n.my_rating)}`].filter(Boolean).join(" · ")
+            : score != null ? `Suggested · ${pct(score)}` : "";
+          return (
+            <Link key={n.id} to={itemPath(n)} className="mini-poster flex flex-col gap-2 no-underline text-inherit hover:text-inherit">
+              <Poster film={asFilm(n)} size="mini" shadow={false} layout={false} />
+              <span className="text-[12px] text-ink-3">{meta}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export default function MediaDetail({ kind }: { kind: Kind }) {
   const id = Number(useParams().id);
   const loc = useLocation();
@@ -1013,6 +1039,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
           <span className="font-mono text-[11px] text-ink-4 px-1">{item.added_at ? `added ${relativeTime(item.added_at)}` : "not in your library yet"}</span>
         </aside>
       </div>
+      <Neighbours item={item} />
     </main>
   );
 }

@@ -68,6 +68,7 @@ export type ItemDetail = ItemCard & {
   time_left?: number | null;
   follow?: FollowState;
   external_ids: Record<string, string>;
+  neighbors: { item: ItemCard; score: number | null }[];
 };
 
 export type MediaLibrary = { counts: Record<string, number>; items: ItemCard[]; genres: string[] };

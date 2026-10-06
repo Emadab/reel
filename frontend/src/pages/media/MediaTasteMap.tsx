@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useMediaMap, type Kind, type MapPoint } from "../../api/media";
 import { Poster } from "../../components/Poster";
 import { PageHeader, cx } from "../../components/ui";
@@ -14,8 +14,11 @@ import { pagePad } from "./parts";
 export default function MediaTasteMap({ kind }: { kind: Kind }) {
   const { data, isLoading } = useMediaMap(kind);
   const nav = useNavigate();
-  const [hover, setHover] = useState<MapPoint | null>(null);
+  const [hovered, setHover] = useState<MapPoint | null>(null);
   const pts = data?.points ?? [];
+  const focus = Number(useSearchParams()[0].get("focus")) || null; // from a detail page's "Open taste map"
+  const focused = pts.find((p) => p.id === focus) ?? null;
+  const hover = hovered ?? focused;
   const mine = pts.filter((p) => p.kind === "mine").length;
   return (
     <main className={cx("flex flex-col gap-7 pt-9 pb-16 max-[1023px]:pt-7 max-[639px]:pt-5 max-[639px]:pb-24 box-border min-w-0", pagePad)}>
@@ -40,6 +43,7 @@ export default function MediaTasteMap({ kind }: { kind: Kind }) {
                   onClick={(e) => { e.preventDefault(); nav(`${MODES[kind].base}/${p.id}`); }}
                   onMouseEnter={() => setHover(p)} onMouseLeave={() => setHover((h) => (h?.id === p.id ? null : h))} onFocus={() => setHover(p)}>
                   <circle cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={r + 12} fill="transparent" />
+                  {p.id === focus && <circle cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={r + 7} fill="none" stroke="white" strokeWidth={1.5} opacity={0.85} />}
                   {p.kind === "mine" ? (
                     <circle cx={`${p.x * 100}%`} cy={`${p.y * 100}%`} r={r} fill={p.color ?? "var(--color-accent)"} stroke="#0A0C11" strokeWidth={2}
                       style={{ filter: `drop-shadow(0 0 6px ${p.color ?? "var(--color-accent)"})` }} />

@@ -16,6 +16,7 @@ from ..db import get_session
 from ..flags import require_kind
 from ..models_media import Event, ExternalId, Item, ItemPerson, LibraryEntry, MediaFeedback, Person, Run, Season
 from ..providers import PRIMARY
+from ..recommender import media as recs
 from ..status import STICKY, allowed, transition
 
 router = APIRouter(prefix="/media")
@@ -178,6 +179,7 @@ def _detail(s: Session, item: Item) -> dict:
         "allowed": allowed(item.kind, run.status if run else None, item.endless),
         "suggest": _suggest(s, run),
         "external_ids": {e.source: e.ext_id for e in s.exec(select(ExternalId).where(ExternalId.item_id == item.id))},
+        "neighbors": recs.neighbors(s, item),
     }
     if item.kind == "show":
         seen = shows.watched_events(s, run)

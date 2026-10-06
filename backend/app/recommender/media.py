@@ -282,3 +282,21 @@ def request(kind: str) -> None:
 def is_stale(s: Session, kind: str) -> bool:
     c = s.exec(select(MediaCandidate).where(MediaCandidate.kind == kind)).first()
     return c is None or datetime.now(UTC) - items.utc(c.computed_at) > STALE
+
+
+def neighbors(s: Session, item: Item, k: int = 6) -> list[dict]:
+    """The film page's 'neighbours on your taste map' for a show, book or game: the closest of your own
+    items and the current slate, by the same embeddings the suggestions use."""
+    if item.embedding is None:
+        return []
+    slate = {c.item_id: c for c in s.exec(select(MediaCandidate).where(MediaCandidate.kind == item.kind))}
+    lib = {e.item_id: e for e in s.exec(select(LibraryEntry)) if e.shelf != "not_interested"}
+    pool = [x for i in (set(lib) | set(slate)) - {item.id} if (x := s.get(Item, i)) and x.kind == item.kind and x.embedding is not None]
+    if not pool:
+        return []
+    sims = np.stack([vec(x) for x in pool]) @ vec(item)
+    out = []
+    for i in np.argsort(-sims)[:k]:
+        x = pool[int(i)]
+        out.append({"item": items.card(s, x, lib.get(x.id)), "score": round(slate[x.id].score, 3) if x.id in slate else None})  # type: ignore[index]
+    return out
