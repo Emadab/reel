@@ -167,6 +167,21 @@ def test_google_books_and_hardcover():
 
 
 @respx.mock
+def test_hardcover_fills_book_when_google_is_down():
+    from app import books
+    ol = "https://openlibrary.org"
+    respx.get(f"{ol}/works/OL1W.json").mock(return_value=Response(200, json={"title": "T"}))
+    respx.get(f"{ol}/works/OL1W/editions.json").mock(return_value=Response(200, json={"entries": [{"isbn_13": ["9780000000002"]}]}))
+    respx.get("https://www.googleapis.com/books/v1/volumes").mock(return_value=Response(403))
+    respx.post("https://api.hardcover.app/v1/graphql").mock(return_value=Response(200, json={"data": {"editions": [{"book": {
+        "id": 8, "title": "T", "release_date": "2001-05-06", "description": "<i>Hi</i> there", "pages": 210,
+        "cached_tags": {"Genre": [{"tag": "Fantasy"}], "Mood": [{"tag": "Adventurous"}]}, "image": {"url": "https://assets.hardcover.app/c.jpg"}}}]}}))
+    d = run(books.fetch_book("OL1W"))
+    assert (d.overview, d.details["pages"], d.genres, d.tags) == ("Hi there", 210, ["Fantasy"], ["Adventurous"])
+    assert d.cover_url == "https://assets.hardcover.app/c.jpg" and d.year == 2001 and d.external_ids["hardcover"] == "8"
+
+
+@respx.mock
 def test_rawg_fetch_endless_and_dlc():
     base = "https://api.rawg.io/api"
     respx.get(f"{base}/games/3498").mock(return_value=Response(200, json={

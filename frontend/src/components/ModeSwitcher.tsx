@@ -58,11 +58,11 @@ export function ModeSwitcher() {
 
   if (modes.length < 2) return null;
   return (
-    <div className="flex flex-col gap-2 max-[1023px]:items-center">
-      <span className="px-[10px] font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color-mix(in_oklch,var(--color-accent)_80%,white)] max-[1023px]:hidden">
+    <div className="flex flex-col items-center gap-2 self-start ml-[10px] max-[1023px]:self-center max-[1023px]:ml-0">
+      <span className="pl-[0.18em] font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color-mix(in_oklch,var(--color-accent)_80%,white)] max-[1023px]:hidden">
         Mode · {MODES[mode].label}
       </span>
-      <div role="group" aria-label="Mode" className="flex max-[1023px]:flex-col self-start max-[1023px]:self-center ml-[10px] max-[1023px]:ml-0 rounded-[14px] border border-(--line-1) bg-(--fill-ctl) overflow-hidden">
+      <div role="group" aria-label="Mode" className="flex max-[1023px]:flex-col rounded-[14px] border border-(--line-1) bg-(--fill-ctl) overflow-hidden">
         {modes.map((m, i) => {
           const Icon = ICON[m];
           const on = m === mode;

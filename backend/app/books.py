@@ -14,12 +14,16 @@ async def fetch_book(work_id: str) -> ItemData | None:
     if d is None:
         return None
     isbn = d.external_ids.get("isbn13")
-    try:
+    hc = None
+    try:  # fallbacks are optional, and each one fails on its own
         if isbn and (hc := await hardcover.by_isbn(isbn)):
             d.external_ids["hardcover"] = hc["hardcover_id"]
             d.details["series"] = hc["series"]
             if hc["release_date"]:
                 d.release_date = hc["release_date"]
+    except ProviderUnavailable:
+        pass
+    try:
         if not d.overview or not d.details.get("pages"):
             authors = d.details.get("authors") or [None]
             if g := await googlebooks.lookup(isbn, d.title, authors[0]):
@@ -27,7 +31,13 @@ async def fetch_book(work_id: str) -> ItemData | None:
                 d.details["pages"] = d.details.get("pages") or g["pages"]
                 d.release_date = d.release_date or g["published"]
     except ProviderUnavailable:
-        pass  # fallbacks are optional
+        pass
+    if hc:  # whatever Open Library and Google Books still left empty
+        d.overview = d.overview or hc["description"]
+        d.details["pages"] = d.details.get("pages") or hc["pages"]
+        d.genres = d.genres or hc["genres"][:6]
+        d.tags = d.tags or hc["tags"][:18]
+        d.cover_url = d.cover_url or hc["cover_url"]
     if d.release_date and not d.year:
         d.year = d.release_date.year
     return d

@@ -7,7 +7,6 @@ import { useToast } from "../components/Toasts";
 import { Button, ButtonLink, PageHeader, Panel, SectionTitle, cx } from "../components/ui";
 import { MediaSettings } from "./settings/MediaSettings";
 
-const ACCENT_NAMES: Record<string, string> = { "#7FDBFF": "Ice", "#C6F36B": "Lime", "#FFB86B": "Amber", "#C9A7FF": "Violet" };
 const input = "h-11 px-[14px] rounded-[12px] border border-(--line-4) bg-(--fill-input) text-ink-hi text-[14px] min-w-0 flex-1 placeholder:text-ink-4";
 
 function KeyForm({ label, hint, configured, onSave, status }: { label: string; hint: ReactNode; configured: boolean; onSave: (v: string) => Promise<void>; status?: ReactNode }) {
@@ -58,64 +57,42 @@ export default function Settings() {
       <PageHeader title="Settings" />
       {s && (
         <>
-          <Panel className="flex flex-col gap-6">
-            <SectionTitle>API keys</SectionTitle>
-            <KeyForm
-              label="TMDB API Read Access Token"
-              configured={s.tmdb_configured}
-              status={
-                connected ?? s.tmdb_connected ? <span className="font-mono text-score">Connected</span> : s.tmdb_configured ? (
-                  <button type="button" className="font-mono text-ink-3 bg-transparent border-0 p-0 underline cursor-pointer" onClick={async () => setConnected(!!(await api.testTmdb()).tmdb_connected)}>
-                    Test connection
-                  </button>
-                ) : <span className="font-mono text-wild">Not set</span>
-              }
-              hint={<>The long token from themoviedb.org → Settings → API. It is stored in backend/.env and never sent to this page.</>}
-              onSave={async (v) => {
-                const next = await api.putSettings({ tmdb_token: v });
-                apply(next);
-                setConnected(true);
-                qc.invalidateQueries();
-                toast({ text: "TMDB connected" });
-              }}
-            />
-            <KeyForm
-              label="OMDb key (optional)"
-              configured={s.omdb_configured}
-              status={s.omdb_configured ? <span className="font-mono text-score">Saved</span> : null}
-              hint="Adds IMDb, Rotten Tomatoes and Metacritic scores on detail pages. Free at omdbapi.com."
-              onSave={async (v) => {
-                apply(await api.putSettings({ omdb_key: v }));
-                toast({ text: "OMDb key saved" });
-              }}
-            />
-          </Panel>
-
-          <MediaSettings s={s} />
-
-          <Panel className="flex flex-col gap-4">
-            <SectionTitle>Accent</SectionTitle>
-            <div role="radiogroup" aria-label="Accent colour" className="flex gap-3">
-              {s.accents.map((c) => {
-                const on = c.toUpperCase() === s.accent.toUpperCase();
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    role="radio"
-                    aria-checked={on}
-                    aria-label={ACCENT_NAMES[c] ?? c}
-                    onClick={async () => {
-                      document.documentElement.style.setProperty("--color-accent", c);
-                      apply(await api.putSettings({ accent: c }));
-                    }}
-                    className={cx("size-11 rounded-full border-0 cursor-pointer", on && "outline-2 outline-white outline-offset-[3px]")}
-                    style={{ background: c }}
-                  />
-                );
-              })}
-            </div>
-          </Panel>
+          <MediaSettings
+            s={s}
+            movieKeys={
+              <>
+                <KeyForm
+                  label="TMDB API Read Access Token"
+                  configured={s.tmdb_configured}
+                  status={
+                    connected ?? s.tmdb_connected ? <span className="font-mono text-score">Connected</span> : s.tmdb_configured ? (
+                      <button type="button" className="font-mono text-ink-3 bg-transparent border-0 p-0 underline cursor-pointer" onClick={async () => setConnected(!!(await api.testTmdb()).tmdb_connected)}>
+                        Test connection
+                      </button>
+                    ) : <span className="font-mono text-wild">Not set</span>
+                  }
+                  hint={<>The long token from themoviedb.org → Settings → API. It is stored in backend/.env and never sent to this page.</>}
+                  onSave={async (v) => {
+                    const next = await api.putSettings({ tmdb_token: v });
+                    apply(next);
+                    setConnected(true);
+                    qc.invalidateQueries();
+                    toast({ text: "TMDB connected" });
+                  }}
+                />
+                <KeyForm
+                  label="OMDb key (optional)"
+                  configured={s.omdb_configured}
+                  status={s.omdb_configured ? <span className="font-mono text-score">Saved</span> : null}
+                  hint="Adds IMDb, Rotten Tomatoes and Metacritic scores on detail pages. Free at omdbapi.com."
+                  onSave={async (v) => {
+                    apply(await api.putSettings({ omdb_key: v }));
+                    toast({ text: "OMDb key saved" });
+                  }}
+                />
+              </>
+            }
+          />
 
           <Panel className="flex flex-col gap-4">
             <SectionTitle>Data folder</SectionTitle>
@@ -175,7 +152,7 @@ export default function Settings() {
           <Panel className="flex flex-col gap-3">
             <SectionTitle>About</SectionTitle>
             <p className="m-0 text-[14px] text-ink-2b leading-[1.6]">
-              Reel is a personal film diary that runs entirely on this machine. Film data and images come from{" "}
+              Reel is a personal diary for films, shows, books and games that runs entirely on this machine. Film and show data and images come from{" "}
               <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">The Movie Database (TMDB)</a>.
             </p>
             <p className="m-0 text-[13px] text-ink-4">This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
