@@ -45,7 +45,7 @@ function NeonRing({ value, label, busy, onClick }: { value: number; label: strin
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden className="absolute inset-0 -rotate-90 overflow-visible">
         <defs>
           <filter id={`glow-${id}`} x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="2.6" result="b" />
+            <feGaussianBlur stdDeviation="1.8" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
           <linearGradient id={`arc-${id}`} x1="0" y1="0" x2="1" y2="1">
@@ -85,7 +85,7 @@ function UpNextRail() {
   return (
     <section className="flex flex-col gap-4" aria-label="Up next">
       <SectionTitle>Up next</SectionTitle>
-      <div className="flex gap-4 overflow-x-auto scroll-quiet py-2 -my-2 px-1 -mx-1">
+      <div className="flex gap-4 overflow-x-auto scroll-quiet pt-[18px] pb-[34px] -mt-[18px] -mb-[34px] px-[20px] -mx-[20px] select-none">
         {up.data.map((u) => {
           const code = `S${pad(u.episode.season)} · E${pad(u.episode.number)}`;
           const f = fraction("show", u.progress) ?? 0;
@@ -93,32 +93,26 @@ function UpNextRail() {
           return (
             <div
               key={u.item.id}
-              className="group/card relative shrink-0 w-[372px] max-[639px]:w-[312px] flex items-center gap-4 py-[14px] pl-[14px] pr-[12px] rounded-[18px] overflow-hidden border border-(--line-2) bg-(--fill-glass) backdrop-blur-[24px] transition-[border-color,box-shadow] duration-300 hover:border-[color-mix(in_oklch,var(--color-accent)_45%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--color-accent)_18%,transparent),0_18px_44px_-22px_var(--color-accent)]"
+              className="group/card relative shrink-0 w-[400px] max-[639px]:w-[318px] flex items-center gap-4 py-[14px] pl-[14px] pr-[12px] rounded-[16px] border border-(--line-3) bg-[linear-gradient(160deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015))] transition-[border-color,box-shadow,translate] duration-300 hover:-translate-y-[2px] hover:border-[color-mix(in_oklch,var(--color-accent)_60%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--color-accent)_22%,transparent),0_14px_30px_-18px_var(--color-accent)]"
             >
-              {/* neon edge, the show's own colour behind its poster, scanlines and HUD corner brackets */}
-              <span aria-hidden className="absolute inset-x-[18px] top-0 h-px bg-[linear-gradient(90deg,transparent,var(--color-accent)_30%,var(--color-wild)_70%,transparent)] opacity-60 group-hover/card:opacity-100 transition-opacity" />
-              <span aria-hidden className="absolute -left-10 -top-10 size-[150px] rounded-full pointer-events-none opacity-50" style={{ background: `radial-gradient(closest-side, color-mix(in oklch, ${glow} 55%, transparent), transparent)` }} />
-              <span aria-hidden className="absolute inset-0 pointer-events-none opacity-[0.35] bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.035)_0_1px,transparent_1px_3px)]" />
-              <span aria-hidden className="absolute right-[8px] top-[8px] size-[10px] border-t border-r border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] rounded-tr-[3px]" />
-              <span aria-hidden className="absolute left-[8px] bottom-[8px] size-[10px] border-b border-l border-[color-mix(in_oklch,var(--color-wild)_45%,transparent)] rounded-bl-[3px]" />
+              {/* a crisp neon top edge and HUD corner brackets */}
+              <span aria-hidden className="absolute inset-x-[22px] -top-px h-px bg-[linear-gradient(90deg,transparent,var(--color-accent)_25%,var(--color-wild)_75%,transparent)] opacity-70 group-hover/card:opacity-100 transition-opacity" />
+              <span aria-hidden className="absolute right-[7px] top-[7px] size-[9px] border-t border-r border-[color-mix(in_oklch,var(--color-accent)_70%,transparent)]" />
+              <span aria-hidden className="absolute left-[7px] bottom-[7px] size-[9px] border-b border-l border-[color-mix(in_oklch,var(--color-wild)_60%,transparent)]" />
 
-              <Link to={itemPath(u.item)} className="mini-poster relative shrink-0" aria-label={u.item.title}>
-                <Poster film={asFilm(u.item)} size="rec" className="w-[62px] rounded-[10px]" layout={false} shadow={`0 12px 28px -14px ${glow}`} />
+              <Link to={itemPath(u.item)} className="mini-poster relative shrink-0" aria-label={u.item.title} draggable={false}>
+                {/* the show's own colour spills from its poster, unclipped */}
+                <Poster film={asFilm(u.item)} size="rec" className="w-[64px] rounded-[8px]" layout={false} shadow={`0 0 0 1px rgba(255,255,255,0.08), 0 10px 30px -10px ${glow}, 0 0 22px -8px ${glow}`} />
               </Link>
-              <div className="relative flex-1 min-w-0 flex flex-col gap-[7px]">
-                <Link to={itemPath(u.item)} className="text-[15px] font-medium leading-[1.2] truncate no-underline">{u.item.title}</Link>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="shrink-0 font-mono text-[11px] tracking-[0.14em] px-[6px] py-[2px] rounded-[4px] text-accent border border-[color-mix(in_oklch,var(--color-accent)_40%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_10%,transparent)] shadow-[0_0_10px_-4px_var(--color-accent)]">
+              <div className="relative flex-1 min-w-0 flex flex-col gap-[6px]">
+                <Link to={itemPath(u.item)} draggable={false} className="text-[15px] font-semibold leading-[1.2] tracking-[-0.005em] truncate no-underline">{u.item.title}</Link>
+                <div className="flex items-center gap-2">
+                  <span className="shrink-0 font-mono text-[11px] leading-none tracking-[0.12em] px-[6px] py-[4px] rounded-[3px] text-accent border border-[color-mix(in_oklch,var(--color-accent)_50%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_10%,transparent)]">
                     {code}
                   </span>
-                  <span className="text-[13px] text-ink-3 truncate">{u.episode.title ?? "Untitled episode"}</span>
+                  <span className="font-mono text-[11px] leading-none tracking-[0.06em] text-ink-4 tabular-nums">{u.progress.watched}/{u.progress.aired}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="relative flex-1 h-[3px] rounded-full bg-white/8 overflow-hidden">
-                    <span className="absolute inset-y-0 left-0 rounded-full bg-[linear-gradient(90deg,var(--color-accent),var(--color-wild))] transition-[width] duration-700 ease-out" style={{ width: `${Math.round(f * 100)}%` }} />
-                  </span>
-                  <span className="shrink-0 font-mono text-[10.5px] tracking-[0.06em] text-ink-4 tabular-nums">{u.progress.watched}/{u.progress.aired} · {Math.round(f * 100)}%</span>
-                </div>
+                <span className="text-[13.5px] leading-[1.35] text-ink-2 line-clamp-2">{u.episode.title ?? "Untitled episode"}</span>
               </div>
               <div className="relative">
                 <NeonRing
