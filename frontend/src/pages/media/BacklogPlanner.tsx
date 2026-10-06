@@ -5,16 +5,15 @@ import { SectionTitle } from "../../components/ui";
 import { MODES } from "../../lib/mode";
 import { asFilm, itemPath } from "./parts";
 
-/** Backlog books and games, shortest estimated time left first (books at a flat reading pace, games from RAWG). */
+/** This mode's backlog, shortest estimated time left first (books at a flat reading pace, games from RAWG). */
 export function BacklogPlanner({ kind }: { kind: Kind }) {
-  const { data } = useBacklog();
+  const data = useBacklog().data?.filter((d) => d.kind === kind);
   if (!data?.length) return null;
-  const mixed = new Set(data.map((d) => d.kind)).size > 1;
   return (
     <section className="flex flex-col gap-4" aria-label="Backlog planner">
       <div className="flex justify-between items-baseline gap-4 flex-wrap">
         <SectionTitle>Backlog planner</SectionTitle>
-        <span className="font-mono text-[12px] text-ink-3">{mixed ? "books and games" : MODES[kind].noun[1]} · shortest first</span>
+        <span className="font-mono text-[12px] text-ink-3">{MODES[kind].noun[1]} · shortest first</span>
       </div>
       <ol className="list-none m-0 p-0 flex gap-4 overflow-x-auto scroll-quiet pb-2 -mb-2">
         {data.slice(0, 12).map((d, i) => (
@@ -27,7 +26,6 @@ export function BacklogPlanner({ kind }: { kind: Kind }) {
               <span className="text-[13px] font-medium truncate">{d.title}</span>
               <span className="font-mono text-[11px] text-ink-4">
                 {d.hours_left == null ? "no estimate" : `~${d.hours_left} h left`}
-                {mixed && ` · ${MODES[d.kind].noun[0]}`}
               </span>
             </Link>
           </li>

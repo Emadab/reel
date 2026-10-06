@@ -2,7 +2,15 @@
 
 A personal diary for films, TV series, books and games, for Windows. Log what you watch, read and play in a couple of keystrokes, see your history as a poster wall, timeline and stats, and get recommendations that learn from your own ratings. Everything runs locally: one SQLite file plus a folder of cached images. No account, no cloud.
 
-![Library](design/screenshots/Main-desktop.png)
+![Movies library](docs/screenshots/movies-library.png)
+
+| | |
+|---|---|
+| ![Shows](docs/screenshots/shows-library.png) | ![Books](docs/screenshots/books-library.png) |
+| ![Games](docs/screenshots/games-library.png) | ![Film page](docs/screenshots/film-detail.png) |
+| ![Stats](docs/screenshots/movies-stats.png) | ![Timeline](docs/screenshots/movies-timeline.png) |
+| ![For you](docs/screenshots/for-you.png) | ![Taste map](docs/screenshots/taste-map.png) |
+| ![Settings](docs/screenshots/settings.png) | |
 
 ## What it does
 
