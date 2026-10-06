@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Link, useSearchParams } from "react-router";
 import { mediaApi, useMediaLibrary, useMediaMut, useUpNext, type ItemCard, type Kind, type MediaSort, type UpNext } from "../../api/media";
 import { FilterChip } from "../../components/FilterChip";
@@ -28,8 +28,94 @@ function chipLabel(name: string, values: string[]) {
   return values.length === 1 ? `${name}: ${values[0]}` : `${name} · ${values.length}`;
 }
 
+/**
+ * A strip's own scrollbar (design extension), in the window scrollbar's vocabulary: a slim neon pill on a hairline
+ * track that wakes while you scroll or hover, widens under the pointer, drags, and glides to a clicked spot.
+ */
+function StripScrollbar({ strip, count }: { strip: RefObject<HTMLDivElement | null>; count: number }) {
+  const track = useRef<HTMLDivElement>(null);
+  const [m, setM] = useState({ left: 0, size: 0, fits: true });
+  const [awake, setAwake] = useState(false);
+  const [drag, setDrag] = useState<{ x: number; scroll: number } | null>(null);
+  const sleep = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    const el = strip.current;
+    if (!el) return;
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const w = track.current?.clientWidth ?? 0;
+      const range = el.scrollWidth - el.clientWidth;
+      const size = Math.max(56, (el.clientWidth / el.scrollWidth) * w);
+      setM({ left: range > 0 ? (el.scrollLeft / range) * (w - size) : 0, size, fits: range <= 1 });
+    };
+    const schedule = () => {
+      frame ||= requestAnimationFrame(measure);
+    };
+    const onScroll = () => {
+      schedule();
+      setAwake(true);
+      clearTimeout(sleep.current);
+      sleep.current = setTimeout(() => setAwake(false), 1100);
+    };
+    const ro = new ResizeObserver(schedule);
+    ro.observe(el);
+    measure();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(sleep.current);
+      ro.disconnect();
+      el.removeEventListener("scroll", onScroll);
+    };
+  }, [strip, count]);
+
+  if (m.fits) return null;
+  const el = () => strip.current!;
+  const room = () => (track.current?.clientWidth ?? 1) - m.size;
+  const range = () => el().scrollWidth - el().clientWidth;
+  const active = drag != null;
+  return (
+    <div
+      ref={track}
+      aria-hidden
+      className="group/bar relative h-[14px] flex items-center cursor-pointer"
+      onPointerDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        // click the track: glide so the thumb centres on the pointer
+        const x = e.clientX - e.currentTarget.getBoundingClientRect().left - m.size / 2;
+        el().scrollTo({ left: (x / room()) * range(), behavior: "smooth" });
+      }}
+    >
+      <div className={cx("absolute inset-x-0 h-px rounded-full bg-white/8 pointer-events-none transition-opacity duration-300", awake || active ? "opacity-100" : "opacity-60 group-hover/bar:opacity-100")} />
+      <div
+        className={cx(
+          "absolute left-0 rounded-full cursor-default transition-[height,opacity,box-shadow] duration-200 ease-[cubic-bezier(.2,.7,.2,1)]",
+          "bg-[linear-gradient(90deg,var(--color-accent),var(--color-wild))]",
+          active || awake ? "h-[5px] opacity-100" : "h-[3px] opacity-55 group-hover/bar:h-[5px] group-hover/bar:opacity-90",
+          active && "shadow-[0_0_14px_color-mix(in_oklch,var(--color-accent)_70%,transparent)]",
+        )}
+        style={{ width: m.size, transform: `translateX(${m.left}px)` }}
+        onPointerDown={(e) => {
+          e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setDrag({ x: e.clientX, scroll: el().scrollLeft });
+        }}
+        onPointerMove={(e) => {
+          if (!drag) return;
+          el().scrollLeft = drag.scroll + ((e.clientX - drag.x) / room()) * range();
+        }}
+        onPointerUp={() => setDrag(null)}
+        onPointerCancel={() => setDrag(null)}
+      />
+    </div>
+  );
+}
+
 /** Shows: the next aired episode of everything you're watching, ticked off right here. */
 function UpNextRail() {
+  const strip = useRef<HTMLDivElement>(null);
   const up = useUpNext(true);
   const tick = useMediaMut((u: UpNext) => mediaApi.episodes(u.item.id, { episode_ids: [u.episode.id], watched: true }));
   const toast = useToast();
@@ -38,7 +124,7 @@ function UpNextRail() {
   return (
     <section className="flex flex-col gap-4" aria-label="Up next">
       <SectionTitle>Up next</SectionTitle>
-      <div className="flex gap-4 overflow-x-auto scroll-quiet pt-[18px] pb-[34px] -mt-[18px] -mb-[34px] px-[20px] -mx-[20px] select-none">
+      <div ref={strip} className="flex gap-4 overflow-x-auto [scrollbar-width:none] pt-[18px] pb-[34px] -mt-[18px] -mb-[34px] px-[20px] -mx-[20px] select-none">
         {up.data.map((u) => {
           const code = `S${u.episode.season} · E${u.episode.number}`;
           const f = fraction("show", u.progress) ?? 0;
@@ -100,6 +186,7 @@ function UpNextRail() {
           );
         })}
       </div>
+      <StripScrollbar strip={strip} count={up.data.length} />
     </section>
   );
 }
