@@ -344,18 +344,23 @@ function HistoryDialog({ item, onClose }: { item: ItemDetail; onClose: () => voi
   );
 }
 
-/** A book read before: one finished run with its dates, format and rating, in one go. */
-function BookHistoryDialog({ item, onClose }: { item: ItemDetail; onClose: () => void }) {
+/** A book read (or game played) before: one finished run with its dates, format or platform and rating, in one go.
+ * An endless game has no finish, so it only asks when you started. */
+function PastRunDialog({ item, onClose }: { item: ItemDetail; onClose: () => void }) {
+  const book = item.kind === "book";
+  const platforms: string[] = item.details.platforms ?? [];
   const [start, setStart] = useState(iso(today()));
   const [finish, setFinish] = useState(iso(today()));
   const [p, setP] = useState<RunPrecision>("day");
   const [format, setFormat] = useState("print");
+  const [platform, setPlatform] = useState(platforms.length === 1 ? platforms[0] : "");
   const [score, setScore] = useState<number | null>(null);
+  const variant: Record<string, string> = book ? { format } : platform ? { platform } : {};
   const save = useMediaMut(() => mediaApi.history(item.id, {
-    upto_season: null, date_precision: p, rating: score, variant: { format }, ...(p === "unknown" ? {} : { started_on: start, finished_on: finish }),
+    upto_season: null, date_precision: p, rating: score, variant, ...(p === "unknown" ? {} : { started_on: start, ...(item.endless ? {} : { finished_on: finish }) }),
   }));
   const toast = useToast();
-  const bad = p !== "unknown" && finish < start;
+  const bad = !item.endless && p !== "unknown" && finish < start;
   return (
     <DateDialog
       label={`Add ${item.title} to your history`} onClose={onClose} saving={save.isPending || bad}
@@ -363,11 +368,23 @@ function BookHistoryDialog({ item, onClose }: { item: ItemDetail; onClose: () =>
       onSave={async () => { await save.mutateAsync(undefined); toast({ text: <>Added <em>{item.title}</em> to your history</> }); onClose(); }}
     >
       <div className="flex flex-wrap gap-[18px] items-end">
-        <When id="book-hist-s" label="Started" value={start} precision={p} onChange={setStart} />
-        <When id="book-hist-f" label="Finished" value={finish} precision={p} onChange={setFinish} />
+        <When id="past-s" label="Started" value={start} precision={p} onChange={setStart} />
+        {!item.endless && <When id="past-f" label={book ? "Finished" : "Beaten"} value={finish} precision={p} onChange={setFinish} />}
       </div>
       <Remember value={p} onChange={(v) => { setP(v); setStart(fromUnknown(start)); setFinish(fromUnknown(finish)); }} />
-      <Segmented label="Format" variant="form" value={format} options={FORMATS} onChange={setFormat} />
+      {book && <Segmented label="Format" variant="form" value={format} options={FORMATS} onChange={setFormat} />}
+      {!book && platforms.length > 1 && (
+        <label className="flex flex-col gap-2 text-[12px] text-ink-3">
+          Platform
+          <select
+            value={platform} onChange={(e) => setPlatform(e.target.value)}
+            className="h-11 px-3 rounded-[12px] border border-(--line-5) bg-(--fill-input) text-ink-hi text-[14px] [color-scheme:dark] outline-none focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            <option value="">Choose a platform</option>
+            {platforms.map((x) => <option key={x} value={x}>{x}</option>)}
+          </select>
+        </label>
+      )}
       <RatingInput value={score} onChange={setScore} />
     </DateDialog>
   );
@@ -990,7 +1007,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
   const tickNext = useMediaMut((epId: number) => mediaApi.episodes(id, { episode_ids: [epId], watched: true }));
   const suggest = useMediaMut((s: string) => mediaApi.setStatus(id, s));
   const [dismissed, setDismissed] = useState(false);
-  const [bookHistory, setBookHistory] = useState(false);
+  const [pastRun, setPastRun] = useState(false);
 
   const backPill = (
     <button
@@ -1096,9 +1113,9 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
             </p>
             <div className="flex flex-wrap gap-[10px] mt-2">
               {primary}
-              {kind === "book" && !active && (
+              {kind !== "show" && !active && (
                 <button
-                  type="button" onClick={() => setBookHistory(true)}
+                  type="button" onClick={() => setPastRun(true)}
                   className="flex items-center gap-2 h-[46px] px-[18px] rounded-[14px] bg-white/8 border border-(--line-5) text-ink text-[14px] cursor-pointer backdrop-blur-[16px] hover:bg-white/10"
                 >
                   <IconCalendar size={15} />
@@ -1163,7 +1180,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
       </div>
       <Collection item={item} />
       <Neighbours item={item} />
-      {bookHistory && <BookHistoryDialog item={item} onClose={() => setBookHistory(false)} />}
+      {pastRun && <PastRunDialog item={item} onClose={() => setPastRun(false)} />}
     </main>
   );
 }

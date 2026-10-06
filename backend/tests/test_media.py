@@ -284,6 +284,15 @@ def test_book_added_to_history_with_dates_format_and_rating(media):
     assert media.post(f"/api/media/items/{item_id}/history", json={**body, "finished_on": "2024-01-01"}).status_code == 422
 
 
+def test_game_added_to_history_beaten_or_endless(media):
+    item_id = media.post("/api/media/game/items", json={"ext_id": "1"}).json()["id"]
+    body = {"started_on": "2024-03-09", "finished_on": "2024-04-20", "date_precision": "day", "variant": {"platform": "PC"}}
+    r = media.post(f"/api/media/items/{item_id}/history", json=body).json()["runs"][0]
+    assert (r["status"], r["finished_on"], r["variant"]) == ("beaten", "2024-04-20", {"platform": "PC"})
+    endless = media.post("/api/media/game/items", json={"ext_id": "2"}).json()["id"]
+    r = media.post(f"/api/media/items/{endless}/history", json={"started_on": "2024-03-09", "date_precision": "day"}).json()["runs"][0]
+    assert (r["status"], r["started_on"], r["finished_on"]) == ("playing", "2024-03-09", None)
+
 def test_show_scores_fetched_in_background(media, monkeypatch):
     from app import omdb
     from tests.conftest import drain
