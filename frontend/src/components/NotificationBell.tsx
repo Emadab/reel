@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useSettings } from "../api/hooks";
@@ -50,13 +51,19 @@ export function NotificationBell() {
       >
         <IconBell size={18} />
         {unseen > 0 && (
-          <span className="absolute -right-1 -top-1 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-on-accent font-mono text-[10.5px] grid place-items-center shadow-[0_0_10px_var(--color-accent)]">
+          <motion.span key={unseen} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 600, damping: 30 }} className="absolute -right-1 -top-1 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-on-accent font-mono text-[10.5px] grid place-items-center shadow-[0_0_10px_var(--color-accent)]">
             {unseen > 9 ? "9+" : unseen}
-          </span>
+          </motion.span>
         )}
       </button>
+      <AnimatePresence>
       {open && (
-        <div role="dialog" aria-label="Notifications" className="absolute left-0 bottom-[calc(100%+10px)] max-[1023px]:left-[calc(100%+10px)] max-[1023px]:bottom-0 z-40 w-[340px] max-h-[460px] flex flex-col rounded-[16px] bg-[rgba(20,22,30,0.94)] border border-(--line-4) backdrop-blur-[24px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)] overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, y: 6, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: [0.2, 0.7, 0.2, 1] } }}
+          exit={{ opacity: 0, y: 6, scale: 0.97, transition: { duration: 0.12, ease: "easeIn" } }}
+          style={{ transformOrigin: "bottom left" }}
+          role="dialog" aria-label="Notifications" className="absolute left-0 bottom-[calc(100%+10px)] max-[1023px]:left-[calc(100%+10px)] max-[1023px]:bottom-0 z-40 w-[340px] max-h-[460px] flex flex-col rounded-[16px] bg-[rgba(20,22,30,0.94)] border border-(--line-4) backdrop-blur-[24px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)] overflow-hidden">
           <div className="flex items-center justify-between px-4 h-12 border-b border-(--line-1)">
             <span className="font-mono text-[11px] tracking-[0.1em] uppercase text-ink-3">Notifications</span>
             {unseen > 0 && (
@@ -82,8 +89,9 @@ export function NotificationBell() {
               </li>
             ))}
           </ol>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

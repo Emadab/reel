@@ -91,12 +91,12 @@ export function Select({ label, value, options, onChange, placeholder = "Chooseâ
         )}
       >
         <span id={`${id}-value`} className={cx("truncate", current ? "text-ink-hi" : "text-ink-4")}>{current?.label ?? placeholder}</span>
-        <IconChevronDown size={12} className={cx("shrink-0 text-ink-3 transition-transform duration-150", open && "rotate-180")} />
+        <IconChevronDown size={12} className={cx("shrink-0 text-ink-3 transition-transform duration-200 ease-[cubic-bezier(.2,.7,.2,1)]", open && "rotate-180")} />
       </button>
       <div
         ref={pop} popover="auto" role="listbox" tabIndex={-1} aria-labelledby={`${id}-label`}
         aria-activedescendant={open ? `${id}-${active}` : undefined} onKeyDown={onListKey}
-        className="fixed inset-auto m-0 max-w-[min(360px,calc(100vw-32px))] max-h-[320px] overflow-y-auto p-2 rounded-[16px] bg-[rgba(20,22,30,0.92)] border border-(--line-4) backdrop-blur-[24px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)] text-ink outline-none palette-in"
+        className="fixed inset-auto m-0 max-w-[min(360px,calc(100vw-32px))] max-h-[320px] overflow-y-auto p-2 rounded-[16px] bg-[rgba(20,22,30,0.92)] border border-(--line-4) backdrop-blur-[24px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)] text-ink outline-none pop"
       >
         {options.map((o, i) => {
           const on = o.value === value;

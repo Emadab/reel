@@ -36,11 +36,11 @@ export function YearBars({ years, selected, onPick }: { years: YearBar[]; select
               <span className="flex flex-col justify-end h-[140px] gap-[2px]">
                 {y.approx > 0 && (
                   <span
-                    className="rounded-[4px_4px_0_0] box-border"
+                    className="bar-rise rounded-[4px_4px_0_0] box-border transition-[height,border-color] duration-500 ease-[cubic-bezier(.16,1,.3,1)]"
                     style={{ border: `1.5px dashed ${on ? accent : mix(accent, 55, "#07080C")}`, height: Math.round((y.approx / max) * 132) }}
                   />
                 )}
-                <span className="rounded-[2px]" style={{ height: Math.round(((y.total - y.approx) / max) * 132), background: on ? accent : mix(accent, 45, "#07080C") }} />
+                <span className="bar-rise rounded-[2px] transition-[height,background-color] duration-500 ease-[cubic-bezier(.16,1,.3,1)]" style={{ height: Math.round(((y.total - y.approx) / max) * 132), background: on ? accent : mix(accent, 45, "#07080C") }} />
               </span>
               <span className="font-mono text-[12px] text-center">{y.year}</span>
             </button>

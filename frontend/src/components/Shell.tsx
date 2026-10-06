@@ -5,7 +5,7 @@ import { CommandPalette, EditWatchDialog } from "../features/search/CommandPalet
 import { usePalette } from "../features/search/palette";
 import { trackPath } from "../lib/history";
 import { MODES, useMode, type Mode } from "../lib/mode";
-import { GlowProvider, alpha } from "./Glow";
+import { GlowProvider } from "./Glow";
 import { useSettings } from "../api/hooks";
 import { IconCalendar, IconForYou, IconLibrary, IconSearch, IconSettings, IconStats, IconTasteMap, IconTimeline } from "./Icons";
 import { NotificationBell } from "./NotificationBell";
@@ -82,14 +82,18 @@ function Sidebar() {
               className={({ isActive }) => {
                 const active = isActive || (to === home && libraryish);
                 return cx(
-                  "flex items-center gap-3 h-11 px-3 rounded-[12px] no-underline text-[14px] max-[1023px]:justify-center max-[1023px]:px-0",
-                  active ? "bg-(--fill-nav-active) text-ink-hi font-medium hover:text-ink-hi" : "text-ink-3 hover:bg-(--fill-ctl) hover:text-ink-3",
+                  "relative isolate flex items-center gap-3 h-11 px-3 rounded-[12px] no-underline text-[14px] max-[1023px]:justify-center max-[1023px]:px-0 transition-[background-color,color] duration-150",
+                  active ? "text-ink-hi font-medium hover:text-ink-hi" : "text-ink-3 hover:bg-(--fill-ctl) hover:text-ink-2",
                 );
               }}
               {...(to === home && libraryish ? { "aria-current": "page" as const } : {})}
             >
               {({ isActive }) => (
                 <>
+                  {/* the active pill slides between sections */}
+                  {(isActive || (to === home && libraryish)) && (
+                    <motion.span layoutId="nav-active" aria-hidden className="absolute inset-0 -z-10 rounded-[12px] bg-(--fill-nav-active)" transition={{ type: "spring", stiffness: 520, damping: 40 }} />
+                  )}
                   <Icon size={18} />
                   <span className="flex-1 max-[1023px]:hidden">{label}</span>
                   {(isActive || (to === home && libraryish)) && <span className="size-[6px] rounded-full bg-accent max-[1023px]:hidden" />}
@@ -180,13 +184,11 @@ export function Shell() {
     <GlowProvider>
       {(glow) => (
         <div className="min-h-screen bg-bg text-ink font-sans flex lg:flex-wrap relative overflow-clip">
-          {glow && (
-            <div
-              aria-hidden
-              className="absolute top-[-320px] right-[-180px] w-[980px] h-[680px] pointer-events-none transition-[background] duration-500"
-              style={{ background: `radial-gradient(closest-side, ${alpha(glow, 0.42)}, ${alpha(glow, 0)})` }}
-            />
-          )}
+          <div
+            aria-hidden
+            className="ambient-glow absolute top-[-320px] right-[-180px] w-[980px] h-[680px] pointer-events-none"
+            style={{ "--glow-c": glow ?? "transparent" } as React.CSSProperties}
+          />
           <TitleBar />
           <ScrollRail />
           <Sidebar />

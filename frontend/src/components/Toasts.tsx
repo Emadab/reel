@@ -24,14 +24,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider value={show}>
       {children}
       <div aria-live="polite" className="fixed left-1/2 -translate-x-1/2 bottom-6 max-[639px]:bottom-[92px] z-50 flex flex-col items-center gap-2 pointer-events-none">
-        <AnimatePresence>
+        <AnimatePresence mode="popLayout">
           {toasts.map((t) => (
             <motion.div
               key={t.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
+              layout
+              initial={{ opacity: 0, y: 14, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.14, ease: "easeIn" } }}
+              transition={{ type: "spring", stiffness: 420, damping: 34 }}
               className="pointer-events-auto flex items-center gap-4 rounded-[14px] px-4 py-3 text-[14px] bg-[rgba(20,22,30,0.85)] border border-(--line-4) backdrop-blur-[24px] shadow-[0_20px_40px_-20px_rgba(0,0,0,0.8)]"
             >
               <span>{t.text}</span>

@@ -1,3 +1,4 @@
+import { motion, useReducedMotion } from "framer-motion";
 import { mix } from "../Glow";
 import { monthShort, parseDate } from "../../lib/format";
 
@@ -78,6 +79,7 @@ export function Radar({ genres }: { genres: { name: string; value: number }[] })
     return [cx + Math.cos(a) * R * v, cy + Math.sin(a) * R * v];
   };
   const poly = (v: number) => genres.map((_, i) => pt(i, v).map((x) => x.toFixed(1)).join(",")).join(" ");
+  const still = useReducedMotion();
   return (
     <svg viewBox="-30 0 380 300" role="img" aria-label={`Genre profile: ${genres.map((g) => `${g.name} ${Math.round(g.value * 100)}%`).join(", ")}`} className="w-full h-auto">
       {[0.25, 0.5, 0.75, 1].map((r) => <polygon key={r} points={poly(r)} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth={1} />)}
@@ -85,11 +87,17 @@ export function Radar({ genres }: { genres: { name: string; value: number }[] })
         const [x, y] = pt(i, 1);
         return <line key={i} x1={cx} y1={cy} x2={x.toFixed(1)} y2={y.toFixed(1)} stroke="rgba(255,255,255,0.09)" strokeWidth={1} />;
       })}
-      <polygon points={genres.map((g, i) => pt(i, g.value).map((x) => x.toFixed(1)).join(",")).join(" ")} fill={mix(accent, 22)} stroke={accent} strokeWidth={2} strokeLinejoin="round" />
+      {/* the shape grows out of the centre on first show and morphs when the range changes */}
+      <motion.polygon
+        initial={still ? false : { points: poly(0) }}
+        animate={{ points: genres.map((g, i) => pt(i, g.value).map((x) => x.toFixed(1)).join(",")).join(" ") }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        fill={mix(accent, 22)} stroke={accent} strokeWidth={2} strokeLinejoin="round"
+      />
       {genres.map((g, i) => {
         const [x, y] = pt(i, g.value);
         return (
-          <circle key={g.name} cx={x.toFixed(1)} cy={y.toFixed(1)} r={4} fill={accent} stroke="#101218" strokeWidth={2} data-tip={`${g.name}: ${Math.round(g.value * 100)}% of your top genre`} />
+          <motion.circle key={g.name} initial={still ? false : { cx, cy }} animate={{ cx: +x.toFixed(1), cy: +y.toFixed(1) }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} r={4} fill={accent} stroke="#101218" strokeWidth={2} data-tip={`${g.name}: ${Math.round(g.value * 100)}% of your top genre`} />
         );
       })}
       {genres.map((g, i) => {
@@ -110,7 +118,7 @@ export function BarList({ rows }: { rows: { name: string; count: number }[] }) {
           <span className="text-[14px] truncate">{r.name}</span>
           <span className="font-mono text-[13px] text-ink-2b">{r.count}</span>
           <span className="col-span-full h-1 rounded-[4px] bg-(--fill-tag)">
-            <span className="block h-1 rounded-[4px] bg-accent" style={{ width: `${Math.round((r.count / max) * 100)}%` }} />
+            <span className="bar-grow block h-1 rounded-[4px] bg-accent transition-[width] duration-500 ease-[cubic-bezier(.16,1,.3,1)]" style={{ width: `${Math.round((r.count / max) * 100)}%` }} />
           </span>
         </li>
       ))}
@@ -129,7 +137,7 @@ export function RatingHistogram({ bins }: { bins: { bin: number; count: number }
           <div key={b.bin} title={`${b.bin} out of 10: ${b.count} films`} className="group flex flex-col justify-end items-stretch gap-[6px] h-full">
             <span className="font-mono text-[11px] text-center text-ink-2b">{b.count}</span>
             <span
-              className="rounded-[4px_4px_0_0] group-hover:brightness-125"
+              className="bar-rise rounded-[4px_4px_0_0] group-hover:brightness-125 transition-[height,filter,background-color] duration-500 ease-[cubic-bezier(.16,1,.3,1)]"
               style={{ height: Math.max(2, Math.round((b.count / max) * 170)), background: b.count ? accent : "rgba(255,255,255,0.08)" }}
             />
           </div>

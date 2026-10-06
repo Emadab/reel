@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes, ComponentProps, ReactNode } from "react";
+import { motion } from "framer-motion";
+import { useEffect, useId, useState, type ButtonHTMLAttributes, type ComponentProps, type ReactNode } from "react";
 import { Link } from "react-router";
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
@@ -61,6 +62,7 @@ export function Segmented<T extends string>({
   className?: string;
 }) {
   const form = variant === "form";
+  const pill = useId();
   return (
     <div
       role="group"
@@ -76,11 +78,13 @@ export function Segmented<T extends string>({
             aria-pressed={on}
             onClick={() => onChange(o.id)}
             className={cx(
-              "px-[14px] border-0 rounded-[10px] text-[13px] cursor-pointer whitespace-nowrap",
+              "relative isolate px-[14px] border-0 rounded-[10px] text-[13px] cursor-pointer whitespace-nowrap bg-transparent",
               form ? "h-[34px]" : "h-9",
-              on ? (form ? "bg-ink text-on-accent" : "bg-(--fill-seg-active) text-ink-hi") : cx("bg-transparent", form ? "text-ink-2" : "text-ink-3"),
+              on ? (form ? "text-on-accent" : "text-ink-hi") : cx(form ? "text-ink-2 hover:text-ink" : "text-ink-3 hover:text-ink-2"),
             )}
           >
+            {/* the selection slides to the pressed option */}
+            {on && <motion.span layoutId={pill} aria-hidden className={cx("absolute inset-0 -z-10 rounded-[10px]", form ? "bg-ink" : "bg-(--fill-seg-active)")} transition={{ type: "spring", stiffness: 560, damping: 42 }} />}
             {o.label}
           </button>
         );
@@ -190,4 +194,18 @@ export function ErrorLine({ error, onSettings }: { error: unknown; onSettings?: 
       )}
     </p>
   );
+}
+
+const introPlayed = new Set<string>();
+/** True for the first ~1 s after `key`'s wall first has content this session: posters stagger in once, never on
+ *  filter changes or on coming back (where they'd hide the poster morphing home). */
+export function useIntro(key: string, ready: boolean) {
+  const [on, setOn] = useState(() => !introPlayed.has(key));
+  useEffect(() => {
+    if (!on || !ready) return;
+    introPlayed.add(key);
+    const t = setTimeout(() => setOn(false), 1000);
+    return () => clearTimeout(t);
+  }, [key, on, ready]);
+  return on && ready;
 }

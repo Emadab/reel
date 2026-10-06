@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { useEffect, useRef, type ComponentType } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useSettings } from "../api/hooks";
@@ -79,7 +80,7 @@ export function ModeSwitcher() {
                 on ? "text-accent bg-[color-mix(in_oklch,var(--color-accent)_14%,transparent)]" : "text-ink-3 hover:bg-white/5 hover:text-ink-2",
               )}
             >
-              {on && <span aria-hidden className="absolute inset-x-[10px] bottom-0 h-[2px] rounded-full bg-accent shadow-[0_0_10px_var(--color-accent)] max-[1023px]:inset-x-auto max-[1023px]:inset-y-[10px] max-[1023px]:left-0 max-[1023px]:w-[2px] max-[1023px]:h-auto" />}
+              {on && <motion.span layoutId="mode-bar" transition={{ type: "spring", stiffness: 520, damping: 38 }} aria-hidden className="absolute inset-x-[10px] bottom-0 h-[2px] rounded-full bg-accent shadow-[0_0_10px_var(--color-accent)] max-[1023px]:inset-x-auto max-[1023px]:inset-y-[10px] max-[1023px]:left-0 max-[1023px]:w-[2px] max-[1023px]:h-auto" />}
               <Icon size={18} />
             </button>
           );

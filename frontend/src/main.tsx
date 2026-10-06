@@ -3,7 +3,8 @@ import { MotionConfig } from "framer-motion";
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
-import type { Kind } from "./api/media";
+import { api } from "./api/client";
+import { mediaApi, type Kind } from "./api/media";
 import { MediaGate } from "./components/MediaGate";
 import { RouteError, reloadOnceForNewBuild } from "./components/RouteError";
 import { Shell } from "./components/Shell";
@@ -14,7 +15,8 @@ import { Library } from "./pages/Library";
 import "./theme.css";
 import "./app.css";
 
-const FilmDetail = lazy(() => import("./pages/FilmDetail"));
+const loadFilmDetail = () => import("./pages/FilmDetail");
+const FilmDetail = lazy(loadFilmDetail);
 const Timeline = lazy(() => import("./pages/Timeline"));
 const Stats = lazy(() => import("./pages/Stats"));
 const ForYou = lazy(() => import("./pages/ForYou"));
@@ -22,7 +24,8 @@ const TasteMap = lazy(() => import("./pages/TasteMap"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Import = lazy(() => import("./pages/Import"));
 const MediaLibrary = lazy(() => import("./pages/media/MediaLibrary"));
-const MediaDetail = lazy(() => import("./pages/media/MediaDetail"));
+const loadMediaDetail = () => import("./pages/media/MediaDetail");
+const MediaDetail = lazy(loadMediaDetail);
 const MediaCalendar = lazy(() => import("./pages/media/MediaCalendar"));
 const MediaTimeline = lazy(() => import("./pages/media/MediaTimeline"));
 const MediaStats = lazy(() => import("./pages/media/MediaStats"));
@@ -34,6 +37,23 @@ installDesktopBehaviour();
 window.addEventListener("vite:preloadError", (e) => reloadOnceForNewBuild() && e.preventDefault());
 
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 } } });
+
+// Pointing at (or tabbing to) a film or item link loads its page's code and data, so the click opens it at once and
+// the poster can morph into the hero instead of the page showing a skeleton first.
+const warm = (e: Event) => {
+  const m = (e.target as Element | null)?.closest?.("a[href]")?.getAttribute("href")?.match(/^\/(film|shows|books|games)\/(\d+)/);
+  if (!m) return;
+  const id = Number(m[2]);
+  if (m[1] === "film") {
+    void loadFilmDetail();
+    void qc.prefetchQuery({ queryKey: ["movie", id], queryFn: () => api.movie(id) });
+  } else {
+    void loadMediaDetail();
+    void qc.prefetchQuery({ queryKey: ["media", "item", id], queryFn: () => mediaApi.item(id) });
+  }
+};
+document.addEventListener("pointerover", warm);
+document.addEventListener("focusin", warm);
 
 const page = (el: React.ReactNode) => <Suspense fallback={null}>{el}</Suspense>;
 

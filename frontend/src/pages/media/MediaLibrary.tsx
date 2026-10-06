@@ -7,7 +7,7 @@ import { useAmbientGlow } from "../../components/Glow";
 import { IconCheck, IconPlus } from "../../components/Icons";
 import { Poster, posterBg } from "../../components/Poster";
 import { useToast } from "../../components/Toasts";
-import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx } from "../../components/ui";
+import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx, useIntro } from "../../components/ui";
 import { usePalette } from "../../features/search/palette";
 import { num } from "../../lib/format";
 import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
@@ -246,6 +246,7 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
   // games: played (any run, whatever its status or percentage) or not, on top of the tabs
   const played = kind === "game" ? sp.get("played") : null;
   const items = (lib.data?.items ?? []).filter((i) => !played || (played === "yes") === i.run_no > 0);
+  const intro = useIntro(kind, items.length > 0);
   const everything = all.data?.items ?? [];
   const counts = all.data?.counts ?? {};
   const first = tab ?? null;
@@ -336,7 +337,7 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
           )}
         </div>
       ) : (
-        <div className={cx(wallGrid, lib.isPlaceholderData && "opacity-60 transition-opacity")}>
+        <div className={cx(wallGrid, intro && "wall-intro", lib.isPlaceholderData && "opacity-60 transition-opacity")}>
           {items.map((i) => <MediaCard key={i.id} item={i} />)}
         </div>
       )}

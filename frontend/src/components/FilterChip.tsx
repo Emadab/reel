@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useId, useRef, useState } from "react";
 import { IconChevronDown } from "./Icons";
 import { cx } from "./ui";
@@ -57,10 +58,15 @@ export function FilterChip({
         )}
       >
         {label}
-        <IconChevronDown size={12} />
+        <IconChevronDown size={12} className={cx("transition-transform duration-200 ease-[cubic-bezier(.2,.7,.2,1)]", open && "rotate-180")} />
       </button>
+      <AnimatePresence>
       {open && (
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: -4, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.18, ease: [0.2, 0.7, 0.2, 1] } }}
+          exit={{ opacity: 0, y: -4, scale: 0.97, transition: { duration: 0.12, ease: "easeIn" } }}
+          style={{ transformOrigin: align === "right" ? "top right" : "top left" }}
           className={cx(
             "absolute top-[calc(100%+6px)] z-30 min-w-[220px] max-w-[300px] p-2 rounded-[16px] bg-[rgba(20,22,30,0.92)] border border-(--line-4) backdrop-blur-[24px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)]",
             align === "right" ? "right-0" : "left-0",
@@ -104,8 +110,9 @@ export function FilterChip({
               Clear
             </button>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
