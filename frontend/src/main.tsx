@@ -55,6 +55,12 @@ const warm = (e: Event) => {
 document.addEventListener("pointerover", warm);
 document.addEventListener("focusin", warm);
 
+// Focus rings are for keyboard use. Chromium shows one on the last clicked button as soon as any key goes down, even a
+// lone Shift or Ctrl; so after a click, rings stay hidden until a real (non-modifier) key is pressed.
+const MODIFIERS = new Set(["Shift", "Control", "Alt", "Meta", "CapsLock", "AltGraph"]);
+document.addEventListener("pointerdown", () => (document.documentElement.dataset.pointer = ""), true);
+document.addEventListener("keydown", (e) => !MODIFIERS.has(e.key) && delete document.documentElement.dataset.pointer, true);
+
 const page = (el: React.ReactNode) => <Suspense fallback={null}>{el}</Suspense>;
 
 const movies = (el: React.ReactNode) => page(<MediaGate kind="movie">{el}</MediaGate>);

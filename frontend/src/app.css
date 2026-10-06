@@ -124,3 +124,8 @@
   .pop, .pop:not(:popover-open) { transition: none; scale: none; translate: none; }
   .ambient-glow { transition: none; }
 }
+
+/* After a click, no focus ring until a non-modifier key is pressed (main.tsx); text fields keep theirs */
+[data-pointer] :focus-visible:not(input, textarea, select, [contenteditable="true"]),
+[data-pointer] .poster-card:focus-visible .poster-art { outline: none; }
+[data-pointer] .poster-card:focus-visible:not(:hover) .poster-art { translate: none; rotate: none; }
