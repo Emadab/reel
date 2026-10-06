@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent, type ReactNode } from "react";
-import { request } from "../../api/client";
+import { api, request } from "../../api/client";
 import type { Flag, SettingsOut } from "../../api/types";
 import { useToast } from "../../components/Toasts";
 import { Button, Panel, SectionTitle, cx } from "../../components/ui";
@@ -36,12 +36,25 @@ function Toggle({ on, label, hint, locked, onChange }: { on: boolean; label: str
   );
 }
 
-function TextSetting({ label, hint, value, secret, configured, onSave }: {
-  label: string; hint: ReactNode; value?: string; secret?: boolean; configured?: boolean; onSave: (v: string) => Promise<void>;
+/** `test`: the key's name for POST /settings/test/{name}, which shows a Test connection link once it's saved. */
+function TextSetting({ label, hint, value, secret, configured, test, onSave }: {
+  label: string; hint: ReactNode; value?: string; secret?: boolean; configured?: boolean; test?: string; onSave: (v: string) => Promise<void>;
 }) {
   const [v, setV] = useState(value ?? "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [ok, setOk] = useState<boolean | null>(null);
+  const [testing, setTesting] = useState(false);
+  const runTest = async () => {
+    setTesting(true);
+    try {
+      setOk((await api.testKey(test!)).ok);
+    } catch {
+      setOk(false);
+    } finally {
+      setTesting(false);
+    }
+  };
   const id = `ms-${label.replace(/\W+/g, "-").toLowerCase()}`;
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -50,6 +63,7 @@ function TextSetting({ label, hint, value, secret, configured, onSave }: {
     try {
       await onSave(v.trim());
       if (secret) setV("");
+      setOk(null);
     } catch (x) {
       setErr(x instanceof Error ? x.message : "Couldn't save");
     } finally {
@@ -67,7 +81,12 @@ function TextSetting({ label, hint, value, secret, configured, onSave }: {
         <Button type="submit" disabled={busy || (secret && !v.trim())}>{busy ? "Saving…" : "Save"}</Button>
       </div>
       <div className="flex flex-wrap gap-3 items-baseline text-[12px] text-ink-4">
-        {secret && (configured ? <span className="font-mono text-score">Saved</span> : <span className="font-mono">Not set</span>)}
+        {secret && !configured && <span className="font-mono">Not set</span>}
+        {secret && configured && (ok ? <span className="font-mono text-score">Connected</span> : test ? (
+          <button type="button" disabled={testing} onClick={runTest} className={cx("font-mono bg-transparent border-0 p-0 underline cursor-pointer", ok === false ? "text-wild" : "text-ink-3")}>
+            {testing ? "Testing…" : ok === false ? "Couldn't connect. Test again" : "Test connection"}
+          </button>
+        ) : <span className="font-mono text-score">Saved</span>)}
         <span>{hint}</span>
       </div>
       {err && <p className="m-0 font-mono text-[12px] text-wild">{err}</p>}
@@ -107,23 +126,23 @@ export function MediaSettings({ s }: { s: SettingsOut }) {
       <Panel className="flex flex-col gap-6">
         <SectionTitle>Keys</SectionTitle>
         {(on("movie") || on("show")) && (
-          <TextSetting label="TMDB API Read Access Token" secret configured={s.tmdb_configured} hint="Movies and shows. The long token from themoviedb.org → Settings → API."
+          <TextSetting label="TMDB API Read Access Token" secret test="tmdb" configured={s.tmdb_configured} hint="Movies and shows. The long token from themoviedb.org → Settings → API."
             onSave={async (v) => { await put({ tmdb_token: v }); void qc.invalidateQueries(); toast({ text: "TMDB connected" }); }} />
         )}
         {on("movie") && (
-          <TextSetting label="OMDb key (optional)" secret configured={s.omdb_configured} hint="Movies: IMDb, Rotten Tomatoes and Metacritic scores. Free at omdbapi.com."
+          <TextSetting label="OMDb key (optional)" secret test="omdb" configured={s.omdb_configured} hint="Movies: IMDb, Rotten Tomatoes and Metacritic scores. Free at omdbapi.com."
             onSave={async (v) => { await put({ omdb_key: v }); toast({ text: "OMDb key saved" }); }} />
         )}
         {on("book") && (
           <>
-            <TextSetting label="Hardcover token (optional)" secret configured={m.hardcover_configured} hint="Books: series, release dates and any details other sources miss. hardcover.app → Settings → API."
+            <TextSetting label="Hardcover token (optional)" secret test="hardcover" configured={m.hardcover_configured} hint="Books: series, release dates and any details other sources miss. hardcover.app → Settings → API."
               onSave={async (v) => { await put({ hardcover_token: v }); toast({ text: "Hardcover token saved" }); }} />
-            <TextSetting label="Google Books key (optional)" secret configured={m.google_books_configured} hint="Books: fills in missing descriptions and page counts."
+            <TextSetting label="Google Books key (optional)" secret test="google_books" configured={m.google_books_configured} hint="Books: fills in missing descriptions and page counts."
               onSave={async (v) => { await put({ google_books_key: v }); toast({ text: "Google Books key saved" }); }} />
           </>
         )}
         {on("game") && (
-          <TextSetting label="RAWG key" secret configured={m.rawg_configured} hint="Games: search and details. Free at rawg.io/apidocs."
+          <TextSetting label="RAWG key" secret test="rawg" configured={m.rawg_configured} hint="Games: search and details. Free at rawg.io/apidocs."
             onSave={async (v) => { await put({ rawg_key: v }); toast({ text: "RAWG key saved" }); }} />
         )}
         {(on("show") || on("book")) && (

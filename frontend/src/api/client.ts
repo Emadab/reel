@@ -85,7 +85,7 @@ export const api = {
   settings: () => request<SettingsOut>("GET", "/settings"),
   putSettings: (body: Partial<{ accent: string; tmdb_token: string; omdb_key: string; data_dir: string }>) =>
     request<SettingsOut>("PUT", "/settings", { body }),
-  testTmdb: () => request<SettingsOut>("POST", "/settings/test"),
+  testKey: (name: string) => request<{ ok: boolean }>("POST", `/settings/test/${name}`),
   importUpload: (source: "letterboxd" | "imdb", files: File[]) => {
     const fd = new FormData();
     files.forEach((f) => fd.append("files", f));

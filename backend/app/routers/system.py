@@ -81,10 +81,31 @@ def get_settings(s: Session = Depends(get_session)):
     return _out(s)
 
 
-@router.post("/settings/test")
-async def test_tmdb(s: Session = Depends(get_session)):
-    ok = bool(settings.tmdb_token) and await _check_tmdb(settings.tmdb_token)
-    return _out(s, ok)
+async def _check(name: str) -> bool:
+    """One cheap, uncached request with the saved key; False if it's missing, rejected or unreachable."""
+    async with httpx.AsyncClient(timeout=15) as c:
+        if name == "tmdb":
+            return bool(settings.tmdb_token) and await _check_tmdb(settings.tmdb_token)
+        if name == "omdb":
+            return bool(settings.omdb_key) and await omdb.check_key(settings.omdb_key)
+        if name == "rawg":
+            return bool(settings.rawg_key) and (await c.get("https://api.rawg.io/api/genres", params={"key": settings.rawg_key, "page_size": 1})).status_code == 200
+        if name == "google_books":
+            return bool(settings.google_books_key) and (await c.get("https://www.googleapis.com/books/v1/volumes", params={"q": "isbn:9780547928227", "maxResults": 1, "key": settings.google_books_key})).status_code == 200
+        if name == "hardcover":
+            if not settings.hardcover_token:
+                return False
+            r = await c.post("https://api.hardcover.app/v1/graphql", json={"query": "{ me { id } }"}, headers={"authorization": f"Bearer {settings.hardcover_token}"})
+            return r.status_code == 200 and bool((r.json().get("data") or {}).get("me"))
+    raise HTTPException(404, "Unknown key")
+
+
+@router.post("/settings/test/{name}")
+async def test_key(name: str):
+    try:
+        return {"ok": await _check(name)}
+    except httpx.HTTPError:
+        raise HTTPException(503, "Unreachable. Check your connection.")
 
 
 @router.put("/settings")

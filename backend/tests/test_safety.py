@@ -38,3 +38,10 @@ def test_flags_default_off_and_toggle(client):
     assert client.put("/api/settings", json={"flags": {"media.shows": True}}).json()["flags"]["media.shows"] is True
     assert client.put("/api/settings", json={"flags": {"media.movies": False}}).json()["flags"]["media.movies"] is False
     assert client.put("/api/settings", json={"flags": {"nope": True}}).status_code == 422
+
+
+def test_key_check_needs_a_saved_key(client, monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "rawg_key", "")
+    assert client.post("/api/settings/test/rawg").json() == {"ok": False}
+    assert client.post("/api/settings/test/nope").status_code == 404
