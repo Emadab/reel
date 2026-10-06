@@ -36,9 +36,9 @@ DERIVED_SHOW = {"watching", "caught_up", "completed"}
 
 def allowed(kind: str, current: str | None, endless: bool = False) -> list[str]:
     nxt = TRANSITIONS[kind].get(current, set())
-    if endless:  # games without an ending skip beaten/completed
-        nxt = nxt - {"beaten", "completed"}
-    elif kind == "game":  # retired is how an endless game ends; one with an ending is beaten or abandoned
+    if endless:  # games without an ending are retired, never beaten, completed or dropped
+        nxt = nxt - {"beaten", "completed", "abandoned"}
+    elif kind == "game":  # retired is how an endless game ends; one with an ending is beaten or dropped (abandoned)
         nxt = nxt - {"retired"}
     return sorted(nxt)
 

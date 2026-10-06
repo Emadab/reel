@@ -68,7 +68,7 @@ def tick(c, item_id, ids, watched=True):
 
 def test_transition_table():
     assert allowed("show", None) == ["watching"]
-    assert allowed("game", "playing", endless=True) == ["abandoned", "retired", "shelved"]
+    assert allowed("game", "playing", endless=True) == ["retired", "shelved"]
     assert allowed("game", "playing") == ["abandoned", "beaten", "completed", "shelved"]  # retired: endless games only
     assert allowed("game", "retired") == ["abandoned", "beaten", "completed", "playing"]  # an ended run can be corrected
     assert allowed("book", "finished") == ["did_not_finish", "reading"]
@@ -328,7 +328,8 @@ def test_endless_game_and_sticky_states_survive_hours(media):
     item_id = media.post("/api/media/game/items", json={"ext_id": "2", "status": "playing"}).json()["id"]
     d = detail(media, item_id)
     assert d["endless"] and "beaten" not in d["allowed"] and d["time_left"] is None
-    for sticky in ("shelved", "abandoned"):
+    assert "abandoned" not in d["allowed"]  # an endless game is retired, not dropped
+    for sticky in ("shelved", "retired"):
         d = media.post(f"/api/media/items/{item_id}/status", json={"status": sticky}).json()
         d = media.post(f"/api/media/runs/{d['runs'][0]['id']}/progress", json={"hours": 50}).json()
         assert d["status"] == sticky

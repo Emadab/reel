@@ -14,7 +14,7 @@ function kpis(kind: Kind, s: S) {
   const k = s.kpis;
   const [one, many] = MODES[kind].noun;
   const finish = { show: "COMPLETED", book: "FINISHED", game: "BEATEN" }[kind];
-  const drop = { show: "dropped", book: "did not finish", game: "abandoned" }[kind];
+  const drop = { show: "dropped", book: "did not finish", game: "dropped" }[kind];
   const amount =
     kind === "book"
       ? { label: "PAGES READ", value: num(k.pages ?? 0), sub: k.finished ? `about ${num(Math.round((k.pages ?? 0) / Math.max(k.finished, 1)))} per book finished` : "log progress to count pages" }

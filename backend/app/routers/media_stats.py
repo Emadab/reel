@@ -120,7 +120,7 @@ def all_stats(range_: str = Query("all", alias="range"), s: Session = Depends(ge
     movies = {m.tmdb_id: m for m in s.exec(select(Movie).where(col(Movie.tmdb_id).in_(ids)))}
     rows.append({"kind": "movie", "label": "Movies", "finished": len(ids), "finished_label": "watched",
                  "hours": round(movie_hours(movies, watches), 1), "pages": None, "drop_rate": None, "drop_label": None})
-    labels = {"show": ("Shows", "completed", "dropped"), "book": ("Books", "finished", "did not finish"), "game": ("Games", "beaten or completed", "abandoned")}
+    labels = {"show": ("Shows", "completed", "dropped"), "book": ("Books", "finished", "did not finish"), "game": ("Games", "beaten or completed", "dropped")}
     for kind in ("show", "book", "game"):
         if not enabled(s, KIND_FLAG[kind]):
             continue

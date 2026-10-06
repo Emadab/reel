@@ -52,7 +52,7 @@ export const STATUS_LABEL: Record<string, string> = {
 export const SHELF_LABEL: Record<Kind, Record<string, string>> = {
   show: { wishlist: "Watchlist" },
   book: { wishlist: "Want to read", backlog: "To read (owned)" },
-  game: { wishlist: "Wishlist", backlog: "Backlog", completed: "Completed 100%", retired: "Stopped playing" },
+  game: { wishlist: "Wishlist", backlog: "Backlog", completed: "Completed 100%", abandoned: "Dropped" },
 };
 
 export function statusLabel(kind: Kind, s: string | null): string {
@@ -84,7 +84,8 @@ export const TABS: Record<Kind, { id: string; label: string; statuses: string[] 
     { id: "wishlist", label: "Wishlist", statuses: ["wishlist"] },
     { id: "beaten", label: "Beaten", statuses: ["beaten", "completed"] },
     { id: "shelved", label: "Shelved", statuses: ["shelved"] },
-    { id: "abandoned", label: "Abandoned", statuses: ["abandoned", "retired"] },
+    { id: "abandoned", label: "Dropped", statuses: ["abandoned"] },
+    { id: "retired", label: "Retired", statuses: ["retired"] },
   ],
 };
 
@@ -116,8 +117,8 @@ export const STATUS_MENU: Record<Kind, { status: string; label: string; done: st
     { status: "shelved", label: "Shelve for now", done: "Shelved" },
     { status: "beaten", label: "Beaten (main story)", done: "Marked beaten" },
     { status: "completed", label: "Completed 100%", done: "Marked completed 100%" },
-    { status: "abandoned", label: "Abandon", done: "Abandoned" },
-    { status: "retired", label: "Stopped playing", done: "Marked stopped playing" },
+    { status: "abandoned", label: "Dropped", done: "Dropped" }, // a game with an ending, left unfinished
+    { status: "retired", label: "Retired", done: "Retired" }, // an endless game you're done with
   ],
 };
 
