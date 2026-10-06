@@ -17,7 +17,7 @@ A personal diary for films, TV series, books and games, for Windows. Log what yo
 Reel has four **modes**: Movies, Shows, Books and Games. Switch between them in the sidebar or with `Ctrl 1`–`4`; every page then shows only that medium. Turn each mode on or off in Settings → Modes (at least one stays on), and give each its own accent colour.
 
 - **Log fast.** `Ctrl K` → type → `↵` → press `1`–`5` for stars → `↵`. Or hover any poster and press the check: one tap on a star logs it for today.
-- **Library**: poster wall (or a 3D carousel for films) with status, genre, decade and rating filters. Shows track episodes and "up next", books track reading progress and shelves, games track playthroughs and hours.
+- **Library**: poster wall (or a 3D carousel for films) with status, genre, decade and rating filters. Shows track episodes and "up next"; every episode and run can be dated at day, month or year precision (or unknown), and *Add to history* logs a show you watched long ago, whole or up to a season, without ticking each episode. Books track reading progress and shelves, games track playthroughs and hours.
 - **Detail pages** glow in each title's own cover colours: people, trailer, scores and your full history (click an entry to edit it).
 - **Timeline** of every month and year, including things you only remember as "sometime in 2019". A watch can also have no date at all ("Date unknown"): it counts in the library and stats but stays off the timeline.
 - **Stats**: activity heatmap, genre radar, top people, rating histogram, plus an *All media* view.

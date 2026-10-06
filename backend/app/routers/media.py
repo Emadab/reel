@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from sqlmodel import Session, col, delete, select
 
 from .. import books, games, items, media, shows
+from ..cards import normalize
 from ..config import settings
 from ..db import get_session
 from ..flags import require_kind
@@ -136,7 +137,7 @@ def up_next(s: Session = Depends(get_session)):
             continue
         nxt = shows.next_episode(s, item, run)
         if nxt:
-            out.append({"item": items.card(s, item, run=run), "episode": shows.episode_out(nxt, set()),
+            out.append({"item": items.card(s, item, run=run), "episode": shows.episode_out(nxt, {}),
                         "progress": run.progress, "last": (items.last_activity(s, run) or datetime.min.replace(tzinfo=UTC)).isoformat()})
     out.sort(key=lambda x: x["last"], reverse=True)
     return out
@@ -179,7 +180,7 @@ def _detail(s: Session, item: Item) -> dict:
         "external_ids": {e.source: e.ext_id for e in s.exec(select(ExternalId).where(ExternalId.item_id == item.id))},
     }
     if item.kind == "show":
-        seen = shows.watched_ids(s, run)
+        seen = shows.watched_events(s, run)
         eps = shows.episodes(s, item.id)  # type: ignore[arg-type]
         seasons = s.exec(select(Season).where(Season.item_id == item.id).order_by(col(Season.number))).all()
         out["seasons"] = [{"number": se.number, "name": se.name, "premiere": se.premiere_date.isoformat() if se.premiere_date else None,
@@ -287,6 +288,8 @@ class RunPatch(BaseModel):
     variant: dict | None = None
     started_on: date | None = None
     finished_on: date | None = None
+    clear_started: bool = False
+    clear_finished: bool = False
     date_precision: Precision | None = None
 
 
@@ -296,6 +299,13 @@ def patch_run(run_id: int, body: RunPatch, s: Session = Depends(get_session)):
     for f in ("review", "goal", "variant", "started_on", "finished_on", "date_precision"):
         if (v := getattr(body, f)) is not None:
             setattr(run, f, v)
+    if body.clear_started:
+        run.started_on = None
+    if body.clear_finished:
+        run.finished_on = None
+    # same rule as movie watches: month → the 1st, year → Jan 1, unknown → 0001-01-01
+    run.started_on = normalize(run.started_on, run.date_precision) if run.started_on else None
+    run.finished_on = normalize(run.finished_on, run.date_precision) if run.finished_on else None
     if body.rating is not None or body.clear_rating:
         run.rating = None if body.clear_rating else body.rating
         s.add(Event(item_id=item.id, run_id=run.id, kind="rating", payload={"rating": run.rating}))  # type: ignore[arg-type]
@@ -366,6 +376,8 @@ class EpisodesIn(BaseModel):
     episode_ids: list[int] = Field(default_factory=list)
     season: int | None = None
     watched: bool = True
+    watched_on: date | None = None  # with a date (or unknown), ticked episodes get it; ticked ones are re-dated
+    date_precision: Precision = "day"
 
 
 @router.post("/items/{item_id}/episodes")
@@ -376,7 +388,27 @@ def tick(item_id: int, body: EpisodesIn, s: Session = Depends(get_session)):
     ids = list(body.episode_ids)
     if body.season is not None:  # mark the whole season: every aired episode
         ids += [e.id for e in shows.episodes(s, item.id) if e.season == body.season and (shows.aired(e) or not body.watched)]  # type: ignore[arg-type, misc]
-    shows.set_watched(s, item, ids, body.watched)
+    dated = body.watched_on is not None or body.date_precision == "unknown"
+    shows.set_watched(s, item, ids, body.watched, shows.event_time(body.watched_on, body.date_precision) if dated else None,
+                      body.date_precision if dated else "day")
+    return _detail(s, item)
+
+
+class HistoryIn(BaseModel):
+    upto_season: int | None = None  # None: the whole show
+    started_on: date | None = None
+    finished_on: date | None = None
+    date_precision: Precision = "day"
+    rating: float | None = Field(default=None, gt=0, le=10)
+
+
+@router.post("/items/{item_id}/history")
+def add_history(item_id: int, body: HistoryIn, s: Session = Depends(get_session)):
+    """'I watched this a long time ago': the whole show, or up to a season, without ticking every episode."""
+    item = _item(s, item_id)
+    if item.kind != "show":
+        raise HTTPException(422, "Only shows have episodes")
+    shows.add_history(s, item, body.upto_season, body.started_on, body.finished_on, body.date_precision, body.rating)
     return _detail(s, item)
 
 

@@ -126,6 +126,46 @@ def test_show_completed_revival_and_season_ticks(media):
     assert d["status"] == "watching" and d["progress"]["watched"] == 1
 
 
+def test_episode_dates_with_precision_and_redating(media):
+    item_id = media.post("/api/media/show/items", json={"ext_id": "7"}).json()["id"]
+    d = detail(media, item_id)
+    e1, e2 = ep_id(d, 1, 1), ep_id(d, 1, 2)
+    r = media.post(f"/api/media/items/{item_id}/episodes", json={"episode_ids": [e1], "watched_on": "2021-03-17", "date_precision": "month"}).json()
+    ep = next(e for e in r["seasons"][1]["episodes"] if e["id"] == e1)
+    assert (ep["watched_on"], ep["watched_precision"]) == ("2021-03-01", "month")
+    r = media.post(f"/api/media/items/{item_id}/episodes", json={"episode_ids": [e1], "date_precision": "unknown"}).json()  # re-date
+    ep = next(e for e in r["seasons"][1]["episodes"] if e["id"] == e1)
+    assert (ep["watched_on"], ep["watched_precision"]) == ("0001-01-01", "unknown")
+    r = tick(media, item_id, [e2])  # a plain tick is today
+    assert next(e for e in r["seasons"][1]["episodes"] if e["id"] == e2)["watched_precision"] == "day"
+    assert media.get("/api/media/show/stats").json()["kpis"]["episodes"] == 2  # unknown still counts
+
+
+def test_add_history_whole_show_or_up_to_a_season(media):
+    SHOW.update(status="ended", future_ep=False)
+    item_id = media.post("/api/media/show/items", json={"ext_id": "8"}).json()["id"]
+    d = media.post(f"/api/media/items/{item_id}/history",
+                   json={"started_on": "2015-02-10", "finished_on": "2015-06-20", "date_precision": "year", "rating": 9}).json()
+    run = d["runs"][0]
+    assert d["status"] == "completed" and d["progress"]["watched"] == 2 and run["rating"] == 9
+    assert (run["started_on"], run["finished_on"], run["date_precision"]) == ("2015-01-01", "2015-01-01", "year")
+    assert media.get("/api/media/show/timeline", params={"year": 2015}).json()["totals"]["finished"] == 1
+    # all of it is already watched: adding it again is another time through
+    d = media.post(f"/api/media/items/{item_id}/history", json={"date_precision": "unknown"}).json()
+    assert len(d["runs"]) == 2 and d["runs"][1]["date_precision"] == "unknown" and d["runs"][1]["finished_on"] == "0001-01-01"
+    assert media.post(f"/api/media/items/{item_id}/history", json={"upto_season": 0}).status_code == 422
+
+
+def test_run_dates_follow_precision(media):
+    item_id = media.post("/api/media/book/items", json={"ext_id": "OL1W", "status": "reading"}).json()["id"]
+    run_id = detail(media, item_id)["runs"][0]["id"]
+    r = media.patch(f"/api/media/runs/{run_id}", json={"started_on": "2019-07-20", "date_precision": "month"}).json()
+    assert r["runs"][0]["started_on"] == "2019-07-01"
+    r = media.patch(f"/api/media/runs/{run_id}", json={"date_precision": "unknown"}).json()
+    assert r["runs"][0]["started_on"] == "0001-01-01"
+    assert media.patch(f"/api/media/runs/{run_id}", json={"clear_started": True}).json()["runs"][0]["started_on"] is None
+
+
 def test_sticky_show_states_are_never_derived_over(media, monkeypatch):
     item_id = media.post("/api/media/show/items", json={"ext_id": "2", "status": "watching"}).json()["id"]
     d = media.post(f"/api/media/items/{item_id}/status", json={"status": "on_hold"}).json()

@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
-import { mediaApi, useFollows, useItem, useMediaMut, type Episode, type Goal, type ItemDetail, type Kind, type RunOut } from "../../api/media";
+import { mediaApi, useFollows, useItem, useMediaMut, type Episode, type Goal, type ItemDetail, type Kind, type RunOut, type RunPrecision } from "../../api/media";
+import { Dialog } from "../../components/Dialog";
 import { mix } from "../../components/Glow";
-import { IconCheck, IconChevronDown, IconChevronLeft, IconMore, IconPlus } from "../../components/Icons";
+import { IconCalendar, IconCheck, IconChevronDown, IconChevronLeft, IconMore, IconPlus } from "../../components/Icons";
 import { Poster, posterBg } from "../../components/Poster";
 import { RatingInput } from "../../components/Rating";
 import { useToast } from "../../components/Toasts";
 import { Button, ErrorLine, Eyebrow, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
+import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
 import { onColor } from "../../lib/color";
-import { formatFullDate, formatWatchDate, rating, relativeTime } from "../../lib/format";
+import { formatFullDate, formatWatchDate, iso, rating, relativeTime, today } from "../../lib/format";
 import { backTarget } from "../../lib/history";
 import { MODES, SHELF_LABEL, START, STATUS_LABEL, USER_SET, statusLabel } from "../../lib/mode";
 import { asFilm, fraction, Meter, pagePad, progressText } from "./parts";
@@ -201,6 +203,144 @@ function MoreMenu({ item }: { item: ItemDetail }) {
   );
 }
 
+// ---- dates: episodes, runs and history, at any precision (like movie watches) ----
+
+function DateDialog({ label, onClose, onSave, saving, error, extra, children }: {
+  label: string; onClose: () => void; onSave: () => void; saving: boolean; error: unknown; extra?: ReactNode; children: ReactNode;
+}) {
+  return (
+    <Dialog open onClose={onClose} label={label} top={96} className="w-[calc(100%-32px)] max-w-[640px] max-[639px]:max-w-none max-[639px]:w-full max-[639px]:h-full max-[639px]:m-0">
+      <form
+        onSubmit={(e) => { e.preventDefault(); onSave(); }}
+        className="flex flex-col rounded-[24px] bg-(--color-bg-dialog) border border-(--line-4) backdrop-blur-[40px] backdrop-saturate-[140%] shadow-[0_60px_120px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(0,0,0,0.4)] overflow-hidden palette-in max-[639px]:rounded-none max-[639px]:min-h-full"
+      >
+        <div className="m-3 p-5 rounded-[18px] bg-(--fill-glass) border border-(--line-1) flex flex-col gap-[18px]">
+          <span className="font-display font-medium text-[16px]">{label}</span>
+          {children}
+          {error != null && <ErrorLine error={error} />}
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 py-[14px] px-[22px] border-t border-(--line-1)">
+          <span>{extra}</span>
+          <span className="flex gap-[10px]">
+            <Button type="button" onClick={onClose}>Cancel</Button>
+            <Button variant="primary" type="submit" disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
+          </span>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
+
+/** One labelled date at the dialog's shared precision. */
+function When({ id, label, value, precision, onChange }: { id: string; label: string; value: string; precision: RunPrecision; onChange: (v: string) => void }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="text-[12px] text-ink-3">{label}</label>
+      <DateOrUnknown id={id} value={value} precision={precision} onChange={onChange} />
+    </div>
+  );
+}
+
+function Remember({ value, onChange }: { value: RunPrecision; onChange: (p: RunPrecision) => void }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-[12px] text-ink-3">I remember the</span>
+      <PrecisionPicker value={value} onChange={onChange} />
+    </div>
+  );
+}
+
+const epCode = (e: Episode) => `S${e.season} ${e.special ? "SP" : "E"}${String(e.number).padStart(2, "0")}`;
+
+/** Mark an episode watched on a chosen date, or change or remove the date of one already ticked. */
+function EpisodeDateDialog({ item, ep, onClose }: { item: ItemDetail; ep: Episode; onClose: () => void }) {
+  const [when, setWhen] = useState(fromUnknown(ep.watched_on ?? iso(today())));
+  const [p, setP] = useState<RunPrecision>(ep.watched_precision ?? "day");
+  const save = useMediaMut((watched: boolean) => mediaApi.episodes(item.id, { episode_ids: [ep.id], watched, watched_on: watched && p !== "unknown" ? when : undefined, date_precision: p }));
+  const toast = useToast();
+  const done = async (watched: boolean) => {
+    await save.mutateAsync(watched);
+    toast({ text: watched ? (ep.watched ? "Date updated" : "Marked watched") : "Unmarked" });
+    onClose();
+  };
+  return (
+    <DateDialog
+      label={`${epCode(ep)}${ep.title ? ` · ${ep.title}` : ""}`} onClose={onClose} onSave={() => done(true)} saving={save.isPending} error={save.error}
+      extra={ep.watched && (
+        <button type="button" onClick={() => done(false)} className="h-11 px-0 bg-transparent border-0 text-[14px] text-wild cursor-pointer">Unmark watched</button>
+      )}
+    >
+      <div className="flex flex-wrap gap-[18px] items-end">
+        <When id={`ep-${ep.id}-d`} label="Watched on" value={when} precision={p} onChange={setWhen} />
+        <Remember value={p} onChange={(v) => { setP(v); setWhen(fromUnknown(when)); }} />
+      </div>
+    </DateDialog>
+  );
+}
+
+/** A run's start and finish dates, at one precision. */
+function RunDatesDialog({ item, run, onClose }: { item: ItemDetail; run: RunOut; onClose: () => void }) {
+  const [start, setStart] = useState(fromUnknown(run.started_on ?? iso(today())));
+  const [finish, setFinish] = useState(fromUnknown(run.finished_on ?? iso(today())));
+  const [p, setP] = useState<RunPrecision>(run.date_precision);
+  const finished = run.finished_on != null || (run.status != null && (FINAL.has(run.status) || run.status === "caught_up"));
+  const save = useMediaMut(() => mediaApi.patchRun(run.id, { started_on: start, ...(finished ? { finished_on: finish } : {}), date_precision: p }));
+  const toast = useToast();
+  const bad = finished && p !== "unknown" && finish < start;
+  return (
+    <DateDialog
+      label={`${item.title} · ${run.run_no > 1 ? `${ordinal(run.run_no)} time` : "dates"}`} onClose={onClose} saving={save.isPending || bad}
+      error={bad ? new Error("The finish date is before the start") : save.error}
+      onSave={async () => { await save.mutateAsync(undefined); toast({ text: "Dates saved" }); onClose(); }}
+    >
+      <div className="flex flex-wrap gap-[18px] items-end">
+        <When id={`run-${run.id}-s`} label="Started" value={start} precision={p} onChange={setStart} />
+        {finished && <When id={`run-${run.id}-f`} label="Finished" value={finish} precision={p} onChange={setFinish} />}
+      </div>
+      <Remember value={p} onChange={(v) => { setP(v); setStart(fromUnknown(start)); setFinish(fromUnknown(finish)); }} />
+    </DateDialog>
+  );
+}
+
+/** "I watched this a long time ago": the whole show or up to a season, without ticking each episode. */
+function HistoryDialog({ item, onClose }: { item: ItemDetail; onClose: () => void }) {
+  const seasons = (item.seasons ?? []).filter((s) => s.number > 0 && s.episodes.some((e) => e.aired));
+  const [upto, setUpto] = useState<number | null>(null);
+  const [start, setStart] = useState(iso(today()));
+  const [finish, setFinish] = useState(iso(today()));
+  const [p, setP] = useState<RunPrecision>("year");
+  const [score, setScore] = useState<number | null>(null);
+  const save = useMediaMut(() => mediaApi.history(item.id, {
+    upto_season: upto, date_precision: p, rating: score, ...(p === "unknown" ? {} : { started_on: start, finished_on: finish }),
+  }));
+  const toast = useToast();
+  const bad = p !== "unknown" && finish < start;
+  return (
+    <DateDialog
+      label={`Add ${item.title} to your history`} onClose={onClose} saving={save.isPending || bad}
+      error={bad ? new Error("The finish date is before the start") : save.error}
+      onSave={async () => { await save.mutateAsync(undefined); toast({ text: <>Added <em>{item.title}</em> to your history</> }); onClose(); }}
+    >
+      <label className="flex flex-col gap-2 text-[12px] text-ink-3">
+        What you watched
+        <select
+          value={upto ?? ""} onChange={(e) => setUpto(e.target.value ? Number(e.target.value) : null)}
+          className="h-11 px-3 rounded-[12px] border border-(--line-5) bg-(--fill-input) text-ink-hi text-[14px] [color-scheme:dark] outline-none focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <option value="">The whole show (every aired episode)</option>
+          {seasons.slice(0, -1).map((s) => <option key={s.number} value={s.number}>{s.number === 1 ? "Season 1" : `Seasons 1–${s.number}`}</option>)}
+        </select>
+      </label>
+      <div className="flex flex-wrap gap-[18px] items-end">
+        <When id="hist-s" label="Started" value={start} precision={p} onChange={setStart} />
+        <When id="hist-f" label="Finished" value={finish} precision={p} onChange={setFinish} />
+      </div>
+      <Remember value={p} onChange={setP} />
+      <RatingInput value={score} onChange={setScore} />
+    </DateDialog>
+  );
+}
+
 // ---- shows: seasons and the episode grid ----
 
 function airLabel(e: Episode): string {
@@ -218,6 +358,8 @@ function Episodes({ item }: { item: ItemDetail }) {
   const [pick, setPick] = useState<number | null>(null);
   const shown = seasons.find((s) => s.number === (pick ?? current)) ?? seasons[0];
   const tick = useMediaMut((b: { episode_ids?: number[]; season?: number; watched: boolean }) => mediaApi.episodes(item.id, b));
+  const [dating, setDating] = useState<Episode | null>(null);
+  const [history, setHistory] = useState(false);
   if (!shown) return null;
   const aired = shown.episodes.filter((e) => e.aired);
   const done = aired.filter((e) => e.watched).length;
@@ -250,47 +392,69 @@ function Episodes({ item }: { item: ItemDetail }) {
           {shown.number === 0 ? "Specials don't count toward your progress" : `${shown.name ?? `Season ${shown.number}`} · ${done} of ${aired.length} aired watched`}
           {shown.episodes.length > aired.length && ` · ${shown.episodes.length - aired.length} still to air`}
         </span>
-        {aired.length > 0 && (
-          <Button onClick={() => tick.mutate({ season: shown.number, watched: !all })} disabled={tick.isPending}>
-            {all ? "Unmark season" : <><IconCheck size={15} /> Mark season watched</>}
-          </Button>
-        )}
+        <span className="flex flex-wrap gap-[10px]">
+          <Button onClick={() => setHistory(true)}><IconPlus size={15} /> Add to history</Button>
+          {aired.length > 0 && (
+            <Button onClick={() => tick.mutate({ season: shown.number, watched: !all })} disabled={tick.isPending}>
+              {all ? "Unmark season" : <><IconCheck size={15} /> Mark season watched</>}
+            </Button>
+          )}
+        </span>
       </div>
+      {history && <HistoryDialog item={item} onClose={() => setHistory(false)} />}
+      {dating && <EpisodeDateDialog item={item} ep={dating} onClose={() => setDating(null)} />}
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(220px,100%),1fr))] gap-3">
         {shown.episodes.map((e) => {
           const code = `${e.special ? "SP" : "E"}${String(e.number).padStart(2, "0")}`;
           return (
-            <button
+            <div
               key={e.id}
-              type="button"
-              aria-pressed={e.watched}
-              aria-label={`${e.watched ? "Unmark" : "Mark"} S${e.season} ${code}${e.title ? ` ${e.title}` : ""} watched`}
-              disabled={!e.aired && !e.watched}
-              title={e.aired && !e.watched ? "Shift-click marks everything up to here" : undefined}
-              onClick={(ev) => toggle(e, ev)}
               className={cx(
-                "group min-h-[68px] flex items-center gap-3 px-[14px] py-[10px] rounded-[14px] border text-left",
+                "group min-h-[68px] flex items-center rounded-[14px] border",
                 e.watched
                   ? "border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_8%,transparent)]"
                   : "border-(--line-2) bg-(--fill-card) hover:border-(--line-5)",
                 !e.aired && "opacity-45",
               )}
             >
-              <span className={cx("font-mono text-[13px] tabular-nums shrink-0", e.watched ? "text-accent" : "text-ink-3")}>{code}</span>
-              <span className="flex-1 min-w-0 flex flex-col gap-[3px]">
-                <span className="text-[14px] truncate">{e.title ?? "Untitled episode"}</span>
-                <span className="font-mono text-[11px] text-ink-4">{airLabel(e)}{e.runtime ? ` · ${e.runtime} min` : ""}</span>
-              </span>
-              <span
-                aria-hidden
-                className={cx(
-                  "size-6 rounded-full grid place-items-center shrink-0 border",
-                  e.watched ? "bg-accent border-accent text-on-accent shadow-[0_0_12px_-2px_var(--color-accent)]" : "border-(--line-5) text-transparent group-hover:text-ink-4",
-                )}
+              <button
+                type="button"
+                aria-pressed={e.watched}
+                aria-label={`${e.watched ? "Unmark" : "Mark"} S${e.season} ${code}${e.title ? ` ${e.title}` : ""} watched`}
+                disabled={!e.aired && !e.watched}
+                title={e.aired && !e.watched ? "Shift-click marks everything up to here" : undefined}
+                onClick={(ev) => toggle(e, ev)}
+                className="flex-1 min-w-0 self-stretch flex items-center gap-3 pl-[14px] pr-1 py-[10px] bg-transparent border-0 text-left text-inherit cursor-pointer disabled:cursor-default"
               >
-                <IconCheck size={13} />
-              </span>
-            </button>
+                <span className={cx("font-mono text-[13px] tabular-nums shrink-0", e.watched ? "text-accent" : "text-ink-3")}>{code}</span>
+                <span className="flex-1 min-w-0 flex flex-col gap-[3px]">
+                  <span className="text-[14px] truncate">{e.title ?? "Untitled episode"}</span>
+                  <span className="font-mono text-[11px] text-ink-4">
+                    {e.watched && e.watched_on ? `Watched ${formatWatchDate(e.watched_on, e.watched_precision ?? "day")}` : airLabel(e)}{e.runtime ? ` · ${e.runtime} min` : ""}
+                  </span>
+                </span>
+                <span
+                  aria-hidden
+                  className={cx(
+                    "size-6 rounded-full grid place-items-center shrink-0 border",
+                    e.watched ? "bg-accent border-accent text-on-accent shadow-[0_0_12px_-2px_var(--color-accent)]" : "border-(--line-5) text-transparent group-hover:text-ink-4",
+                  )}
+                >
+                  <IconCheck size={13} />
+                </span>
+              </button>
+              {(e.aired || e.watched) && (
+                <button
+                  type="button"
+                  aria-label={`${e.watched ? "Change the date you watched" : "Mark watched on a date:"} S${e.season} ${code}`}
+                  title={e.watched ? "Change the date" : "Watched on another day"}
+                  onClick={() => setDating(e)}
+                  className="size-11 mr-1 shrink-0 grid place-items-center rounded-[10px] bg-transparent border-0 text-ink-4 hover:text-ink-hi hover:bg-(--fill-ctl) cursor-pointer"
+                >
+                  <IconCalendar size={15} />
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
@@ -400,6 +564,7 @@ function Variant({ item, run }: { item: ItemDetail; run: RunOut }) {
 
 function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: string }) {
   const rate = useMediaMut((v: number | null) => mediaApi.patchRun(run.id, v == null ? { clear_rating: true } : { rating: v }));
+  const [dating, setDating] = useState(false);
   const f = fraction(item.kind, run.progress);
   const text = progressText(item.kind, run.progress);
   const dates = run.date_precision === "unknown" ? (run.started_on || run.finished_on ? "date unknown" : "")
@@ -417,7 +582,13 @@ function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: str
           <span className="font-mono text-[12px] text-ink-3">{text}</span>
         </div>
       )}
-      {dates && <span className="text-[13px] text-ink-3 -mt-2">{dates}</span>}
+      {run.status && (
+        <div className="flex flex-wrap items-center justify-between gap-3 -my-2">
+          <span className="text-[13px] text-ink-3">{dates || "No dates yet"}</span>
+          <button type="button" onClick={() => setDating(true)} className="h-11 px-0 bg-transparent border-0 text-[13px] text-ink-3 hover:text-ink-hi underline cursor-pointer">Edit dates</button>
+        </div>
+      )}
+      {dating && <RunDatesDialog item={item} run={run} onClose={() => setDating(false)} />}
       <Variant item={item} run={run} />
       {item.kind === "book" && run.status && !FINAL.has(run.status) && <BookProgress item={item} run={run} />}
       {item.kind === "game" && run.status && !["abandoned", "retired"].includes(run.status) && <GameProgress item={item} run={run} />}
@@ -435,6 +606,7 @@ function Runs({ item, glow, glow2 }: { item: ItemDetail; glow: string; glow2: st
   const dots = [glow, glow2, "#8E95A3"];
   const del = useMediaMut((id: number) => mediaApi.deleteRun(id));
   const [confirm, setConfirm] = useState<number | null>(null);
+  const [dating, setDating] = useState<RunOut | null>(null);
   if (item.runs.length < 2) return null;
   return (
     <section className="p-6 rounded-[22px] bg-(--fill-glass) border border-(--line-2) backdrop-blur-[24px] flex flex-col gap-[22px]">
@@ -468,12 +640,16 @@ function Runs({ item, glow, glow2 }: { item: ItemDetail; glow: string; glow2: st
                   <button type="button" className="h-11 px-1 bg-transparent border-0 text-ink-3 cursor-pointer" onClick={() => setConfirm(null)}>Keep it</button>
                 </span>
               ) : (
-                <button type="button" onClick={() => setConfirm(r.id)} className="self-start h-11 px-0 bg-transparent border-0 text-[13px] text-ink-4 hover:text-wild cursor-pointer">Delete run</button>
+                <span className="flex gap-5">
+                  <button type="button" onClick={() => setDating(r)} className="h-11 px-0 bg-transparent border-0 text-[13px] text-ink-4 hover:text-ink-hi cursor-pointer">Edit dates</button>
+                  <button type="button" onClick={() => setConfirm(r.id)} className="h-11 px-0 bg-transparent border-0 text-[13px] text-ink-4 hover:text-wild cursor-pointer">Delete run</button>
+                </span>
               )}
             </div>
           </li>
         ))}
       </ol>
+      {dating && <RunDatesDialog item={item} run={dating} onClose={() => setDating(null)} />}
     </section>
   );
 }

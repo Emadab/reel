@@ -171,7 +171,7 @@ def stats(kind: Kind, range_: str = Query("all", alias="range"), s: Session = De
     end = today()
     start = end - timedelta(days=364)
     start -= timedelta(days=start.weekday())
-    days = Counter(e.occurred_at.date() for e in _events(s, kind, start, end))
+    days = Counter(e.occurred_at.date() for e in _events(s, kind, start, end) if e.date_precision == "day")
     ratings = list(latest.values())
     avg = round(mean(ratings), 1) if ratings else None
     done = len(finished) + len(dropped)
@@ -179,7 +179,7 @@ def stats(kind: Kind, range_: str = Query("all", alias="range"), s: Session = De
         "kpis": {"items": len(touched) if year else len(lib), "finished": len(finished), "dropped": len(dropped),
                  "drop_rate": round(len(dropped) / done, 2) if done else None,
                  "in_progress": sum(1 for _, r in in_range if r.status and r.status not in FINISHED and r.status != DROPPED[kind]),
-                 "active_days": len({e.occurred_at.date() for e in _events(s, kind, *( (date(year, 1, 1), date(year, 12, 31)) if year else (None, None)))}),
+                 "active_days": len({e.occurred_at.date() for e in _events(s, kind, *( (date(year, 1, 1), date(year, 12, 31)) if year else (None, None))) if e.date_precision == "day"}),
                  "avg_rating": avg, **_amount(s, kind, year)},
         "genres": [{"name": g, "value": round(n / gmax, 3), "count": n} for g, n in top],
         "people": [{"title": PEOPLE[kind][0], "rows": [{"name": n, "count": c} for n, c in a.most_common(5)]},

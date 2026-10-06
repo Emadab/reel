@@ -1,8 +1,8 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import type { DatePrecision, WatchOut } from "../../api/types";
-import { DateField } from "../../components/DateField";
+import type { WatchOut } from "../../api/types";
 import { RatingInput } from "../../components/Rating";
-import { Segmented, cx } from "../../components/ui";
+import { cx } from "../../components/ui";
+import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
 import { iso, today } from "../../lib/format";
 
 export type LogValues = Omit<WatchOut, "id" | "tmdb_id">;
@@ -103,29 +103,16 @@ export function LogWatchForm({
               </span>
             )}
           </div>
-          {v.date_precision === "unknown" ? (
-            <span id={`${id}-d`} className={cx(input, "px-3 border-(--line-5) w-[220px] flex items-center text-ink-3")}>Date unknown</span>
-          ) : (
-            <DateField
-              id={`${id}-d`}
-              value={v.watched_on}
-              precision={v.date_precision}
-              onChange={(d) => set("watched_on", d)}
-              className={cx(input, "px-3 border-(--line-5)", v.date_precision === "year" ? "w-[140px]" : "w-[220px]")}
-            />
-          )}
+          <DateOrUnknown id={`${id}-d`} value={v.watched_on} precision={v.date_precision} onChange={(d) => set("watched_on", d)} />
         </div>
         <div className="flex flex-col gap-2">
           <span id={`${id}-p`} className="text-[12px] text-ink-3">I remember the</span>
-          <Segmented<DatePrecision>
-            label="Date precision"
-            variant="form"
+          <PrecisionPicker
             value={v.date_precision}
             onChange={(p) => {
               set("date_precision", p);
-              if (v.date_precision === "unknown" && p !== "unknown") set("watched_on", day(0)); // the stored 0001-01-01 means nothing
+              set("watched_on", fromUnknown(v.watched_on));
             }}
-            options={[{ id: "day", label: "Day" }, { id: "month", label: "Month" }, { id: "year", label: "Year" }, { id: "unknown", label: "Unknown" }]}
           />
         </div>
         <RatingInput value={v.rating} onChange={(r) => set("rating", r)} />

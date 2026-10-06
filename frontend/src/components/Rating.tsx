@@ -48,6 +48,7 @@ export function RatingInput({
   };
   const onDown = (e: PointerEvent) => {
     if (e.button !== 0) return;
+    swallowClick.current = false; // a drag's click can land on the row (pointer capture), not a key: never carry it over
     press.current = { x: e.clientX, id: e.pointerId };
   };
   const onMove = (e: PointerEvent) => {
@@ -78,7 +79,7 @@ export function RatingInput({
         ref={row}
         role="group"
         aria-labelledby={`${id}-l`}
-        className={`relative flex touch-none ${compact ? "gap-[2px]" : "gap-[3px]"} ${scrub != null ? "cursor-ew-resize [&_*]:cursor-ew-resize" : ""}`}
+        className={`relative flex touch-none ${compact ? "gap-[2px]" : "gap-[3px] w-fit"} ${scrub != null ? "cursor-ew-resize [&_*]:cursor-ew-resize" : ""}`}
         onKeyDown={onKey}
         onPointerDown={onDown}
         onPointerMove={onMove}
