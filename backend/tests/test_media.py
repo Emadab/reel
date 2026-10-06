@@ -273,6 +273,32 @@ def test_paused_book_is_not_finished_by_progress(media):
     assert d["status"] == "paused"
 
 
+def test_book_added_to_history_with_dates_format_and_rating(media):
+    item_id = media.post("/api/media/book/items", json={"ext_id": "OL3W", "shelf": "wishlist"}).json()["id"]
+    body = {"started_on": "2024-03-09", "finished_on": "2024-04-20", "date_precision": "month", "rating": 8, "variant": {"format": "audio"}}
+    d = media.post(f"/api/media/items/{item_id}/history", json=body).json()
+    r = d["runs"][0]
+    assert d["status"] == "finished" and d["shelf"] is None and d["my_rating"] == 8
+    assert (r["started_on"], r["finished_on"], r["date_precision"]) == ("2024-03-01", "2024-04-01", "month")
+    assert r["variant"] == {"format": "audio"} and d["progress"]["current"] == 272
+    assert media.post(f"/api/media/items/{item_id}/history", json={**body, "finished_on": "2024-01-01"}).status_code == 422
+
+
+def test_show_scores_fetched_in_background(media, monkeypatch):
+    from app import omdb
+    from tests.conftest import drain
+
+    async def fake_scores(imdb):
+        return {"imdb": "8.7", "rt": "96%", "metacritic": None}
+
+    monkeypatch.setattr(omdb, "scores_for", fake_scores)
+    item_id = media.post("/api/media/show/items", json={"ext_id": "95396"}).json()["id"]
+    assert detail(media, item_id)["scores_pending"] is True
+    drain(media)
+    d = detail(media, item_id)
+    assert d["details"]["scores"]["rt"] == "96%" and d["scores_pending"] is False
+
+
 # ---- games ----
 
 def test_game_hours_goal_and_time_left(media):

@@ -28,13 +28,26 @@ async def refresh_scores(s: Session, m: Movie, force: bool = False) -> None:
         return
     if d.get("Response") != "True":
         return
-    na = lambda v: None if not v or v == "N/A" else v  # noqa: E731
-    rt = next((x["Value"] for x in d.get("Ratings", []) if x.get("Source") == "Rotten Tomatoes"), None)
-    m.omdb = {"imdb": na(d.get("imdbRating")), "rt": na(rt), "metacritic": na(d.get("Metascore")),
-              "imdb_votes": na(d.get("imdbVotes")), "awards": na(d.get("Awards")), "box_office": na(d.get("BoxOffice"))}
+    m.omdb = _parse(d)
     m.omdb_fetched_at = now()
     s.add(m)
     s.commit()
+
+
+def _parse(d: dict) -> dict:
+    na = lambda v: None if not v or v == "N/A" else v  # noqa: E731
+    rt = next((x["Value"] for x in d.get("Ratings", []) if x.get("Source") == "Rotten Tomatoes"), None)
+    return {"imdb": na(d.get("imdbRating")), "rt": na(rt), "metacritic": na(d.get("Metascore")),
+            "imdb_votes": na(d.get("imdbVotes")), "awards": na(d.get("Awards")), "box_office": na(d.get("BoxOffice"))}
+
+
+async def scores_for(imdb_id: str) -> dict:
+    """Scores for any IMDb title (series too), from the same sources as films. Raises when offline."""
+    if settings.omdb_key:
+        d = (await client.get("https://www.omdbapi.com/", params={"i": imdb_id, "apikey": settings.omdb_key})).json()
+        return _parse(d) if d.get("Response") == "True" else {}
+    imdb = await imdb_ratings({imdb_id})
+    return {"imdb": imdb.get(imdb_id), "rt": None, "metacritic": None} | (await wikidata_scores([imdb_id])).get(imdb_id, {})
 
 
 async def check_key(key: str) -> bool:

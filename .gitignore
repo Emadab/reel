@@ -6,6 +6,7 @@ node_modules/
 # personal exports (viewing history) never go to the public repo
 /*.csv
 /*.zip
+/*.xml.gz
 frontend/dist/
 frontend/test-results/
 frontend/playwright-report/

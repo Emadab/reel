@@ -14,11 +14,11 @@ import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/Wh
 import { onColor } from "../../lib/color";
 import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today } from "../../lib/format";
 import { backTarget } from "../../lib/history";
-import { MODES, SHELF_LABEL, START, STATUS_LABEL, USER_SET, statusLabel } from "../../lib/mode";
-import { asFilm, fraction, itemPath, Meter, pagePad, progressText } from "./parts";
+import { MODES, START, STATUS_LABEL, statusLabel } from "../../lib/mode";
+import { Scores } from "../FilmDetail";
+import { applyChoice, asFilm, FINAL, fraction, itemPath, Meter, pagePad, progressText, statusChoices, type StatusChoice } from "./parts";
 
 const ITEM_STATUS: Record<string, string> = { released: "Released", upcoming: "Upcoming", returning: "Returning series", ended: "Ended", canceled: "Canceled" };
-const FINAL = new Set(["completed", "finished", "beaten", "dropped", "abandoned", "did_not_finish", "retired"]);
 const GOALS: { id: Goal; label: string }[] = [{ id: "main", label: "Main story" }, { id: "main_extras", label: "Main + extras" }, { id: "completionist", label: "Completionist" }];
 
 function useOutside(open: boolean, close: () => void) {
@@ -45,12 +45,7 @@ function StatusMenu({ item }: { item: ItemDetail }) {
   const [open, setOpen] = useState(false);
   const ref = useOutside(open, () => setOpen(false));
   const toast = useToast();
-  const setStatus = useMediaMut((s: string) => mediaApi.setStatus(item.id, s));
-  const shelf = useMediaMut((s: string) => mediaApi.patch(item.id, { shelf: s }));
-  const userSet = USER_SET[item.kind];
-  const next = item.allowed.filter((s) => !userSet || userSet.has(s));
-  const shelves = (item.kind === "show" ? ["wishlist", "not_interested"] : ["wishlist", "backlog", "not_interested"]).filter((s) => s !== item.shelf);
-  const active = item.runs.length > 0 && item.status && !FINAL.has(item.status) && !(item.shelf && item.status === item.shelf);
+  const choose = useMediaMut((c: StatusChoice) => applyChoice(item.id, c));
   const run = async (fn: () => Promise<unknown>, text: string) => {
     setOpen(false);
     try {
@@ -75,22 +70,11 @@ function StatusMenu({ item }: { item: ItemDetail }) {
       </button>
       {open && (
         <div role="menu" className={menuBox}>
-          {next.map((s) => (
-            <button key={s} role="menuitem" type="button" className={menuItem} onClick={() => run(() => setStatus.mutateAsync(s), `Marked ${STATUS_LABEL[s].toLowerCase()}`)}>
-              {STATUS_LABEL[s]}
+          {statusChoices(item).map((c) => (
+            <button key={c.label} role="menuitem" type="button" className={menuItem} onClick={() => run(() => choose.mutateAsync(c), c.done)}>
+              {c.label}
             </button>
           ))}
-          {!active &&
-            shelves.map((s) => (
-              <button key={s} role="menuitem" type="button" className={menuItem} onClick={() => run(() => shelf.mutateAsync(s), `Moved to ${statusLabel(item.kind, s).toLowerCase()}`)}>
-                {s === "not_interested" ? "Not interested" : `Move to ${SHELF_LABEL[item.kind][s] ?? STATUS_LABEL[s]}`}
-              </button>
-            ))}
-          {item.shelf && !active && (
-            <button role="menuitem" type="button" className={menuItem} onClick={() => run(() => shelf.mutateAsync(""), "Removed from the shelf")}>
-              Take off {statusLabel(item.kind, item.shelf).toLowerCase()}
-            </button>
-          )}
         </div>
       )}
     </div>
@@ -360,6 +344,35 @@ function HistoryDialog({ item, onClose }: { item: ItemDetail; onClose: () => voi
   );
 }
 
+/** A book read before: one finished run with its dates, format and rating, in one go. */
+function BookHistoryDialog({ item, onClose }: { item: ItemDetail; onClose: () => void }) {
+  const [start, setStart] = useState(iso(today()));
+  const [finish, setFinish] = useState(iso(today()));
+  const [p, setP] = useState<RunPrecision>("day");
+  const [format, setFormat] = useState("print");
+  const [score, setScore] = useState<number | null>(null);
+  const save = useMediaMut(() => mediaApi.history(item.id, {
+    upto_season: null, date_precision: p, rating: score, variant: { format }, ...(p === "unknown" ? {} : { started_on: start, finished_on: finish }),
+  }));
+  const toast = useToast();
+  const bad = p !== "unknown" && finish < start;
+  return (
+    <DateDialog
+      label={`Add ${item.title} to your history`} onClose={onClose} saving={save.isPending || bad}
+      error={bad ? new Error("The finish date is before the start") : save.error}
+      onSave={async () => { await save.mutateAsync(undefined); toast({ text: <>Added <em>{item.title}</em> to your history</> }); onClose(); }}
+    >
+      <div className="flex flex-wrap gap-[18px] items-end">
+        <When id="book-hist-s" label="Started" value={start} precision={p} onChange={setStart} />
+        <When id="book-hist-f" label="Finished" value={finish} precision={p} onChange={setFinish} />
+      </div>
+      <Remember value={p} onChange={(v) => { setP(v); setStart(fromUnknown(start)); setFinish(fromUnknown(finish)); }} />
+      <Segmented label="Format" variant="form" value={format} options={FORMATS} onChange={setFormat} />
+      <RatingInput value={score} onChange={setScore} />
+    </DateDialog>
+  );
+}
+
 // ---- shows: seasons and the episode grid ----
 
 function airLabel(e: Episode): string {
@@ -590,21 +603,29 @@ function Episodes({ item }: { item: ItemDetail }) {
 
 // ---- your run: rating, progress, goal ----
 
+const STEPS = { page: [10, 25, 50], percent: [5, 10, 25], minutes: [15, 30, 60] };
+
 function BookProgress({ item, run }: { item: ItemDetail; run: RunOut }) {
   const p = run.progress;
   const [unit, setUnit] = useState<"page" | "percent" | "minutes">(p.unit ?? "page");
   const [current, setCurrent] = useState(String(p.current ?? ""));
   const [total, setTotal] = useState(String(p.total ?? (unit === "percent" ? 100 : item.details.pages ?? "")));
-  const save = useMediaMut(() => mediaApi.progress(run.id, { unit, current: Number(current), ...(total ? { total: Number(total) } : {}) }));
+  const save = useMediaMut((n: number) => mediaApi.progress(run.id, { unit, current: n, ...(total ? { total: Number(total) } : {}) }));
   const toast = useToast();
   const input = "h-11 w-full px-[14px] rounded-[12px] border border-(--line-4) bg-(--fill-input) text-ink-hi text-[14px] tabular-nums outline-none focus-visible:outline-2 focus-visible:outline-accent";
+  const log = async (n: number) => {
+    setCurrent(String(n));
+    const d = await save.mutateAsync(n);
+    toast({ text: d.status === "finished" && run.status !== "finished" ? <>Finished <em>{item.title}</em></> : "Progress saved" });
+  };
+  const max = Number(total) || Infinity;
+  const noun = unit === "page" ? "pages" : unit === "percent" ? "percent" : "minutes";
   return (
     <form
       className="flex flex-col gap-3"
-      onSubmit={async (e) => {
+      onSubmit={(e) => {
         e.preventDefault();
-        const d = await save.mutateAsync(undefined);
-        toast({ text: d.status === "finished" && run.status !== "finished" ? <>Finished <em>{item.title}</em></> : "Progress saved" });
+        log(Number(current));
       }}
     >
       <Segmented
@@ -622,6 +643,16 @@ function BookProgress({ item, run }: { item: ItemDetail; run: RunOut }) {
           <input className={input} inputMode="decimal" value={total} disabled={unit === "percent"} onChange={(e) => setTotal(e.target.value.replace(/[^\d.]/g, ""))} />
         </label>
         <Button variant="primary" type="submit" disabled={!current || save.isPending}>Save</Button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {STEPS[unit].map((n) => (
+          <Button key={n} aria-label={`Add ${n} ${noun}`} disabled={save.isPending} onClick={() => log(Math.min((Number(current) || 0) + n, max))}>
+            +{n}
+          </Button>
+        ))}
+        <Button className="ml-auto" disabled={!total || save.isPending} onClick={() => log(Number(total))}>
+          <IconCheck size={15} /> Finished it
+        </Button>
       </div>
     </form>
   );
@@ -778,6 +809,18 @@ function Runs({ item, glow, glow2 }: { item: ItemDetail; glow: string; glow2: st
       {dating && <RunDatesDialog item={item} run={dating} onClose={() => setDating(null)} />}
     </section>
   );
+}
+
+/** A show's scores in the film page's panel: TMDB from its record, the rest fetched like a film's. */
+function showScores(item: ItemDetail) {
+  const d = item.details;
+  const o = d.scores ?? {};
+  const votes = Number(String(o.imdb_votes ?? "").replace(/,/g, ""));
+  return {
+    scores: { tmdb: d.tmdb_rating ? Number(d.tmdb_rating).toFixed(1) : null, imdb: o.imdb ?? null, rt: o.rt ?? null, metacritic: o.metacritic ?? null },
+    votes: { tmdb: d.tmdb_votes ?? null, imdb: votes || null },
+    awards: o.awards ?? null,
+  };
 }
 
 function Details({ item }: { item: ItemDetail }) {
@@ -947,6 +990,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
   const tickNext = useMediaMut((epId: number) => mediaApi.episodes(id, { episode_ids: [epId], watched: true }));
   const suggest = useMediaMut((s: string) => mediaApi.setStatus(id, s));
   const [dismissed, setDismissed] = useState(false);
+  const [bookHistory, setBookHistory] = useState(false);
 
   const backPill = (
     <button
@@ -1052,6 +1096,15 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
             </p>
             <div className="flex flex-wrap gap-[10px] mt-2">
               {primary}
+              {kind === "book" && !active && (
+                <button
+                  type="button" onClick={() => setBookHistory(true)}
+                  className="flex items-center gap-2 h-[46px] px-[18px] rounded-[14px] bg-white/8 border border-(--line-5) text-ink text-[14px] cursor-pointer backdrop-blur-[16px] hover:bg-white/10"
+                >
+                  <IconCalendar size={15} />
+                  Add to history
+                </button>
+              )}
               <StatusMenu item={item} />
               <MoreMenu item={item} />
             </div>
@@ -1103,12 +1156,14 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
         <aside className="flex-[1_1_340px] min-w-0 flex flex-col gap-5">
           {run && run.status && <YourRun item={item} run={run} glow={glow} />}
           <Runs item={item} glow={glow} glow2={glow2} />
+          {kind === "show" && <Scores film={showScores(item)} glow={glow} />}
           <Details item={item} />
           <span className="font-mono text-[11px] text-ink-4 px-1">{item.added_at ? `added ${relativeTime(item.added_at)}` : "not in your library yet"}</span>
         </aside>
       </div>
       <Collection item={item} />
       <Neighbours item={item} />
+      {bookHistory && <BookHistoryDialog item={item} onClose={() => setBookHistory(false)} />}
     </main>
   );
 }

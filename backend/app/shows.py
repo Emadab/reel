@@ -6,12 +6,13 @@ episodes are watched and the show continues; completed when it has ended or been
 import asyncio
 from datetime import UTC, date, datetime, time
 
+import httpx
 from fastapi import HTTPException
 from sqlmodel import Session, col, select
 
-from . import items, tmdb
+from . import db, items, jobs, omdb, tmdb
 from .cards import normalize
-from .models_media import Episode, Event, Item, Run
+from .models_media import Episode, Event, ExternalId, Item, Run
 from .providers import tvmaze, wikidata
 from .providers.base import ItemData, SearchHit
 from .providers.http import ProviderUnavailable
@@ -55,6 +56,35 @@ def collection_out(s: Session, item: Item) -> dict | None:
         return None
     shown = [x for h in col["parts"] if (x := items.find(s, h["source"], h["ext_id"]))]
     return {"name": col["name"], "items": [items.card(s, x) for x in shown]} if len(shown) > 1 else None
+
+
+SCORES_STALE = 30 * 86400
+
+
+def imdb_id(s: Session, item: Item) -> str | None:
+    row = s.exec(select(ExternalId).where(ExternalId.item_id == item.id, ExternalId.source == "imdb")).first()
+    return row.ext_id if row else None
+
+
+def scores_pending(s: Session, item: Item) -> bool:
+    """IMDb, Rotten Tomatoes and Metacritic like a film's, fetched in the background when missing or a month old.
+    True while that fetch is queued or running, so the page polls until the scores land."""
+    at = item.details.get("scores_at")
+    if (imdb := imdb_id(s, item)) and (not at or now().timestamp() - datetime.fromisoformat(at).timestamp() > SCORES_STALE):
+        jobs.enqueue(f"scores:item:{item.id}", lambda i=item.id, x=imdb: fill_scores(i, x))
+    return jobs.status.get(f"scores:item:{item.id}", {}).get("state") in ("queued", "running")
+
+
+async def fill_scores(item_id: int, imdb: str) -> None:
+    try:
+        found = await omdb.scores_for(imdb)
+    except (httpx.HTTPError, OSError, ValueError, KeyError):
+        return  # offline: try again next time the page opens
+    with Session(db.engine) as s:
+        if item := s.get(Item, item_id):
+            item.details = {**item.details, "scores": found, "scores_at": now().isoformat()}
+            s.add(item)
+            s.commit()
 
 
 async def fetch_show(tmdb_id: str) -> ItemData | None:

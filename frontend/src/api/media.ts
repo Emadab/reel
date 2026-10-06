@@ -27,6 +27,7 @@ export type ItemCard = {
   progress: Progress;
   run_no: number;
   sticky: boolean;
+  allowed: string[]; // next statuses the backend accepts
   added_at: string | null;
 };
 
@@ -60,7 +61,6 @@ export type ItemDetail = ItemCard & {
   owned: boolean;
   platforms: string[];
   runs: RunOut[];
-  allowed: string[];
   suggest: string | null;
   seasons?: { number: number; name: string | null; premiere: string | null; episodes: Episode[] }[];
   next_episode?: Episode | null;
@@ -71,6 +71,7 @@ export type ItemDetail = ItemCard & {
   external_ids: Record<string, string>;
   neighbors: { item: ItemCard; score: number | null }[];
   neighbors_pending: boolean;
+  scores_pending?: boolean; // shows: IMDb / RT / Metacritic are being fetched
 };
 
 export type MediaLibrary = { counts: Record<string, number>; items: ItemCard[]; genres: string[] };
@@ -132,7 +133,7 @@ export const mediaApi = {
     request<ItemDetail>("POST", `/media/runs/${runId}/progress`, { body }),
   episodes: (id: number, body: { episode_ids?: number[]; season?: number; watched: boolean; watched_on?: string; date_precision?: RunPrecision; on_air_dates?: boolean }) =>
     request<ItemDetail>("POST", `/media/items/${id}/episodes`, { body }),
-  history: (id: number, body: { upto_season: number | null; started_on?: string; finished_on?: string; date_precision: RunPrecision; rating?: number | null; on_air_dates?: boolean }) =>
+  history: (id: number, body: { upto_season: number | null; started_on?: string; finished_on?: string; date_precision: RunPrecision; rating?: number | null; on_air_dates?: boolean; variant?: Record<string, string> }) =>
     request<ItemDetail>("POST", `/media/items/${id}/history`, { body }),
   upNext: () => request<UpNext[]>("GET", "/media/shows/up-next"),
   notifications: () => request<{ unseen: number; items: Note[] }>("GET", "/notifications"),
@@ -167,7 +168,7 @@ export const useMediaLibrary = (kind: Kind, p: { status?: string[]; genre?: stri
 export const useMediaSearch = (kind: Kind, q: string) =>
   useQuery({ queryKey: ["media", kind, "search", q], queryFn: () => mediaApi.search(kind, q), enabled: q.trim().length >= 2, placeholderData: keepPreviousData, retry: false });
 export const useItem = (id: number) =>
-  useQuery({ queryKey: ["media", "item", id], queryFn: () => mediaApi.item(id), enabled: id > 0, refetchInterval: (q) => (q.state.data?.neighbors_pending ? 3000 : false) });
+  useQuery({ queryKey: ["media", "item", id], queryFn: () => mediaApi.item(id), enabled: id > 0, refetchInterval: (q) => (q.state.data?.neighbors_pending || q.state.data?.scores_pending ? 3000 : false) });
 export const useNotifications = (enabled: boolean) =>
   useQuery({ queryKey: ["media", "notifications"], queryFn: mediaApi.notifications, enabled, refetchInterval: 60_000 });
 export const useCalendar = (kind: Kind) => useQuery({ queryKey: ["media", kind, "calendar"], queryFn: () => mediaApi.calendar(kind) });

@@ -182,7 +182,7 @@ function Crew({ film }: { film: MovieDetail }) {
 }
 
 /** Four scores, each with a meter on a shared 0–100 scale, plus the awards line. */
-function Scores({ film, glow }: { film: MovieDetail; glow: string }) {
+export function Scores({ film, glow }: { film: Pick<MovieDetail, "scores" | "votes" | "awards">; glow: string }) {
   const num = (v: string | null) => (v == null ? null : parseFloat(v));
   const rows: { label: string; value: string | null; of: number; sub: string }[] = [
     { label: "TMDB", value: film.scores.tmdb, of: 10, sub: film.votes?.tmdb ? `${compact.format(film.votes.tmdb)} votes` : "users" },

@@ -1,14 +1,16 @@
 import { AnimatePresence } from "framer-motion";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import type { LibraryParams } from "../api/client";
-import { useFacets, useLibrary } from "../api/hooks";
+import { useFacets, useLibrary, useWatchlistToggle } from "../api/hooks";
 import type { CardWithWatch, FilmCard } from "../api/types";
+import { ContextMenu, useContextMenu, type MenuAt } from "../components/ContextMenu";
 import { FilterChip } from "../components/FilterChip";
 import { alpha, useAmbientGlow } from "../components/Glow";
 import { IconCheck, IconPlus } from "../components/Icons";
 import { QuickLog } from "../components/QuickLog";
 import { Poster, posterBg } from "../components/Poster";
+import { useToast } from "../components/Toasts";
 import { Button, PageHeader, PillTab, Segmented, cx } from "../components/ui";
 import { usePalette } from "../features/search/palette";
 import { lightest } from "../lib/color";
@@ -95,15 +97,46 @@ function LastWatched({ film }: { film: CardWithWatch }) {
   );
 }
 
+/** Right-click on a film card: log it, (un)list it, without opening it. */
+function WallCardMenu({ film, at, onClose, onQuick }: { film: FilmCard; at: MenuAt; onClose: () => void; onQuick: () => void }) {
+  const nav = useNavigate();
+  const toast = useToast();
+  const { openPalette } = usePalette();
+  const wl = useWatchlistToggle();
+  const watched = film.watch_count > 0;
+  const list = (on: boolean) =>
+    wl.mutate(
+      { id: film.tmdb_id, on },
+      { onSuccess: () => toast({ text: <>{on ? "Added" : "Removed"} <em>{film.title}</em> {on ? "to" : "from"} your watchlist</>, undo: () => wl.mutate({ id: film.tmdb_id, on: !on }) }) },
+    );
+  return (
+    <ContextMenu
+      at={at}
+      title={film.title}
+      onClose={onClose}
+      items={[
+        { label: "Open", onSelect: () => nav(`/film/${film.tmdb_id}`) },
+        "sep",
+        { label: watched ? "Log a rewatch" : "Mark watched", onSelect: onQuick },
+        { label: "Log with details…", onSelect: () => openPalette({ logFor: { tmdb_id: film.tmdb_id, title: film.title, year: film.year, watch_count: film.watch_count } }) },
+        { label: film.on_watchlist ? "Remove from watchlist" : "Add to watchlist", onSelect: () => list(!film.on_watchlist) },
+        "sep",
+        { label: "Copy title", onSelect: () => void navigator.clipboard?.writeText(film.title) },
+      ]}
+    />
+  );
+}
+
 export function WallCard({ film, tab }: { film: FilmCard; tab: Tab }) {
   const [quick, setQuick] = useState(false);
+  const menu = useContextMenu();
   const watched = film.watch_count > 0;
   const sub =
     tab === "watchlist"
       ? film.added_at ? `Added ${formatWatchDate(film.added_at.slice(0, 10), "day")}` : "On your watchlist"
       : [film.director, film.last_watched && formatWatchDate(film.last_watched.date, film.last_watched.precision)].filter(Boolean).join(" · ");
   return (
-    <div className="quick-card relative flex flex-col gap-[10px] min-w-0">
+    <div className="quick-card relative flex flex-col gap-[10px] min-w-0" onContextMenu={menu.onContextMenu}>
       <Link to={`/film/${film.tmdb_id}`} className="poster-card flex flex-col gap-[10px] no-underline text-inherit hover:text-inherit min-w-0">
         <Poster film={film} size="wall" />
         <div className="flex justify-between items-baseline gap-2">
@@ -133,6 +166,7 @@ export function WallCard({ film, tab }: { film: FilmCard; tab: Tab }) {
           )}
         </AnimatePresence>
       </div>
+      {menu.at && <WallCardMenu film={film} at={menu.at} onClose={menu.close} onQuick={() => setQuick(true)} />}
     </div>
   );
 }

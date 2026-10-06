@@ -11,7 +11,8 @@ import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx } from "../..
 import { usePalette } from "../../features/search/palette";
 import { num } from "../../lib/format";
 import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
-import { asFilm, fraction, itemPath, MediaCard, Meter, pagePad, progressText, wallGrid } from "./parts";
+import type { MenuAt } from "../../components/ContextMenu";
+import { asFilm, fraction, itemPath, MediaCard, MediaCardMenu, Meter, pagePad, progressText, wallGrid } from "./parts";
 import { BacklogPlanner } from "./BacklogPlanner";
 
 const WATCHED: Record<Kind, string> = { show: "last watched", book: "last read", game: "last played" };
@@ -120,6 +121,13 @@ function UpNextRail() {
   const tick = useMediaMut((u: UpNext) => mediaApi.episodes(u.item.id, { episode_ids: [u.episode.id], watched: true }));
   const toast = useToast();
   const [pulse, setPulse] = useState<{ id: number; k: number } | null>(null);
+  const [menu, setMenu] = useState<{ u: UpNext; at: MenuAt } | null>(null);
+  const markNext = async (u: UpNext) => {
+    const code = `S${u.episode.season} · E${u.episode.number}`;
+    await tick.mutateAsync(u);
+    setPulse({ id: u.item.id, k: Date.now() });
+    toast({ text: <>Watched <em>{u.item.title}</em> {code}</> });
+  };
   if (!up.data?.length) return null;
   return (
     <section className="flex flex-col gap-4" aria-label="Up next">
@@ -132,6 +140,10 @@ function UpNextRail() {
           return (
             <div
               key={u.item.id}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setMenu({ u, at: { x: e.clientX, y: e.clientY } });
+              }}
               className="group/card relative shrink-0 w-[400px] max-[639px]:w-[318px] flex items-center gap-4 py-[14px] pl-[14px] pr-[12px] rounded-[16px] border border-(--line-3) bg-[linear-gradient(160deg,rgba(255,255,255,0.045),rgba(255,255,255,0.015))] transition-[border-color,box-shadow,translate] duration-300 hover:-translate-y-[2px] hover:border-[color-mix(in_oklch,var(--color-accent)_60%,transparent)] hover:shadow-[0_0_0_1px_color-mix(in_oklch,var(--color-accent)_22%,transparent),0_14px_30px_-18px_var(--color-accent)]"
             >
               {/* a crisp neon top edge */}
@@ -158,11 +170,7 @@ function UpNextRail() {
                   aria-label={`Mark ${u.item.title} ${code} watched`}
                   title="Mark watched"
                   disabled={tick.isPending && tick.variables?.item.id === u.item.id}
-                  onClick={async () => {
-                    await tick.mutateAsync(u);
-                    setPulse({ id: u.item.id, k: Date.now() });
-                    toast({ text: <>Watched <em>{u.item.title}</em> {code}</> });
-                  }}
+                  onClick={() => void markNext(u)}
                   className="size-11 shrink-0 rounded-full grid place-items-center border border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_12%,transparent)] text-accent cursor-pointer transition-[background-color,color,box-shadow] duration-200 hover:bg-accent hover:text-on-accent hover:shadow-[0_0_18px_-2px_var(--color-accent)] disabled:cursor-wait disabled:animate-pulse"
                 >
                   <IconCheck size={17} />
@@ -187,6 +195,14 @@ function UpNextRail() {
         })}
       </div>
       <StripScrollbar strip={strip} count={up.data.length} />
+      {menu && (
+        <MediaCardMenu
+          item={menu.u.item}
+          at={menu.at}
+          onClose={() => setMenu(null)}
+          extra={[{ label: `Mark S${menu.u.episode.season} · E${menu.u.episode.number} watched`, onSelect: () => void markNext(menu.u) }]}
+        />
+      )}
     </section>
   );
 }

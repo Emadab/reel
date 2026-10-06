@@ -17,7 +17,7 @@ from ..flags import require_kind
 from ..models_media import Event, ExternalId, Item, ItemPerson, LibraryEntry, MediaFeedback, Person, Run, Season
 from ..providers import PRIMARY
 from ..recommender import media as recs
-from ..status import STICKY, allowed, transition
+from ..status import STICKY, transition
 
 router = APIRouter(prefix="/media")
 Kind = Literal["show", "book", "game"]
@@ -174,6 +174,9 @@ async def refresh(item_id: int, s: Session = Depends(get_session)):
     item = _item(s, item_id)
     item = await items.refresh(s, item)
     if item.kind == "show":
+        item.details = {k: v for k, v in item.details.items() if k != "scores_at"}  # fetch the scores again too
+        s.add(item)
+        s.commit()
         await shows.ensure_collection(s, item)
     if item.kind == "show" and (run := items.current_run(s, item.id)):  # type: ignore[arg-type]
         shows.derive(s, item, run)
@@ -193,7 +196,6 @@ def _detail(s: Session, item: Item) -> dict:
         "people": [{"name": p.name, "role": ip.role, "character": ip.character, "photo": p.photo_path} for ip, p in people],
         "owned": entry.owned if entry else False, "platforms": entry.platforms if entry else [],
         "runs": [_run_out(r) for r in items.runs(s, item.id)],  # type: ignore[arg-type]
-        "allowed": allowed(item.kind, run.status if run else None, item.endless),
         "suggest": _suggest(s, run),
         "external_ids": {e.source: e.ext_id for e in s.exec(select(ExternalId).where(ExternalId.item_id == item.id))},
         "neighbors": recs.neighbors(s, item),
@@ -209,6 +211,7 @@ def _detail(s: Session, item: Item) -> dict:
         out["next_episode"] = shows.episode_out(nxt, seen) if nxt else None
         out["upcoming_episode"] = shows.episode_out(upcoming, seen) if upcoming else None
         out["collection"] = shows.collection_out(s, item)
+        out["scores_pending"] = shows.scores_pending(s, item)
     if item.kind == "game":
         out["time_left"] = games.time_left(item, run)
     from ..flags import enabled
@@ -447,14 +450,24 @@ async def seen(item_id: int, body: SeenIn, s: Session = Depends(get_session)):
     if item.kind == "show":
         shows.add_history(s, item, None, None, None, "unknown", body.rating)
         return _detail(s, item)
-    run = items.new_run(s, item, date_precision="unknown", rating=body.rating)
+    _finished_run(s, item, None, None, "unknown", body.rating)
+    return _detail(s, item)
+
+
+def _finished_run(s: Session, item: Item, started: date | None, finished: date | None, precision: str,
+                  rating: float | None, variant: dict | None = None) -> Run:
+    """A book read (or game beaten) some time ago, as a new run with its dates. A book with a page count counts
+    every page as read."""
+    run = items.new_run(s, item, date_precision=precision, rating=rating, variant=variant or {})
     done = "finished" if item.kind == "book" else "playing" if item.endless else "beaten"
     transition(s, run, item.kind, done, endless=item.endless)
-    run.started_on = None
-    run.finished_on = normalize(date.today(), "unknown") if done != "playing" else None
+    run.started_on = normalize(started, precision) if started else None
+    run.finished_on = normalize(finished or started or date.min, precision) if done != "playing" else None
+    if item.kind == "book" and (pages := item.details.get("pages")):
+        run.progress = {"unit": "page", "current": pages, "total": pages}
     s.add(run)
     s.commit()
-    return _detail(s, item)
+    return run
 
 
 class HistoryIn(BaseModel):
@@ -464,14 +477,21 @@ class HistoryIn(BaseModel):
     date_precision: Precision = "day"
     rating: float | None = Field(default=None, gt=0, le=10)
     on_air_dates: bool = False  # each episode watched on the day it aired
+    variant: dict | None = None  # books: {"format": ...}
 
 
 @router.post("/items/{item_id}/history")
-def add_history(item_id: int, body: HistoryIn, s: Session = Depends(get_session)):
-    """'I watched this a long time ago': the whole show, or up to a season, without ticking every episode."""
+async def add_history(item_id: int, body: HistoryIn, s: Session = Depends(get_session)):
+    """'I watched this a long time ago': the whole show, or up to a season, without ticking every episode.
+    A book or game: one finished run with its dates."""
     item = _item(s, item_id)
+    if item.details.get("light"):
+        item = await items.refresh(s, item)
     if item.kind != "show":
-        raise HTTPException(422, "Only shows have episodes")
+        if body.finished_on and body.started_on and body.finished_on < body.started_on:
+            raise HTTPException(422, "The finish date is before the start")
+        _finished_run(s, item, body.started_on, body.finished_on, body.date_precision, body.rating, body.variant)
+        return _detail(s, item)
     shows.add_history(s, item, body.upto_season, body.started_on, body.finished_on, body.date_precision, body.rating, body.on_air_dates)
     return _detail(s, item)
 

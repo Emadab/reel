@@ -10,7 +10,7 @@ from . import jobs, media
 from .models_media import Episode, Event, ExternalId, Item, ItemPerson, LibraryEntry, Person, Run, Season
 from .providers import PRIMARY
 from .providers.base import ItemData, Kind
-from .status import FINISHED, STICKY
+from .status import FINISHED, STICKY, allowed
 
 STALE = timedelta(days=30)
 SUBTITLE = {"show": "networks", "book": "authors", "game": "platforms"}
@@ -219,5 +219,6 @@ def card(s: Session, item: Item, entry: LibraryEntry | None = None, run: Run | N
         "status": displayed_status(run, entry), "shelf": entry.shelf if entry else None, "in_library": entry is not None,
         "my_rating": rated[-1] if rated else None, "progress": run.progress if run else {},
         "run_no": run.run_no if run else 0, "sticky": bool(run and run.status in STICKY),
+        "allowed": allowed(item.kind, run.status if run else None, item.endless),
         "added_at": entry.added_at.isoformat() if entry else None,
     }
