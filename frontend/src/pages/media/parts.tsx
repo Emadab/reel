@@ -8,7 +8,7 @@ import { Poster } from "../../components/Poster";
 import { useToast } from "../../components/Toasts";
 import { cx } from "../../components/ui";
 import { rating } from "../../lib/format";
-import { MODES, SHELF_LABEL, STATUS_LABEL, USER_SET, statusLabel } from "../../lib/mode";
+import { MODES, SHELF_LABEL, STATUS_LABEL, STATUS_MENU, statusLabel } from "../../lib/mode";
 
 /** Items reuse the movie Poster; negative ids keep their shared-layout ids apart from films. */
 export const asFilm = (c: Pick<ItemCard, "id" | "title" | "year" | "poster" | "poster_sm" | "poster_art" | "palette">): PosterFilm => ({
@@ -49,12 +49,9 @@ export const FINAL = new Set(["completed", "finished", "beaten", "dropped", "aba
 
 export type StatusChoice = { label: string; done: string; status?: string; shelf?: string };
 
-/** What the status control offers: the transitions the backend allows (shows: only the ones you set yourself), plus shelves. */
+/** What the status control offers: the medium's own choices the backend allows from here, plus shelves. */
 export function statusChoices(item: ItemCard): StatusChoice[] {
-  const userSet = USER_SET[item.kind];
-  const out: StatusChoice[] = item.allowed
-    .filter((s) => !userSet || userSet.has(s))
-    .map((s) => ({ label: STATUS_LABEL[s], done: `Marked ${STATUS_LABEL[s].toLowerCase()}`, status: s }));
+  const out: StatusChoice[] = STATUS_MENU[item.kind].filter((c) => item.allowed.includes(c.status));
   const active = item.run_no > 0 && item.status && !FINAL.has(item.status) && !(item.shelf && item.status === item.shelf);
   if (active) return out;
   const shelves = (item.kind === "show" ? ["wishlist", "not_interested"] : ["wishlist", "backlog", "not_interested"]).filter((s) => s !== item.shelf);

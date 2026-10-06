@@ -52,7 +52,7 @@ export const STATUS_LABEL: Record<string, string> = {
 export const SHELF_LABEL: Record<Kind, Record<string, string>> = {
   show: { wishlist: "Watchlist" },
   book: { wishlist: "Want to read", backlog: "To read (owned)" },
-  game: { wishlist: "Wishlist", backlog: "Backlog" },
+  game: { wishlist: "Wishlist", backlog: "Backlog", completed: "Completed 100%", retired: "Stopped playing" },
 };
 
 export function statusLabel(kind: Kind, s: string | null): string {
@@ -95,11 +95,30 @@ export const START: Record<Kind, { status: string; verb: string; again: string }
   game: { status: "playing", verb: "Start playing", again: "Start a replay" },
 };
 
-/** Shows derive watching / up to date / completed from episodes; the status menu only offers the states you set. */
-export const USER_SET: Record<Kind, Set<string> | null> = {
-  show: new Set(["watching", "on_hold", "dropped"]),
-  book: null,
-  game: null,
+/** The status menu per medium, in the order a run moves through it, with what each choice says there. Shows derive
+ * watching / up to date / completed from episodes, so their menu only has the states you set yourself. Only the
+ * ones the backend allows from the current state are offered. */
+export const STATUS_MENU: Record<Kind, { status: string; label: string; done: string }[]> = {
+  show: [
+    { status: "watching", label: "Watching", done: "Marked watching" },
+    { status: "on_hold", label: "Put on hold", done: "Put on hold" },
+    { status: "dropped", label: "Drop it", done: "Dropped" },
+  ],
+  book: [
+    { status: "reading", label: "Reading", done: "Marked reading" },
+    { status: "dipping", label: "Dipping in (no set order)", done: "Marked dipping in" },
+    { status: "paused", label: "Pause", done: "Paused" },
+    { status: "finished", label: "Finished", done: "Marked finished" },
+    { status: "did_not_finish", label: "Did not finish", done: "Marked did not finish" },
+  ],
+  game: [
+    { status: "playing", label: "Playing", done: "Marked playing" },
+    { status: "shelved", label: "Shelve for now", done: "Shelved" },
+    { status: "beaten", label: "Beaten (main story)", done: "Marked beaten" },
+    { status: "completed", label: "Completed 100%", done: "Marked completed 100%" },
+    { status: "abandoned", label: "Abandon", done: "Abandoned" },
+    { status: "retired", label: "Stopped playing", done: "Marked stopped playing" },
+  ],
 };
 
 export const SOURCE_NAME: Record<Kind, string> = { show: "TMDB", book: "Open Library", game: "RAWG" };

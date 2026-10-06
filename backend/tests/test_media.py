@@ -69,6 +69,7 @@ def tick(c, item_id, ids, watched=True):
 def test_transition_table():
     assert allowed("show", None) == ["watching"]
     assert allowed("game", "playing", endless=True) == ["abandoned", "retired", "shelved"]
+    assert allowed("game", "playing") == ["abandoned", "beaten", "completed", "shelved"]  # retired: endless games only
     assert allowed("book", "did_not_finish") == ["reading"]
     with Session(db.engine) as s:
         run = Run(item_id=1, status="reading")
