@@ -4,7 +4,7 @@ import { request } from "../../api/client";
 import type { Flag, SettingsOut } from "../../api/types";
 import { useToast } from "../../components/Toasts";
 import { Button, Panel, SectionTitle, cx } from "../../components/ui";
-import { MODE_ORDER, MODES } from "../../lib/mode";
+import { MODE_ORDER, MODES, type Mode } from "../../lib/mode";
 
 type MediaSettingsOut = SettingsOut & {
   rawg_configured: boolean; google_books_configured: boolean; hardcover_configured: boolean; contact_email: string;
@@ -14,16 +14,17 @@ const input = "h-11 px-[14px] rounded-[12px] border border-(--line-4) bg-(--fill
 const ACCENT_NAMES: Record<string, string> = { "#7FDBFF": "Ice", "#C6F36B": "Lime", "#FFB86B": "Amber", "#C9A7FF": "Violet" };
 
 const FLAGS: { flag: Flag; label: string; hint: string }[] = [
+  { flag: "media.movies", label: "Movies", hint: "Watches, rewatches, ratings, recommendations. Data from TMDB." },
   { flag: "media.shows", label: "TV series", hint: "Episodes, up next, seasons. Data from TMDB and TVmaze." },
   { flag: "media.books", label: "Books", hint: "Reading progress, shelves, rereads. Data from Open Library." },
   { flag: "media.games", label: "Games", hint: "Playthroughs, hours, backlog planner. Data from RAWG (needs a key)." },
   { flag: "announcements", label: "Announcements", hint: "New episodes, seasons and releases: a bell, a calendar, desktop and phone alerts." },
 ];
 
-/** A switch: a real button with aria-pressed, 44 px tall like every control. */
-function Toggle({ on, label, hint, onChange }: { on: boolean; label: string; hint: ReactNode; onChange: (on: boolean) => void }) {
+/** A switch: a real button with aria-pressed, 44 px tall like every control. `locked`: the last mode on can't be turned off. */
+function Toggle({ on, label, hint, locked, onChange }: { on: boolean; label: string; hint: ReactNode; locked?: boolean; onChange: (on: boolean) => void }) {
   return (
-    <button type="button" aria-pressed={on} onClick={() => onChange(!on)} className="w-full flex items-center gap-4 min-h-11 py-2 bg-transparent border-0 text-left">
+    <button type="button" aria-pressed={on} disabled={locked} onClick={() => onChange(!on)} className="w-full flex items-center gap-4 min-h-11 py-2 bg-transparent border-0 text-left disabled:opacity-60">
       <span className="flex-1 flex flex-col gap-[3px]">
         <span className="text-[14px] font-medium">{label}</span>
         <span className="text-[12px] text-ink-4">{hint}</span>
@@ -74,9 +75,8 @@ function TextSetting({ label, hint, value, secret, configured, onSave }: {
   );
 }
 
-/** Settings for every mode alike: which media are on, their keys, accents and notifications (design extension).
- * `movieKeys` are the TMDB and OMDb forms, which live in Settings.tsx. */
-export function MediaSettings({ s, movieKeys }: { s: SettingsOut; movieKeys: ReactNode }) {
+/** Settings for every mode alike: which modes are on, their keys and accents, notifications (design extension). */
+export function MediaSettings({ s }: { s: SettingsOut }) {
   const m = s as MediaSettingsOut;
   const qc = useQueryClient();
   const toast = useToast();
@@ -86,35 +86,47 @@ export function MediaSettings({ s, movieKeys }: { s: SettingsOut; movieKeys: Rea
     void qc.invalidateQueries({ queryKey: ["media"] });
     return next;
   };
-  const modes = MODE_ORDER.filter((k) => !MODES[k].flag || s.flags[MODES[k].flag!]);
+  const on = (k: Mode) => !!s.flags[MODES[k].flag];
+  const modes = MODE_ORDER.filter(on);
   return (
     <>
       <Panel className="flex flex-col gap-3">
         <SectionTitle>Modes</SectionTitle>
-        <p className="m-0 text-[13px] text-ink-4">Each medium gets its own mode in the sidebar (Ctrl 1–4).</p>
+        <p className="m-0 text-[13px] text-ink-4">Each medium gets its own mode in the sidebar (Ctrl 1–4). At least one stays on.</p>
         <div className="flex flex-col divide-y divide-(--divider)">
           {FLAGS.map((f) => (
-            <Toggle key={f.flag} on={!!s.flags[f.flag]} label={f.label} hint={f.hint} onChange={(on) => put({ flags: { [f.flag]: on } })} />
+            <Toggle
+              key={f.flag} on={!!s.flags[f.flag]} label={f.label} hint={f.hint}
+              locked={s.flags[f.flag] && modes.length === 1 && MODES[modes[0]].flag === f.flag}
+              onChange={(v) => put({ flags: { [f.flag]: v } })}
+            />
           ))}
         </div>
       </Panel>
 
       <Panel className="flex flex-col gap-6">
         <SectionTitle>Keys</SectionTitle>
-        {movieKeys}
-        {s.flags["media.games"] && (
-          <TextSetting label="RAWG key" secret configured={m.rawg_configured} hint="Games search and details. Free at rawg.io/apidocs."
-            onSave={async (v) => { await put({ rawg_key: v }); toast({ text: "RAWG key saved" }); }} />
+        {(on("movie") || on("show")) && (
+          <TextSetting label="TMDB API Read Access Token" secret configured={s.tmdb_configured} hint="Movies and shows. The long token from themoviedb.org → Settings → API."
+            onSave={async (v) => { await put({ tmdb_token: v }); void qc.invalidateQueries(); toast({ text: "TMDB connected" }); }} />
         )}
-        {s.flags["media.books"] && (
+        {on("movie") && (
+          <TextSetting label="OMDb key (optional)" secret configured={s.omdb_configured} hint="Movies: IMDb, Rotten Tomatoes and Metacritic scores. Free at omdbapi.com."
+            onSave={async (v) => { await put({ omdb_key: v }); toast({ text: "OMDb key saved" }); }} />
+        )}
+        {on("book") && (
           <>
-            <TextSetting label="Hardcover token (optional)" secret configured={m.hardcover_configured} hint="Series, release dates and any book details other sources miss. hardcover.app → Settings → API."
+            <TextSetting label="Hardcover token (optional)" secret configured={m.hardcover_configured} hint="Books: series, release dates and any details other sources miss. hardcover.app → Settings → API."
               onSave={async (v) => { await put({ hardcover_token: v }); toast({ text: "Hardcover token saved" }); }} />
-            <TextSetting label="Google Books key (optional)" secret configured={m.google_books_configured} hint="Fills in missing descriptions and page counts."
+            <TextSetting label="Google Books key (optional)" secret configured={m.google_books_configured} hint="Books: fills in missing descriptions and page counts."
               onSave={async (v) => { await put({ google_books_key: v }); toast({ text: "Google Books key saved" }); }} />
           </>
         )}
-        {(s.flags["media.shows"] || s.flags["media.books"]) && (
+        {on("game") && (
+          <TextSetting label="RAWG key" secret configured={m.rawg_configured} hint="Games: search and details. Free at rawg.io/apidocs."
+            onSave={async (v) => { await put({ rawg_key: v }); toast({ text: "RAWG key saved" }); }} />
+        )}
+        {(on("show") || on("book")) && (
           <TextSetting label="Contact email (optional)" value={m.contact_email} hint="Sent only to Open Library and TVmaze, who ask apps to identify themselves. It raises Open Library's rate limit."
             onSave={async (v) => { await put({ contact_email: v }); toast({ text: "Saved" }); }} />
         )}
@@ -124,7 +136,7 @@ export function MediaSettings({ s, movieKeys }: { s: SettingsOut; movieKeys: Rea
       <Panel className="flex flex-col gap-5">
         <SectionTitle>Mode accents</SectionTitle>
         {modes.map((k) => {
-          const current = (k === "movie" ? s.accent : s.mode_accents?.[k] ?? MODES[k].accent!).toUpperCase();
+          const current = (s.mode_accents?.[k] ?? MODES[k].accent).toUpperCase();
           return (
             <div key={k} className="flex flex-wrap items-center gap-4">
               <span className="w-[72px] text-[14px]">{MODES[k].label}</span>
@@ -132,7 +144,7 @@ export function MediaSettings({ s, movieKeys }: { s: SettingsOut; movieKeys: Rea
                 {s.accents.map((c) => (
                   <button
                     key={c} type="button" role="radio" aria-checked={c.toUpperCase() === current} aria-label={ACCENT_NAMES[c] ?? c}
-                    onClick={() => put(k === "movie" ? { accent: c } : { mode_accents: { [k]: c } })}
+                    onClick={() => put({ mode_accents: { [k]: c } })}
                     className={cx("size-11 rounded-full border-0 cursor-pointer", c.toUpperCase() === current && "outline-2 outline-white outline-offset-[3px]")}
                     style={{ background: c }}
                   />
@@ -157,7 +169,7 @@ export function MediaSettings({ s, movieKeys }: { s: SettingsOut; movieKeys: Rea
       <Panel className="flex flex-col gap-3">
         <SectionTitle>Data sources</SectionTitle>
         <ul className="m-0 pl-5 flex flex-col gap-2 text-[14px] text-ink-2b leading-[1.55]">
-          <li>Film data and images from <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">TMDB</a>; IMDb, Rotten Tomatoes and Metacritic scores from <a href="https://www.omdbapi.com" target="_blank" rel="noreferrer">OMDb</a> when a key is set.</li>
+          {on("movie") && <li>Film data and images from <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">TMDB</a>; IMDb, Rotten Tomatoes and Metacritic scores from <a href="https://www.omdbapi.com" target="_blank" rel="noreferrer">OMDb</a> when a key is set.</li>}
           {s.flags["media.shows"] && <li>Show data from <a href="https://www.themoviedb.org" target="_blank" rel="noreferrer">TMDB</a>; air times from <a href="https://www.tvmaze.com" target="_blank" rel="noreferrer">TVmaze</a>, licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA</a>.</li>}
           {s.flags["media.books"] && <li>Book data and covers from <a href="https://openlibrary.org" target="_blank" rel="noreferrer">Open Library</a>, with <a href="https://hardcover.app" target="_blank" rel="noreferrer">Hardcover</a> and Google Books when keys are set.</li>}
           {s.flags["media.games"] && <li>Game data from <a href="https://rawg.io" target="_blank" rel="noreferrer">RAWG</a>.</li>}

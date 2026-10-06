@@ -64,7 +64,8 @@ def _out(s: Session, tmdb_ok: bool | None = None) -> dict:
         "tmdb_connected": tmdb_ok,
         "omdb_configured": bool(settings.omdb_key),
         "flags": flags.all_flags(s),
-        "mode_accents": {m: v for m in ("show", "book", "game") if (v := get_setting(s, f"accent:{m}"))},
+        "mode_accents": {"movie": get_setting(s, "accent", ACCENTS[0])}  # movies keep the original accent row
+        | {m: v for m in ("show", "book", "game") if (v := get_setting(s, f"accent:{m}"))},
         "rawg_configured": bool(settings.rawg_key),
         "google_books_configured": bool(settings.google_books_key),
         "hardcover_configured": bool(settings.hardcover_token),
@@ -93,9 +94,9 @@ async def put_settings(body: SettingsIn, s: Session = Depends(get_session)):
     for name, on in (body.flags or {}).items():
         flags.set_flag(s, name, on)
     for mode, accent in (body.mode_accents or {}).items():
-        if mode not in ("show", "book", "game") or accent.upper() not in ACCENTS:
+        if mode not in ("movie", "show", "book", "game") or accent.upper() not in ACCENTS:
             raise HTTPException(422, "Unknown mode or accent")
-        put_setting(s, f"accent:{mode}", accent.upper())
+        put_setting(s, "accent" if mode == "movie" else f"accent:{mode}", accent.upper())
     for field, env in (("rawg_key", "RAWG_KEY"), ("google_books_key", "GOOGLE_BOOKS_KEY"), ("hardcover_token", "HARDCOVER_TOKEN"), ("contact_email", "CONTACT_EMAIL")):
         if (v := getattr(body, field)) is not None:
             set_env(env, v.strip())  # keys live only in backend/.env and never come back to the UI

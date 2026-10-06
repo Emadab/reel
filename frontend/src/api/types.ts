@@ -171,7 +171,7 @@ export type Explain = {
   note: string;
 };
 
-export type Flag = "media.shows" | "media.books" | "media.games" | "announcements";
+export type Flag = "media.movies" | "media.shows" | "media.books" | "media.games" | "announcements";
 
 export type SettingsOut = {
   accent: string;

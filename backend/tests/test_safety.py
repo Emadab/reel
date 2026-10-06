@@ -34,6 +34,7 @@ def test_migrate_backs_up_before_schema_change(client):
 
 def test_flags_default_off_and_toggle(client):
     flags = client.get("/api/settings").json()["flags"]
-    assert flags == {"media.shows": False, "media.books": False, "media.games": False, "announcements": False}
+    assert flags == {"media.movies": True, "media.shows": False, "media.books": False, "media.games": False, "announcements": False}
     assert client.put("/api/settings", json={"flags": {"media.shows": True}}).json()["flags"]["media.shows"] is True
+    assert client.put("/api/settings", json={"flags": {"media.movies": False}}).json()["flags"]["media.movies"] is False
     assert client.put("/api/settings", json={"flags": {"nope": True}}).status_code == 422

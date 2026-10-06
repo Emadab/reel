@@ -1,16 +1,19 @@
-"""Feature flags (docs/expansion/REEL_EXPANSION.md §3), stored as setting rows `flag:<name>`, all off by default.
+"""Feature flags (docs/expansion/REEL_EXPANSION.md §3), stored as setting rows `flag:<name>`. Off by default,
+except movies, which are on until turned off (the movie API itself stays open; the UI hides the mode).
 The doc's core.* flags are absent: movies keep their own tables (lean path, see the Phase 1 report)."""
 from fastapi import HTTPException
 from sqlmodel import Session
 
 from .db import get_setting, put_setting
 
-FLAGS = ("media.shows", "media.books", "media.games", "announcements")
+FLAGS = ("media.movies", "media.shows", "media.books", "media.games", "announcements")
+DEFAULT_ON = {"media.movies"}
 KIND_FLAG = {"show": "media.shows", "book": "media.books", "game": "media.games"}
 
 
 def enabled(s: Session, name: str) -> bool:
-    return get_setting(s, f"flag:{name}") == "1"
+    v = get_setting(s, f"flag:{name}")
+    return v == "1" if v is not None else name in DEFAULT_ON
 
 
 def all_flags(s: Session) -> dict[str, bool]:

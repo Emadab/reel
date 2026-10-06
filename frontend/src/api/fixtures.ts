@@ -170,7 +170,7 @@ export function fixture(method: string, path: string, params: Record<string, Any
     case "/tastemap": return tastemap();
     case "/onboarding": return lib.items.slice(0, 8);
     case "/settings":
-      return { accent: d.accent, accents: ["#7FDBFF", "#C6F36B", "#FFB86B", "#C9A7FF"], data_dir: "./data", tmdb_configured: true, tmdb_connected: null, omdb_configured: true, flags: { "media.shows": false, "media.books": false, "media.games": false, announcements: false } };
+      return { accent: d.accent, accents: ["#7FDBFF", "#C6F36B", "#FFB86B", "#C9A7FF"], data_dir: "./data", tmdb_configured: true, tmdb_connected: null, omdb_configured: true, flags: { "media.movies": true, "media.shows": false, "media.books": false, "media.games": false, announcements: false } };
     default: return undefined;
   }
 }

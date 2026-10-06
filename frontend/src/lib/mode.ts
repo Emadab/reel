@@ -9,14 +9,14 @@ export type Mode = "movie" | Kind;
 type ModeInfo = {
   label: string;
   base: string;
-  flag: Flag | null;
-  accent: string | null; // null: the user's chosen accent (movies)
+  flag: Flag;
+  accent: string; // default; Settings → Mode accents overrides it
   noun: [string, string]; // one, many
   add: string;
 };
 
 export const MODES: Record<Mode, ModeInfo> = {
-  movie: { label: "Movies", base: "", flag: null, accent: null, noun: ["film", "films"], add: "Log a watch" },
+  movie: { label: "Movies", base: "", flag: "media.movies", accent: "#7FDBFF", noun: ["film", "films"], add: "Log a watch" },
   show: { label: "Shows", base: "/shows", flag: "media.shows", accent: "#C9A7FF", noun: ["show", "shows"], add: "Add a show" },
   book: { label: "Books", base: "/books", flag: "media.books", accent: "#FFB86B", noun: ["book", "books"], add: "Add a book" },
   game: { label: "Games", base: "/games", flag: "media.games", accent: "#C6F36B", noun: ["game", "games"], add: "Add a game" },

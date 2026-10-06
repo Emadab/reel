@@ -1,53 +1,19 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState } from "react";
 import { api } from "../api/client";
 import { useSettings } from "../api/hooks";
 import type { SettingsOut } from "../api/types";
 import { useToast } from "../components/Toasts";
 import { Button, ButtonLink, PageHeader, Panel, SectionTitle, cx } from "../components/ui";
+import { MODE_ORDER, MODES } from "../lib/mode";
 import { MediaSettings } from "./settings/MediaSettings";
 
 const input = "h-11 px-[14px] rounded-[12px] border border-(--line-4) bg-(--fill-input) text-ink-hi text-[14px] min-w-0 flex-1 placeholder:text-ink-4";
-
-function KeyForm({ label, hint, configured, onSave, status }: { label: string; hint: ReactNode; configured: boolean; onSave: (v: string) => Promise<void>; status?: ReactNode }) {
-  const [v, setV] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const id = label.replace(/\W+/g, "-").toLowerCase();
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setErr(null);
-    try {
-      await onSave(v.trim());
-      setV("");
-    } catch (x) {
-      setErr(x instanceof Error ? x.message : "Couldn't save");
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <form onSubmit={submit} className="flex flex-col gap-2">
-      <label htmlFor={id} className="text-[13px] font-medium">{label}</label>
-      <div className="flex flex-wrap gap-[10px]">
-        <input id={id} type="password" autoComplete="off" spellCheck={false} placeholder={configured ? "Saved. Paste a new one to replace it" : "Paste it here"} value={v} onChange={(e) => setV(e.target.value)} className={input} />
-        <Button type="submit" disabled={busy || !v.trim()}>{busy ? "Checking…" : "Save"}</Button>
-      </div>
-      <div className="flex flex-wrap gap-3 items-baseline text-[12px] text-ink-4">
-        {status}
-        <span>{hint}</span>
-      </div>
-      {err && <p className="m-0 font-mono text-[12px] text-wild">{err}</p>}
-    </form>
-  );
-}
 
 export default function Settings() {
   const { data: s } = useSettings();
   const qc = useQueryClient();
   const toast = useToast();
-  const [connected, setConnected] = useState<boolean | null>(null);
   const [dataDir, setDataDir] = useState("");
   const [restoring, setRestoring] = useState(false);
   const apply = (next: SettingsOut) => qc.setQueryData(["settings"], next);
@@ -57,42 +23,7 @@ export default function Settings() {
       <PageHeader title="Settings" />
       {s && (
         <>
-          <MediaSettings
-            s={s}
-            movieKeys={
-              <>
-                <KeyForm
-                  label="TMDB API Read Access Token"
-                  configured={s.tmdb_configured}
-                  status={
-                    connected ?? s.tmdb_connected ? <span className="font-mono text-score">Connected</span> : s.tmdb_configured ? (
-                      <button type="button" className="font-mono text-ink-3 bg-transparent border-0 p-0 underline cursor-pointer" onClick={async () => setConnected(!!(await api.testTmdb()).tmdb_connected)}>
-                        Test connection
-                      </button>
-                    ) : <span className="font-mono text-wild">Not set</span>
-                  }
-                  hint={<>The long token from themoviedb.org → Settings → API. It is stored in backend/.env and never sent to this page.</>}
-                  onSave={async (v) => {
-                    const next = await api.putSettings({ tmdb_token: v });
-                    apply(next);
-                    setConnected(true);
-                    qc.invalidateQueries();
-                    toast({ text: "TMDB connected" });
-                  }}
-                />
-                <KeyForm
-                  label="OMDb key (optional)"
-                  configured={s.omdb_configured}
-                  status={s.omdb_configured ? <span className="font-mono text-score">Saved</span> : null}
-                  hint="Adds IMDb, Rotten Tomatoes and Metacritic scores on detail pages. Free at omdbapi.com."
-                  onSave={async (v) => {
-                    apply(await api.putSettings({ omdb_key: v }));
-                    toast({ text: "OMDb key saved" });
-                  }}
-                />
-              </>
-            }
-          />
+          <MediaSettings s={s} />
 
           <Panel className="flex flex-col gap-4">
             <SectionTitle>Data folder</SectionTitle>
@@ -145,7 +76,9 @@ export default function Settings() {
                   }}
                 />
               </label>
-              <ButtonLink to="/import">Import history</ButtonLink>
+              {MODE_ORDER.filter((k) => s.flags[MODES[k].flag]).map((k) => (
+                <ButtonLink key={k} to={`${MODES[k].base}/import`}>Import {MODES[k].label.toLowerCase()}</ButtonLink>
+              ))}
             </div>
           </Panel>
 

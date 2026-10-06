@@ -7,10 +7,10 @@ import { cx } from "./ui";
 
 const ICON: Record<Mode, ComponentType<{ size?: number }>> = { movie: IconFilm, show: IconTV, book: IconBook, game: IconGame };
 
-/** Modes whose flag is on (movies always). Only Movies means the switcher stays hidden and Reel looks as it always did. */
+/** Modes whose flag is on. With only one, the switcher stays hidden. */
 export function useModes(): Mode[] {
   const { data } = useSettings();
-  return MODE_ORDER.filter((m) => !MODES[m].flag || data?.flags?.[MODES[m].flag!]);
+  return MODE_ORDER.filter((m) => data?.flags?.[MODES[m].flag]);
 }
 
 /** The accent follows the mode; a mode switch cross-fades it (see --color-accent's @property in app.css). */
@@ -18,7 +18,7 @@ export function useModeAccent() {
   const { data } = useSettings();
   const mode = useMode();
   const prev = useRef(mode);
-  const accent = data?.mode_accents?.[mode] ?? MODES[mode].accent ?? data?.accent;
+  const accent = data?.mode_accents?.[mode] ?? MODES[mode].accent;
   useEffect(() => {
     if (!accent) return;
     const root = document.documentElement;

@@ -35,6 +35,8 @@ const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, ref
 
 const page = (el: React.ReactNode) => <Suspense fallback={null}>{el}</Suspense>;
 
+const movies = (el: React.ReactNode) => page(<MediaGate kind="movie">{el}</MediaGate>);
+
 // shows, books and games: the same sections as movies under their own prefix, each behind its flag
 const media = (kind: Kind, base: string) => [
   { path: base, element: page(<MediaGate kind={kind}><MediaLibrary kind={kind} /></MediaGate>) },
@@ -55,18 +57,18 @@ const router = createBrowserRouter([
       </PaletteProvider>
     ),
     children: [
-      { path: "/", element: <Library /> },
-      { path: "/film/:tmdbId", element: page(<FilmDetail />) },
-      { path: "/timeline/:year?", element: page(<Timeline />) },
-      { path: "/stats", element: page(<Stats />) },
-      { path: "/for-you", element: page(<ForYou />) },
-      { path: "/map", element: page(<TasteMap />) },
+      { path: "/", element: movies(<Library />) },
+      { path: "/film/:tmdbId", element: movies(<FilmDetail />) },
+      { path: "/timeline/:year?", element: movies(<Timeline />) },
+      { path: "/stats", element: movies(<Stats />) },
+      { path: "/for-you", element: movies(<ForYou />) },
+      { path: "/map", element: movies(<TasteMap />) },
       { path: "/settings", element: page(<Settings />) },
-      { path: "/import", element: page(<Import />) },
+      { path: "/import", element: movies(<Import />) },
       ...media("show", "/shows"),
       ...media("book", "/books"),
       ...media("game", "/games"),
-      { path: "*", element: <Library /> },
+      { path: "*", element: movies(<Library />) },
     ],
   },
 ]);
