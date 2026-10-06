@@ -96,6 +96,41 @@ def test_show_recommendations_and_tastemap(media, monkeypatch):  # noqa: F811
     assert r["items"][0]["id"] not in [x["id"] for x in media.get("/api/media/show/recommendations").json()["items"]]
 
 
+def test_show_wildcards_more_like_this_and_seen_it(media, monkeypatch):  # noqa: F811
+    async def fake_get(path, **kw):
+        return {"genres": [{"id": 18, "name": "Drama"}, {"id": 9648, "name": "Mystery"}, {"id": 35, "name": "Comedy"}]}
+
+    async def fake_lists(path, **kw):
+        if path.endswith("/recommendations"):
+            return [{"id": 100 + i, "name": f"Mystery Drama {i}", "overview": "office memory mystery drama", "genre_ids": [18, 9648],
+                     "first_air_date": "2020-01-01", "poster_path": None} for i in range(26)]
+        return [{"id": 300 + i, "name": f"Sitcom {i}", "overview": "a sunny workplace sitcom", "genre_ids": [35],
+                 "first_air_date": "2015-01-01", "poster_path": None} for i in range(3)]
+
+    monkeypatch.setattr(tmdb, "get", fake_get)
+    monkeypatch.setattr(tmdb, "lists", fake_lists)
+    item_id = media.post("/api/media/show/items", json={"ext_id": "95396"}).json()["id"]
+    media.post(f"/api/media/items/{item_id}/episodes", json={"season": 1})
+    run_id = media.get(f"/api/media/items/{item_id}").json()["runs"][0]["id"]
+    media.patch(f"/api/media/runs/{run_id}", json={"rating": 9.5})
+    media.post("/api/media/show/recommendations/recompute")
+    drain(media)
+    wild = media.get("/api/media/show/recommendations", params={"wild": True}).json()["items"]
+    assert wild and all(w["wildcard"] and w["title"].startswith("Sitcom") and not w["because"] for w in wild)
+    all_ = media.get("/api/media/show/recommendations").json()["items"]
+    assert any(x["wildcard"] for x in all_) and not all_[0]["wildcard"]
+
+    pick = all_[0]["id"]
+    assert media.post(f"/api/media/items/{pick}/feedback", json={"like": True}).json() == {"liked": True}
+    assert next(x for x in media.get("/api/media/show/recommendations").json()["items"] if x["id"] == pick)["liked"]
+    with Session(db.engine) as s:
+        assert any(i.id == pick for i, w, _ in recs.labelled(s, "show"))  # the model learns from it
+
+    d = media.post(f"/api/media/items/{wild[0]['id']}/seen", json={"rating": 8}).json()
+    assert d["status"] == "completed" or d["status"] == "caught_up"
+    assert d["runs"][0]["rating"] == 8 and d["runs"][0]["date_precision"] == "unknown"
+
+
 def _book_matchers(monkeypatch):
     async def by_isbn(isbn):
         return {"9781635575637": "OL1W", "9780441172719": "OL9W"}.get(isbn)

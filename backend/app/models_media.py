@@ -171,4 +171,12 @@ class MediaCandidate(SQLModel, table=True):
     reasons: list[str] = _json()
     sources: list[str] = _json()
     model: str = "cosine"
+    wildcard: bool = False  # outside your usual taste on purpose
     computed_at: datetime = Field(default_factory=now)
+
+
+class MediaFeedback(SQLModel, table=True):
+    """'More like this' on a suggestion you haven't watched, read or played: a positive signal for the model."""
+    item_id: int = Field(primary_key=True, foreign_key="item.id")
+    signal: str = "like"
+    created_at: datetime = Field(default_factory=now)

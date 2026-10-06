@@ -6,13 +6,14 @@ Tracking states are signals (REEL_EXPANSION Phase 8): finished/completed is a st
 before 25% a strong negative, after 75% a mild negative, on hold neutral; a rating, when present, dominates."""
 import asyncio
 import logging
+from collections import Counter
 from datetime import UTC, datetime, timedelta
 
 import numpy as np
 from sqlmodel import Session, col, delete, select
 
 from .. import db, items, jobs, media, tmdb
-from ..models_media import ExternalId, Item, LibraryEntry, MediaCandidate, Run
+from ..models_media import ExternalId, Item, LibraryEntry, MediaCandidate, MediaFeedback, Run
 from ..providers import openlibrary, rawg
 from ..providers.base import SearchHit
 from ..status import FINISHED
@@ -25,6 +26,8 @@ STALE = timedelta(hours=24)
 DROPPED = {"dropped", "did_not_finish", "abandoned", "retired"}
 SOURCE = {"show": "tmdb_tv", "book": "openlibrary", "game": "rawg"}
 MIN_FOR_MODEL = 40
+WILD_SLOTS = (3, 7, 11, 15, 19)  # where wildcards sit in the slate, like the movie page's ~20%
+LIKE = 0.5  # "more like this" on something you haven't tried yet
 
 
 def text(i: Item) -> str:
@@ -76,6 +79,10 @@ def labelled(s: Session, kind: str) -> list[tuple[Item, float, datetime]]:
         w = signal(kind, item, run, entry)
         if w is not None:
             out.append((item, w, items.utc(run.updated_at if run else entry.added_at)))
+    have = {i.id for i, _, _ in out}
+    for fb, item in s.exec(select(MediaFeedback, Item).join(Item, col(Item.id) == col(MediaFeedback.item_id)).where(Item.kind == kind)):
+        if item.id not in have:
+            out.append((item, LIKE, items.utc(fb.created_at)))
     return out
 
 
@@ -128,6 +135,11 @@ async def candidates(s: Session, kind: str, seeds: list[Item]) -> dict[int, list
 
     if kind == "show":
         names = {g["id"]: g["name"] for g in (await tmdb.get("/genre/tv/list")).get("genres", [])}
+        for path in ("/tv/top_rated", "/trending/tv/week"):  # well-loved shows: where wildcards come from
+            for r in await tmdb.lists(path):
+                h = SearchHit("show", "tmdb_tv", str(r["id"]), r.get("name") or "?", int((r.get("first_air_date") or "0")[:4] or 0) or None,
+                              None, f"{media.CDN}/w342{r['poster_path']}" if r.get("poster_path") else None)
+                note(await _light(s, kind, h, r.get("overview"), [names.get(g, "") for g in r.get("genre_ids", []) if g in names]), "discover")
         for seed in seeds[:10]:
             row = s.exec(select(ExternalId).where(ExternalId.item_id == seed.id, ExternalId.source == "tmdb_tv")).first()
             if not row:
@@ -221,13 +233,24 @@ async def recompute(s: Session, kind: str) -> None:
         return
     X = np.array([_features(i, t, liked_genres) for i in pool])
     score = model.predict_proba(X)[:, 1] if model else (X[:, 0] + 1) / 2
-    for rank, k in enumerate(np.argsort(-score)[:SLATE * 2]):
+    order = [int(k) for k in np.argsort(-score)]
+    # wildcards: below the visible slate and clear of your two favourite genres; well-loved ones first
+    usual = [g for g, _ in Counter(g for i in liked for g in i.genres).most_common(2)]
+    novel = [k for k in order[SLATE:] if pool[k].genres and not set(pool[k].genres) & set(usual)]
+    novel.sort(key=lambda k: ("discover" not in sources.get(pool[k].id, []), -score[k]))  # type: ignore[arg-type]
+    wild = novel[:len(WILD_SLOTS)]
+    slate = [k for k in order if k not in wild][:SLATE * 2]
+    for slot, k in zip(WILD_SLOTS, wild):
+        slate.insert(min(slot, len(slate)), k)
+    for rank, k in enumerate(slate):
         c = pool[k]
+        is_wild = k in wild
         near = sorted(liked, key=lambda x: -float(vec(x) @ vec(c)))[:2]
         shared = [g for g in c.genres if g in liked_genres][:2]
-        s.add(MediaCandidate(item_id=c.id, kind=kind, score=float(score[k]), rank=rank, because=[n.id for n in near],  # type: ignore[arg-type, misc]
-                             reasons=[f"{', '.join(shared).lower()} like the ones you rate highly"] if shared else [],
-                             sources=sources.get(c.id, []), model="lightgbm" if model else "cosine"))  # type: ignore[arg-type]
+        reasons = [f"{c.genres[0].lower()}, outside your usual {usual[0].lower() if usual else 'taste'}"] if is_wild else \
+            [f"{', '.join(shared).lower()} like the ones you rate highly"] if shared else []
+        s.add(MediaCandidate(item_id=c.id, kind=kind, score=float(score[k]), rank=rank, because=[] if is_wild else [n.id for n in near],  # type: ignore[arg-type, misc]
+                             reasons=reasons, sources=sources.get(c.id, []), model="lightgbm" if model else "cosine", wildcard=is_wild))  # type: ignore[arg-type]
     s.commit()
     update_map(s, kind)
 

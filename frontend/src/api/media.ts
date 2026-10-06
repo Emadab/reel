@@ -101,7 +101,7 @@ export type MediaStats = {
   heatmap: { start: string; end: string; days: { date: string; count: number }[] };
 };
 export type AllStats = { rows: { kind: "movie" | Kind; label: string; finished: number; finished_label: string; hours: number | null; pages: number | null; drop_rate: number | null; drop_label: string | null }[]; hours: number };
-export type MediaRec = ItemCard & { score: number; because: ItemCard[]; reasons: string[]; overview: string | null };
+export type MediaRec = ItemCard & { score: number; because: ItemCard[]; reasons: string[]; overview: string | null; wildcard: boolean; liked: boolean };
 export type MediaRecs = { items: MediaRec[]; model: string | null; learned_from: number; computing: boolean };
 export type MapPoint = { id: number; title: string; x: number; y: number; kind: "mine" | "suggested"; rating?: number | null; status?: string | null; color?: string; score?: number; poster: string | null };
 export type ImportRow = { raw: { title: string; author: string | null; status: string; rating: number | null; date: string | null; precision: string }; status: "pending" | "matched" | "ambiguous" | "unmatched"; ext_id?: string | null; include?: boolean; options?: { ext_id: string; title: string; year: number | string | null; subtitle?: string | null }[] };
@@ -143,7 +143,9 @@ export const mediaApi = {
   years: (kind: Kind) => request<{ year: number; total: number; approx: number }[]>("GET", `/media/${kind}/timeline/years`),
   stats: (kind: Kind | "all", range: string) => request<MediaStats>("GET", `/media/${kind}/stats`, { params: { range } }),
   allStats: (range: string) => request<AllStats>("GET", "/media/all/stats", { params: { range } }),
-  recs: (kind: Kind) => request<MediaRecs>("GET", `/media/${kind}/recommendations`),
+  recs: (kind: Kind, wild = false) => request<MediaRecs>("GET", `/media/${kind}/recommendations${wild ? "?wild=true" : ""}`),
+  feedback: (id: number, like: boolean) => request<{ liked: boolean }>("POST", `/media/items/${id}/feedback`, { body: { like } }),
+  seenIt: (id: number, rating: number | null) => request<ItemDetail>("POST", `/media/items/${id}/seen`, { body: { rating } }),
   recompute: (kind: Kind) => request<void>("POST", `/media/${kind}/recommendations/recompute`),
   tastemap: (kind: Kind) => request<{ points: MapPoint[] }>("GET", `/media/${kind}/tastemap`),
   importUpload: (source: string, file: File) => {
@@ -173,8 +175,8 @@ export const useMediaStats = (kind: Kind, range: string) =>
   useQuery({ queryKey: ["media", kind, "stats", range], queryFn: () => mediaApi.stats(kind, range), placeholderData: keepPreviousData });
 export const useAllStats = (range: string, enabled: boolean) =>
   useQuery({ queryKey: ["media", "all", "stats", range], queryFn: () => mediaApi.allStats(range), enabled });
-export const useMediaRecs = (kind: Kind) =>
-  useQuery({ queryKey: ["media", kind, "recs"], queryFn: () => mediaApi.recs(kind), refetchInterval: (q) => (q.state.data?.computing ? 4000 : false) });
+export const useMediaRecs = (kind: Kind, wild = false) =>
+  useQuery({ queryKey: ["media", kind, "recs", wild], queryFn: () => mediaApi.recs(kind, wild), refetchInterval: (q) => (q.state.data?.computing ? 4000 : false) });
 export const useMediaMap = (kind: Kind) => useQuery({ queryKey: ["media", kind, "map"], queryFn: () => mediaApi.tastemap(kind) });
 export const useBacklog = () => useQuery({ queryKey: ["media", "backlog"], queryFn: mediaApi.backlog });
 export const useUpNext = (enabled: boolean) => useQuery({ queryKey: ["media", "show", "up-next"], queryFn: mediaApi.upNext, enabled });

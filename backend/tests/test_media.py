@@ -280,3 +280,19 @@ def test_run_variant_format_and_platform(media):
     assert d["runs"][0]["variant"] == {"format": "audio"}
     d = media.post(f"/api/media/runs/{run_id}/progress", json={"unit": "minutes", "current": 30, "total": 600}).json()
     assert d["progress"]["unit"] == "minutes" and d["status"] == "reading"
+
+
+def test_show_run_dates_follow_first_and_last_episode(media):
+    SHOW.update(status="ended", future_ep=False)
+    item_id = media.post("/api/media/show/items", json={"ext_id": "9"}).json()["id"]
+    d = detail(media, item_id)
+    e1, e2 = ep_id(d, 1, 1), ep_id(d, 1, 2)
+    media.post(f"/api/media/items/{item_id}/episodes", json={"episode_ids": [e2], "watched_on": "2021-04-02"})
+    d = media.post(f"/api/media/items/{item_id}/episodes", json={"episode_ids": [e1], "watched_on": "2021-03-17"}).json()
+    run = d["runs"][0]
+    assert d["status"] == "completed" and (run["started_on"], run["finished_on"], run["date_precision"]) == ("2021-03-17", "2021-04-02", "day")
+    d = media.post(f"/api/media/items/{item_id}/episodes", json={"episode_ids": [e1], "watched_on": "2020-11-20", "date_precision": "month"}).json()
+    run = d["runs"][0]
+    assert (run["started_on"], run["finished_on"], run["date_precision"]) == ("2020-11-01", "2021-04-01", "month")  # the coarser wins
+    d = tick(media, item_id, [e2], watched=False)
+    assert d["runs"][0]["finished_on"] is None  # no longer finished

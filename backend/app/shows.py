@@ -87,6 +87,30 @@ def derive(s: Session, item: Item, run: Run, at: datetime | None = None) -> None
             transition(s, run, "show", target, source="derived")
 
 
+COARSER = {"day": 0, "month": 1, "year": 2, "unknown": 3}
+
+
+def sync_dates(s: Session, run: Run) -> None:
+    """A show's run starts with its first watched episode and, once caught up or completed, finishes with its
+    last, at the coarser of the two precisions. Episodes with unknown dates only count when nothing is known."""
+    evs = list(watched_events(s, run).values())
+    if not evs:
+        return
+    done = run.status in ("completed", "caught_up")
+    known = [e for e in evs if e.date_precision != "unknown"]
+    if not known:
+        run.date_precision, run.started_on = "unknown", date.min
+        run.finished_on = date.min if done else None
+    else:
+        first = min(known, key=lambda e: items.utc(e.occurred_at))
+        last = max(known, key=lambda e: items.utc(e.occurred_at))
+        p = max(first.date_precision, last.date_precision, key=lambda x: COARSER.get(x, 0))
+        run.date_precision = p
+        run.started_on = normalize(items.utc(first.occurred_at).date(), p)
+        run.finished_on = normalize(items.utc(last.occurred_at).date(), p) if done else None
+    s.add(run)
+
+
 def active_run(s: Session, item: Item) -> Run:
     """The run episode ticks go to; a show you've never ticked gets its first run here."""
     run = items.current_run(s, item.id)  # type: ignore[arg-type]
@@ -116,6 +140,7 @@ def set_watched(s: Session, item: Item, episode_ids: list[int], watched: bool, w
                 s.delete(ev)
     s.flush()
     derive(s, item, run)
+    sync_dates(s, run)
     s.commit()
     return run
 

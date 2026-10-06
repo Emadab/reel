@@ -14,7 +14,7 @@ from ..cards import normalize
 from ..config import settings
 from ..db import get_session
 from ..flags import require_kind
-from ..models_media import Event, ExternalId, Item, ItemPerson, LibraryEntry, Person, Run, Season
+from ..models_media import Event, ExternalId, Item, ItemPerson, LibraryEntry, MediaFeedback, Person, Run, Season
 from ..providers import PRIMARY
 from ..status import STICKY, allowed, transition
 
@@ -391,6 +391,47 @@ def tick(item_id: int, body: EpisodesIn, s: Session = Depends(get_session)):
     dated = body.watched_on is not None or body.date_precision == "unknown"
     shows.set_watched(s, item, ids, body.watched, shows.event_time(body.watched_on, body.date_precision) if dated else None,
                       body.date_precision if dated else "day")
+    return _detail(s, item)
+
+
+class FeedbackIn(BaseModel):
+    like: bool
+
+
+@router.post("/items/{item_id}/feedback")
+def feedback(item_id: int, body: FeedbackIn, s: Session = Depends(get_session)):
+    """'More like this' on a suggestion (and undoing it). The next recompute learns from it."""
+    item = _item(s, item_id)
+    fb = s.get(MediaFeedback, item.id)
+    if body.like and not fb:
+        s.add(MediaFeedback(item_id=item.id))  # type: ignore[arg-type]
+    elif not body.like and fb:
+        s.delete(fb)
+    s.commit()
+    return {"liked": body.like}
+
+
+class SeenIn(BaseModel):
+    rating: float | None = Field(default=None, gt=0, le=10)
+
+
+@router.post("/items/{item_id}/seen")
+async def seen(item_id: int, body: SeenIn, s: Session = Depends(get_session)):
+    """'Seen it, rate it' from suggestions: finished some time ago (date unknown), with the rating if given.
+    A show is marked watched in full; a book finished; a game beaten (an endless one: playing)."""
+    item = _item(s, item_id)
+    if item.details.get("light"):
+        item = await items.refresh(s, item)
+    if item.kind == "show":
+        shows.add_history(s, item, None, None, None, "unknown", body.rating)
+        return _detail(s, item)
+    run = items.new_run(s, item, date_precision="unknown", rating=body.rating)
+    done = "finished" if item.kind == "book" else "playing" if item.endless else "beaten"
+    transition(s, run, item.kind, done, endless=item.endless)
+    run.started_on = None
+    run.finished_on = normalize(date.today(), "unknown") if done != "playing" else None
+    s.add(run)
+    s.commit()
     return _detail(s, item)
 
 

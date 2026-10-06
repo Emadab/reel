@@ -194,9 +194,9 @@ def stats(kind: Kind, range_: str = Query("all", alias="range"), s: Session = De
 # ---- recommendations and taste map ----
 
 @router.get("/{kind}/recommendations")
-def recommendations(kind: Kind, s: Session = Depends(get_session)):
+def recommendations(kind: Kind, wild: bool = False, s: Session = Depends(get_session)):
     from .. import jobs
-    from ..models_media import MediaCandidate
+    from ..models_media import MediaCandidate, MediaFeedback
     from ..recommender import media as recs
 
     require_kind(s, kind)
@@ -207,11 +207,11 @@ def recommendations(kind: Kind, s: Session = Depends(get_session)):
     for c in rows:
         item = s.get(Item, c.item_id)
         entry = s.get(LibraryEntry, c.item_id)
-        if not item or (entry and entry.shelf == "not_interested"):
+        if not item or (entry and entry.shelf == "not_interested") or (wild and not c.wildcard):
             continue
         because = [items.card(s, b) for bid in c.because if (b := s.get(Item, bid))]
         out.append({**items.card(s, item, entry), "score": round(c.score, 3), "because": because, "reasons": c.reasons,
-                    "overview": item.overview})
+                    "overview": item.overview, "wildcard": c.wildcard, "liked": s.get(MediaFeedback, item.id) is not None})
         if len(out) == recs.SLATE:
             break
     labelled = recs.labelled(s, kind)
