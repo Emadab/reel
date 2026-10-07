@@ -21,6 +21,7 @@ from ..models_media import HttpCache
 
 DAY = 86_400
 MAX_ATTEMPTS = 4
+OFFLINE = "can't reach it right now. Your library still works."
 
 
 class ProviderUnavailable(HTTPException):
@@ -55,6 +56,7 @@ class Client:
         self.name = name
         self.ttl = ttl
         self.limiter = Limiter(rate)
+        self.host = httpx.URL(base_url).host
         self.http = httpx.AsyncClient(base_url=base_url, timeout=net.TIMEOUT, follow_redirects=True, headers=headers or {})
         self._inflight: dict[str, asyncio.Future] = {}
 
@@ -100,10 +102,10 @@ class Client:
             row = s.get(HttpCache, key)
             if row and _age(row) < row.ttl_s:
                 return _parse(row)
-            if net.offline():
+            if net.offline(self.host):
                 if row:
                     return _parse(row)
-                raise ProviderUnavailable(self.name, "you're offline")
+                raise ProviderUnavailable(self.name, OFFLINE)
             hdrs = {"User-Agent": user_agent(), **headers}
             if row and row.etag:
                 hdrs["If-None-Match"] = row.etag
@@ -139,15 +141,15 @@ class Client:
             await self.limiter.wait()
             try:
                 r = await self.http.request(method, path, params=params, json=body, headers=headers)
-            except httpx.TransportError:
-                if attempt >= 1:
-                    net.mark_offline()
+            except httpx.TransportError as e:
+                if attempt >= 1 or net.connect_failed(e):
+                    net.mark_offline(self.host)
                     if stale:
                         return None
-                    raise ProviderUnavailable(self.name, "you're offline")
+                    raise ProviderUnavailable(self.name, OFFLINE)
                 await asyncio.sleep(0.3)
                 continue
-            net.mark_online()
+            net.mark_online(self.host)
             if r.status_code == 429 or r.status_code >= 500:
                 if attempt == MAX_ATTEMPTS - 1:
                     break

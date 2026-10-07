@@ -3,7 +3,8 @@ import time
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
-from sqlmodel import Session
+from sqlalchemy import or_
+from sqlmodel import Session, col, select
 
 from .. import media, tmdb
 from ..cards import watch_stats, watchlist_ids
@@ -34,7 +35,10 @@ async def search(q: str, s: Session = Depends(get_session)):
     t0 = time.perf_counter()
     if len(q.strip()) < 2:
         return {"results": [], "took_ms": 0}
-    raw = (await tmdb.search(q))[:8]
+    try:
+        raw = (await tmdb.search(q))[:8]
+    except tmdb.TMDBUnavailable as e:  # offline or blocked: search the films already cached instead
+        return _search_local(s, q.strip(), e.detail, t0)
     ids = [r["id"] for r in raw]
     cached = {i: s.get(Movie, i) for i in ids}
     lookups = [asyncio.ensure_future(_director(i)) for i in ids if not cached[i] and i not in _directors]
@@ -42,20 +46,34 @@ async def search(q: str, s: Session = Depends(get_session)):
         await asyncio.wait(lookups, timeout=0.6)
     directors = [cached[i].director if cached[i] else _directors.get(i) for i in ids]
     stats, wl = watch_stats(s, ids), watchlist_ids(s)
-    results = []
-    for r, director in zip(raw, directors):
-        m = cached[r["id"]]
-        results.append({
-            "tmdb_id": r["id"],
-            "title": r["title"],
-            "year": tmdb._year(r.get("release_date")),
-            "director": director,
-            "poster_sm": thumb_url(r["id"], r.get("poster_path")),
-            "poster_art": media.poster_art(r["id"], m.palette if m else [], m.dominant if m else None),
-            "watch_count": stats[r["id"]].count if r["id"] in stats else 0,
-            "on_watchlist": r["id"] in wl,
-        })
+    results = [_row(r["id"], r["title"], tmdb._year(r.get("release_date")), director, r.get("poster_path"), cached[r["id"]], stats, wl)
+               for r, director in zip(raw, directors)]
     return {"results": results, "took_ms": round((time.perf_counter() - t0) * 1000)}
+
+
+def _search_local(s: Session, q: str, offline: str, t0: float) -> dict:
+    """Cached films whose title matches, the ones you've watched most first."""
+    like = f"%{q}%"
+    movies = list(s.exec(select(Movie).where(or_(col(Movie.title).ilike(like), col(Movie.original_title).ilike(like))).limit(200)))
+    stats, wl = watch_stats(s, [m.tmdb_id for m in movies]), watchlist_ids(s)
+    count = lambda m: stats[m.tmdb_id].count if m.tmdb_id in stats else 0
+    movies.sort(key=lambda m: (-count(m), m.tmdb_id not in wl, not m.title.lower().startswith(q.lower()), m.title))
+    results = [_row(m.tmdb_id, m.title, m.year, m.director, m.poster_path, m, stats, wl) for m in movies[:20]]
+    return {"results": results, "took_ms": round((time.perf_counter() - t0) * 1000), "offline": offline}
+
+
+def _row(tmdb_id: int, title: str, year: int | None, director: str | None, poster_path: str | None,
+         m: Movie | None, stats: dict, wl: set) -> dict:
+    return {
+        "tmdb_id": tmdb_id,
+        "title": title,
+        "year": year,
+        "director": director,
+        "poster_sm": thumb_url(tmdb_id, poster_path),
+        "poster_art": media.poster_art(tmdb_id, m.palette if m else [], m.dominant if m else None),
+        "watch_count": stats[tmdb_id].count if tmdb_id in stats else 0,
+        "on_watchlist": tmdb_id in wl,
+    }
 
 
 @router.get("/img/{size}/{name}", include_in_schema=False)

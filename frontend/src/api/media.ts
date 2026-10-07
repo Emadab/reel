@@ -80,7 +80,7 @@ export type Hit = {
   kind: Kind; source: string; ext_id: string; title: string; year: number | null; subtitle: string | null;
   cover_url: string | null; item_id: number | null;
 };
-export type MediaSearch = { local: ItemCard[]; results: Hit[] };
+export type MediaSearch = { local: ItemCard[]; results: Hit[]; offline?: string };
 export type UpNext = { item: ItemCard; episode: Episode; progress: Progress; last: string };
 export type Upcoming = { item: ItemCard; episode: Episode };
 

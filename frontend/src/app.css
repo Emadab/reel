@@ -51,11 +51,16 @@
 .skeleton { background: var(--fill-ctl); animation: skeleton 1.2s ease-in-out infinite; }
 @keyframes skeleton { 50% { opacity: .45; } }
 
+/* Images that arrive late (a backdrop still downloading) fade in instead of popping */
+.img-in { opacity: 0; transition: opacity .45s ease-out; }
+.img-in.is-loaded { opacity: 1; }
+
 /* Hide scrollbars on horizontal strips but keep them scrollable */
 .scroll-quiet { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.12) transparent; }
 
 @media (prefers-reduced-motion: reduce) {
   .palette-in, .reel-dialog::backdrop, .skeleton { animation: none; }
+  .img-in { transition: none; }
 }
 
 /* Quick-log button on posters: appears on hover/focus, always visible on touch screens */

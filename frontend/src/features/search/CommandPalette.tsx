@@ -100,6 +100,7 @@ function PaletteBody({ initialFor, initialQuery }: { initialFor?: PaletteFilm; i
   const del = useDeleteWatch();
   const formRef = useRef<HTMLDivElement>(null);
 
+  const offline = debounced.length >= 2 && !isCommand ? search.data?.offline : undefined;
   const results: Row[] = useMemo(() => (debounced.length >= 2 && !isCommand ? search.data?.results ?? [] : []), [debounced, isCommand, search.data]);
   const groups: { heading: string; right?: string; rows: Row[] }[] = useMemo(() => {
     if (isCommand) return [];
@@ -109,8 +110,8 @@ function PaletteBody({ initialFor, initialQuery }: { initialFor?: PaletteFilm; i
         { heading: "WATCHLIST", rows: (watchlist.data ?? []).slice(0, 5).map(toRow) },
       ].filter((g) => g.rows.length);
     }
-    return [{ heading: `TMDB · ${results.length} RESULTS`, right: "debounced 180 ms", rows: results }];
-  }, [isCommand, q, recent.data, watchlist.data, results]);
+    return [{ heading: `${offline ? "IN YOUR LIBRARY" : "TMDB"} · ${results.length} RESULTS`, right: "debounced 180 ms", rows: results }];
+  }, [isCommand, q, recent.data, watchlist.data, results, offline]);
   const allRows = groups.flatMap((g) => g.rows);
   const commands = COMMANDS.filter((c) => c.label.toLowerCase().includes(q.slice(1).trim().toLowerCase()));
 
@@ -193,8 +194,9 @@ function PaletteBody({ initialFor, initialQuery }: { initialFor?: PaletteFilm; i
           ) : (
             <>
               {search.isError && q.length >= 2 && <div className="px-3 pb-2"><ErrorLine error={search.error} onSettings /></div>}
+              {offline && <div className="px-3 pb-2"><ErrorLine error={new Error(offline)} onSettings /></div>}
               {!search.isError && debounced.length >= 2 && search.isSuccess && results.length === 0 && (
-                <p className="m-0 px-3 pb-3 font-mono text-[13px] text-ink-4">No matches on TMDB</p>
+                <p className="m-0 px-3 pb-3 font-mono text-[13px] text-ink-4">{offline ? "No matches in your library" : "No matches on TMDB"}</p>
               )}
               {q.length > 0 && q.trim().length < 2 && <p className="m-0 px-3 pb-3 font-mono text-[13px] text-ink-4">Keep typing…</p>}
               {groups.map((g) => (

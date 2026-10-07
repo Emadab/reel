@@ -12,10 +12,12 @@ from .config import settings
 from .models import Movie, now
 
 STALE = timedelta(days=30)
-api = httpx.AsyncClient(base_url="https://api.themoviedb.org/3", timeout=net.TIMEOUT)
+HOST = "api.themoviedb.org"
+api = httpx.AsyncClient(base_url=f"https://{HOST}/3", timeout=net.TIMEOUT)
 _sem = asyncio.Semaphore(8)
 _search_cache: dict[str, tuple[float, list[dict]]] = {}
 DETAILS = "credits,keywords,videos,release_dates,external_ids"
+OFFLINE = "Can't reach TMDB right now. Your library still works."
 
 
 class TMDBUnavailable(HTTPException):
@@ -26,20 +28,20 @@ class TMDBUnavailable(HTTPException):
 async def get(path: str, **params) -> dict:
     if not settings.tmdb_token:
         raise TMDBUnavailable("TMDB token missing. Add it in Settings.")
-    if net.offline():
-        raise TMDBUnavailable("You're offline. Cached films still work.")
+    if net.offline(HOST):
+        raise TMDBUnavailable(OFFLINE)
     headers = {"Authorization": f"Bearer {settings.tmdb_token}"}
     for attempt in range(4):
         try:
             async with _sem:
                 r = await api.get(path, params=params, headers=headers)
-        except httpx.TransportError:
-            if attempt >= 1:  # one quick retry, then fail fast and remember we're offline
-                net.mark_offline()
-                raise TMDBUnavailable("You're offline. Cached films still work.")
+        except httpx.TransportError as e:
+            if attempt >= 1 or net.connect_failed(e):  # unreachable: fail fast and remember it for a while
+                net.mark_offline(HOST)
+                raise TMDBUnavailable(OFFLINE)
             await asyncio.sleep(0.3)
             continue
-        net.mark_online()
+        net.mark_online(HOST)
         if r.status_code == 429 or r.status_code >= 500:
             await asyncio.sleep(float(r.headers.get("retry-after", 0.5 * 2**attempt)))
             continue
@@ -248,7 +250,7 @@ async def get_movie(s: Session, tmdb_id: int, force: bool = False, images: str =
 def images_pending(m: Movie, level: str = "full") -> bool:
     kinds = {"full": ("poster", "poster_sm", "backdrop"), "wall": ("poster", "poster_sm")}.get(level, ())
     paths = {"poster": m.poster_path, "poster_sm": m.poster_path, "backdrop": m.backdrop_path}
-    return not net.offline() and any(paths[k] and not media.media_file(k, m.tmdb_id).exists() for k in kinds)
+    return not net.offline(media.IMG_HOST) and any(paths[k] and not media.media_file(k, m.tmdb_id).exists() for k in kinds)
 
 
 async def _images_job(tmdb_id: int, level: str) -> None:

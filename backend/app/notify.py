@@ -81,7 +81,7 @@ def toast(title: str, text: str) -> None:
 
 
 async def push(topic: str, title: str, text: str) -> bool:
-    if net.offline():
+    if net.offline("ntfy.sh"):
         return False
     try:
         async with httpx.AsyncClient(timeout=net.TIMEOUT) as c:

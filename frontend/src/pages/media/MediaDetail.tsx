@@ -10,7 +10,7 @@ import { Poster, posterBg } from "../../components/Poster";
 import { RatingInput } from "../../components/Rating";
 import { Select } from "../../components/Select";
 import { useToast } from "../../components/Toasts";
-import { Button, ErrorLine, Eyebrow, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
+import { Button, DetailSkeleton, ErrorLine, Eyebrow, fadeIn, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
 import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
 import { onColor } from "../../lib/color";
 import { celebrate } from "../../lib/celebrate";
@@ -958,7 +958,7 @@ function Collection({ item }: { item: ItemDetail }) {
 
 /** Like a film page: the closest of your own items and your suggestions on the taste map. */
 function Neighbours({ item }: { item: ItemDetail }) {
-  if (!item.neighbors?.length) return null;
+  if (!item.neighbors?.length && !item.neighbors_pending) return null;
   return (
     <section className={cx("flex flex-col gap-[18px]", pagePad)}>
       <div className="flex justify-between items-baseline gap-4 flex-wrap">
@@ -966,7 +966,13 @@ function Neighbours({ item }: { item: ItemDetail }) {
         <Link to={`${MODES[item.kind].base}/map?focus=${item.id}`} className="text-[14px] text-ink-2b underline">Open taste map</Link>
       </div>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(min(130px,100%),1fr))] gap-[18px]">
-        {item.neighbors.map(({ item: n, score }) => {
+        {!item.neighbors?.length && Array.from({ length: 6 }, (_, i) => (  // still being placed on the taste map
+          <div key={i} aria-hidden className="flex flex-col gap-2">
+            <div className="skeleton aspect-[2/3] rounded-[12px]" />
+            <div className="skeleton h-[12px] w-3/4 rounded-[4px]" />
+          </div>
+        ))}
+        {(item.neighbors ?? []).map(({ item: n, score }) => {
           const meta = n.status
             ? [statusLabel(n.kind, n.status), n.my_rating != null && `★ ${rating(n.my_rating)}`].filter(Boolean).join(" · ")
             : score != null ? `Suggested · ${pct(score)}` : "";
@@ -1010,7 +1016,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
     return (
       <main className={cx("flex flex-col gap-6 pt-8 pb-[72px]", pagePad)}>
         <div className="flex">{backPill}</div>
-        {error ? <ErrorLine error={error} onSettings /> : item ? <ErrorLine error={new Error("Not found")} /> : <div className="skeleton h-[480px] rounded-[22px]" />}
+        {error ? <ErrorLine error={error} onSettings /> : item ? <ErrorLine error={new Error("Not found")} /> : <DetailSkeleton />}
       </main>
     );
 
@@ -1085,7 +1091,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
           <div className="absolute inset-0 bg-bg-hero" />
           {item.backdrop && (
             <>
-              <img src={item.backdrop} alt="" className="absolute inset-0 size-full object-cover object-top" />
+              <img src={item.backdrop} alt="" onLoad={fadeIn} className="img-in absolute inset-0 size-full object-cover object-top" />
               <div aria-hidden className="absolute inset-0 bg-[rgba(7,8,12,0.35)]" />
             </>
           )}
@@ -1174,7 +1180,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
         <aside className="flex-[1_1_340px] min-w-0 flex flex-col gap-5">
           {run && run.status && <YourRun item={item} run={run} glow={glow} />}
           <Runs item={item} glow={glow} glow2={glow2} />
-          {kind === "show" && <Scores film={showScores(item)} glow={glow} critics={false} />}
+          {kind === "show" && <Scores film={showScores(item)} glow={glow} critics={false} pending={item.scores_pending} />}
           {kind === "game" && (
             <ScoreGrid glow={glow} rows={[
               { label: "RAWG", value: item.details.rating ? Number(item.details.rating).toFixed(2) : null, of: 5, sub: votes(item.details.rating_votes) },

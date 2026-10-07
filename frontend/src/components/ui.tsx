@@ -181,6 +181,35 @@ export function Spinner({ label = "Loading" }: { label?: string }) {
   return <p className="m-0 font-mono text-[13px] text-ink-4 animate-pulse">{label}…</p>;
 }
 
+/** onLoad for an `img-in` image: fades it in once it has actually arrived. */
+export const fadeIn = (e: React.SyntheticEvent<HTMLImageElement>) => e.currentTarget.classList.add("is-loaded");
+
+/** A detail page while its data loads: the hero's poster, eyebrow, title, facts and buttons, then the overview. */
+export function DetailSkeleton() {
+  return (
+    <div aria-busy aria-label="Loading" className="flex flex-col gap-12">
+      <div className="flex flex-wrap items-end gap-9 pt-[200px] max-[639px]:gap-6 max-[639px]:pt-2">
+        <div className="skeleton w-[200px] max-[639px]:w-[120px] aspect-[2/3] rounded-[16px]" />
+        <div className="flex-[1_1_360px] flex flex-col gap-[14px] min-w-0">
+          <div className="skeleton h-[12px] w-[180px] rounded-[4px]" />
+          <div className="skeleton h-[56px] max-[639px]:h-[34px] w-[min(520px,90%)] rounded-[10px]" />
+          <div className="skeleton h-[15px] w-[260px] rounded-[4px]" />
+          <div className="flex gap-[10px] mt-2">
+            <div className="skeleton h-[46px] w-[150px] rounded-[14px]" />
+            <div className="skeleton h-[46px] w-[46px] rounded-[14px]" />
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col gap-3 max-w-[64ch]">
+        <div className="skeleton h-[16px] w-[120px] rounded-[4px] mb-1" />
+        <div className="skeleton h-[16px] w-full rounded-[4px]" />
+        <div className="skeleton h-[16px] w-[92%] rounded-[4px]" />
+        <div className="skeleton h-[16px] w-[70%] rounded-[4px]" />
+      </div>
+    </div>
+  );
+}
+
 export function ErrorLine({ error, onSettings }: { error: unknown; onSettings?: boolean }) {
   const msg = error instanceof Error ? error.message : "Something went wrong";
   return (

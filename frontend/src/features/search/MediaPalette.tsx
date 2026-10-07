@@ -130,8 +130,9 @@ export function MediaPalette({ kind }: { kind: Kind }) {
         </div>
         <Command.List className="min-h-0 pt-[14px] px-3 pb-[6px] max-h-[min(52vh,420px)] overflow-y-auto scroll-quiet empty:hidden">
           {search.isError && q.length >= 2 && <div className="px-3 pb-2"><ErrorLine error={search.error} onSettings /></div>}
+          {debounced.length >= 2 && search.data?.offline && <div className="px-3 pb-2"><ErrorLine error={new Error(search.data.offline)} onSettings /></div>}
           {!search.isError && debounced.length >= 2 && search.isSuccess && rows.length === 0 && (
-            <p className="m-0 px-3 pb-3 font-mono text-[13px] text-ink-4">No matches on {SOURCE_NAME[kind]}</p>
+            <p className="m-0 px-3 pb-3 font-mono text-[13px] text-ink-4">{search.data?.offline ? "No matches in your library" : `No matches on ${SOURCE_NAME[kind]}`}</p>
           )}
           {q.length > 0 && q.trim().length < 2 && <p className="m-0 px-3 pb-3 font-mono text-[13px] text-ink-4">Keep typing…</p>}
           {!q && <p className="m-0 px-3 pb-3 font-mono text-[13px] text-ink-4">Type to search {SOURCE_NAME[kind]} for a {noun}.</p>}

@@ -9,7 +9,7 @@ import { mix } from "../components/Glow";
 import { IconChevronLeft, IconClose, IconMore, IconPlay, IconPlus } from "../components/Icons";
 import { Poster, posterBg } from "../components/Poster";
 import { useToast } from "../components/Toasts";
-import { ErrorLine, Eyebrow, MonoTag, SectionTitle, TagChip, cx } from "../components/ui";
+import { DetailSkeleton, ErrorLine, Eyebrow, MonoTag, SectionTitle, TagChip, cx, fadeIn } from "../components/ui";
 import { usePalette } from "../features/search/palette";
 import { onColor } from "../lib/color";
 import { formatFullDate, formatWatchDate, language, pct, rating, relativeTime, runtime } from "../lib/format";
@@ -184,20 +184,21 @@ function Crew({ film }: { film: MovieDetail }) {
 export type ScoreRow = { label: string; value: string | null; of: number; sub: string };
 
 /** Four scores, each with a meter on a shared 0–100 scale, plus the awards line. */
-export function Scores({ film, glow, critics = true }: { film: Pick<MovieDetail, "scores" | "votes" | "awards">; glow: string; critics?: boolean }) {
+export function Scores({ film, glow, critics = true, pending }: { film: Pick<MovieDetail, "scores" | "votes" | "awards">; glow: string; critics?: boolean; pending?: boolean }) {
   const rows: ScoreRow[] = [
     { label: "TMDB", value: film.scores.tmdb, of: 10, sub: film.votes?.tmdb ? `${compact.format(film.votes.tmdb)} votes` : "users" },
     { label: "IMDb", value: film.scores.imdb, of: 10, sub: film.votes?.imdb ? `${compact.format(film.votes.imdb)} votes` : "users" },
     { label: "Rotten Tomatoes", value: film.scores.rt, of: 100, sub: "Tomatometer" },
     { label: "Metacritic", value: film.scores.metacritic, of: 100, sub: "Metascore" },
   ].slice(0, critics ? 4 : 2);
-  return <ScoreGrid rows={rows} awards={film.awards} glow={glow} />;
+  return <ScoreGrid rows={rows} awards={film.awards} glow={glow} pending={pending} />;
 }
 
 export const votes = (n: number | null | undefined) => (n ? `${compact.format(n)} votes` : "users");
 
 /** Scores two to a row, each with a meter scaled to its maximum. */
-export function ScoreGrid({ rows, awards, glow }: { rows: ScoreRow[]; awards?: string | null; glow: string }) {
+/** pending: scores still being fetched, so missing ones pulse instead of reading "not rated yet". */
+export function ScoreGrid({ rows, awards, glow, pending }: { rows: ScoreRow[]; awards?: string | null; glow: string; pending?: boolean }) {
   const num = (v: string | null) => (v == null ? null : parseFloat(v));
   return (
     <section aria-label="Scores" className="rounded-[22px] bg-(--fill-glass) border border-(--line-2) overflow-hidden">
@@ -209,13 +210,13 @@ export function ScoreGrid({ rows, awards, glow }: { rows: ScoreRow[]; awards?: s
             <div key={r.label} className={cx("flex flex-col gap-[10px] p-5", i % 2 === 0 && "border-r border-(--line-2)", i < rows.length - 2 && "border-b border-(--line-2)")}>
               <Eyebrow className="text-[10.5px]">{r.label}</Eyebrow>
               <span className={cx("font-display text-[26px] font-medium leading-none tabular-nums", n == null && "text-ink-4")}>
-                {r.value ?? "–"}
+                {r.value ?? (pending ? <span aria-label="Loading" className="skeleton inline-block align-top h-[26px] w-[56px] rounded-[6px]" /> : "–")}
                 {n != null && r.of < 100 && <span className="font-sans text-[13px] text-ink-4 font-normal"> / {r.of}</span>}
               </span>
               <span className="h-[3px] rounded-full bg-white/[0.07] overflow-hidden">
                 <span className="block h-full rounded-full transition-[width] duration-700 ease-out" style={{ width: `${fill}%`, background: glow, boxShadow: `0 0 10px ${glow}` }} />
               </span>
-              <span className="font-mono text-[11px] text-ink-4">{n == null ? "not rated yet" : r.sub}</span>
+              <span className="font-mono text-[11px] text-ink-4">{n == null ? (pending ? "fetching…" : "not rated yet") : r.sub}</span>
             </div>
           );
         })}
@@ -351,7 +352,7 @@ export default function FilmDetail() {
     return (
       <main className="flex flex-col gap-6 pt-8 px-12 pb-[72px] max-[1023px]:px-6 max-[639px]:px-4">
         <div className="flex">{backPill}</div>
-        {error ? <ErrorLine error={error} onSettings /> : <div className="skeleton h-[480px] rounded-[22px]" />}
+        {error ? <ErrorLine error={error} onSettings /> : <DetailSkeleton />}
       </main>
     );
 
@@ -369,7 +370,7 @@ export default function FilmDetail() {
           <div className="absolute inset-0 bg-bg-hero" />
           {film.backdrop && (
             <>
-              <img src={film.backdrop} alt="" className="absolute inset-0 size-full object-cover object-top" />
+              <img src={film.backdrop} alt="" onLoad={fadeIn} className="img-in absolute inset-0 size-full object-cover object-top" />
               <div aria-hidden className="absolute inset-0 bg-[rgba(7,8,12,0.35)]" />
             </>
           )}

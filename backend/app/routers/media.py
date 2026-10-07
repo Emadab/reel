@@ -49,8 +49,14 @@ async def search(kind: Kind, q: str, s: Session = Depends(get_session)):
     q = q.strip()
     if len(q) < 2:
         return {"local": [], "results": []}
-    local = [i for i in s.exec(select(Item).where(Item.kind == kind, col(Item.title).ilike(f"%{q}%")).limit(6))]
-    hits = await PRIMARY[kind].search(q, kind)
+    local = [i for i in s.exec(select(Item).where(Item.kind == kind, col(Item.title).ilike(f"%{q}%")).limit(20))]
+    try:
+        hits = await PRIMARY[kind].search(q, kind)
+    except HTTPException as e:  # offline, blocked or no key: your own matches still show
+        if e.status_code != 503:
+            raise
+        return {"local": [items.card(s, i) for i in local], "results": [], "offline": e.detail}
+    local = local[:6]  # online, the provider's results get the room
     out = []
     for h in hits:
         known = items.find(s, h.source, h.ext_id)

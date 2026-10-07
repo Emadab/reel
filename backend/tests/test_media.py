@@ -409,3 +409,22 @@ def test_game_series_name_from_titles():
     assert games.series_name("Grand Theft Auto V", ["Grand Theft Auto", "San Andreas Multiplayer (SA-MP)", "Grand Theft Auto IV"]) == "Grand Theft Auto"
     assert games.series_name("The Witcher 3: Wild Hunt", ["The Witcher", "The Witcher 2: Assassins of Kings"]) == "The Witcher"
     assert games.series_name("Hades", ["Hades"]) is None
+
+
+def test_search_keeps_library_items_when_provider_unreachable(media, monkeypatch):
+    from app.providers.base import SearchHit
+    from app.providers.http import ProviderUnavailable
+    from app.providers.tmdb_tv import provider
+
+    async def fake_search(q, kind="show"):
+        return [SearchHit("show", "tmdb_tv", "95396", "Severance", 2022)]
+
+    monkeypatch.setattr(provider, "search", fake_search)
+    item_id = media.post("/api/media/show/items", json={"ext_id": "95396"}).json()["id"]
+
+    async def down(q, kind="show"):
+        raise ProviderUnavailable("TMDB", "can't reach it right now")
+
+    monkeypatch.setattr(provider, "search", down)
+    r = media.get("/api/media/show/search", params={"q": "sever"}).json()
+    assert r["local"][0]["id"] == item_id and r["results"] == [] and "can't reach" in r["offline"]

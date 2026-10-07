@@ -89,7 +89,8 @@ export type SearchResult = {
   watch_count: number;
   on_watchlist: boolean;
 };
-export type SearchResponse = { results: SearchResult[]; took_ms: number };
+// offline: TMDB couldn't be reached, so results are films from your library
+export type SearchResponse = { results: SearchResult[]; took_ms: number; offline?: string };
 
 export type Timeline = {
   year: number;

@@ -3,6 +3,7 @@ import asyncio
 import hashlib
 import math
 from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
 from colorthief import ColorThief
@@ -10,7 +11,8 @@ from colorthief import ColorThief
 from . import net
 from .config import settings
 
-CDN = "https://image.tmdb.org/t/p"
+IMG_HOST = "image.tmdb.org"
+CDN = f"https://{IMG_HOST}/t/p"
 img_client = httpx.AsyncClient(base_url=CDN, timeout=net.TIMEOUT, follow_redirects=True)
 _sem = asyncio.Semaphore(8)
 
@@ -32,13 +34,13 @@ async def download(kind: str, ident: int | str, tmdb_path: str | None) -> Path |
     f = media_file(kind, ident)
     if f.exists():
         return f
-    if net.offline():
+    if net.offline(IMG_HOST):
         return None
     try:
         async with _sem:
             r = await img_client.get(f"/{SIZES[kind]}{tmdb_path}")
     except httpx.TransportError:
-        net.mark_offline()
+        net.mark_offline(IMG_HOST)
         raise
     r.raise_for_status()
     f.parent.mkdir(parents=True, exist_ok=True)
@@ -50,13 +52,13 @@ async def cached_tmdb_image(size: str, name: str) -> Path:
     """Lazy cache for search thumbnails and cast photos, keyed by TMDB file name."""
     f = settings.media_dir / "tmdb" / size / name
     if not f.exists():
-        if net.offline():
+        if net.offline(IMG_HOST):
             raise FileNotFoundError(name)
         try:
             async with _sem:
                 r = await img_client.get(f"/{size}/{name}")
         except httpx.TransportError:
-            net.mark_offline()
+            net.mark_offline(IMG_HOST)
             raise
         r.raise_for_status()
         f.parent.mkdir(parents=True, exist_ok=True)
@@ -177,13 +179,14 @@ async def store_image(kind: str, url: str | None) -> str | None:
     name = f"{hashlib.sha1(url.encode()).hexdigest()[:20]}{ext}"
     f = settings.media_dir / kind / name
     if not f.exists():
-        if net.offline():
+        host = urlparse(url).hostname or ""
+        if net.offline(host):
             return None
         try:
             async with _sem:
                 r = await any_client.get(url)
         except httpx.TransportError:
-            net.mark_offline()
+            net.mark_offline(host)
             return None
         if r.status_code != 200 or not r.headers.get("content-type", "image").startswith("image"):
             return None

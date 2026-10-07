@@ -160,3 +160,25 @@ def test_detail_is_complete_and_ratings_keep_one_decimal(client):
     col = d["collection"]
     assert col["name"] == "Villeneuve Collection" and [f["tmdb_id"] for f in col["films"]] == [593, 329865, 335984]
     assert col["films"][1]["watch_count"] == 1 and col["films"][0]["poster"] == "/api/img/w342/p593.jpg"
+
+
+def test_search_falls_back_to_library_when_tmdb_unreachable(client):
+    from app import net, tmdb
+    client.post("/api/watchlist/329865")  # caches Arrival
+    net.mark_offline(tmdb.HOST)
+    try:
+        r = client.get("/api/search", params={"q": "arriv"}).json()
+    finally:
+        net.mark_online()
+    assert r["offline"] and [x["tmdb_id"] for x in r["results"]] == [329865] and r["results"][0]["on_watchlist"]
+
+
+def test_breaker_is_per_host():
+    from app import net
+    net.mark_offline("api.themoviedb.org")
+    try:
+        assert net.offline("api.themoviedb.org") and not net.offline("openlibrary.org")
+        net.mark_online("openlibrary.org")  # another host answering doesn't clear a blocked one
+        assert net.offline("api.themoviedb.org")
+    finally:
+        net.mark_online()
