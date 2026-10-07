@@ -59,13 +59,14 @@ function Sidebar() {
       <div className="max-[639px]:hidden flex-[1_1_220px] max-[1023px]:flex-[0_0_72px] max-w-full border-r border-(--line-nav) relative z-[1] bg-bg">
       <nav
         aria-label="Primary"
-        className="sticky top-0 h-screen min-h-[560px] flex flex-col gap-7 pb-7 pt-[calc(28px+var(--tb))] px-[18px] max-[1023px]:px-[14px] box-border"
+        className="sticky top-0 h-screen overflow-y-auto overscroll-contain [scrollbar-width:none] flex flex-col gap-7 pb-7 pt-[calc(28px+var(--tb))] px-[18px] max-[1023px]:px-[14px] max-[1023px]:gap-5 box-border *:shrink-0"
       >
         <Logo compact />
         <button
           type="button"
           onClick={() => openPalette()}
           aria-label="Search"
+          data-tip-rail={`Search · ${isMac ? "⌘K" : "Ctrl K"}`}
           className="flex items-center gap-[10px] h-11 box-content px-3 rounded-[12px] bg-(--fill-ctl) border border-(--line-1) text-ink-3 text-[14px] cursor-pointer max-[1023px]:justify-center max-[1023px]:px-0"
         >
           <IconSearch size={18} />
@@ -79,6 +80,7 @@ function Sidebar() {
               to={to}
               end={end}
               aria-label={label}
+              data-tip-rail={label}
               className={({ isActive }) => {
                 const active = isActive || (to === home && libraryish);
                 return cx(
@@ -108,6 +110,7 @@ function Sidebar() {
           <NavLink
             to="/settings"
             aria-label="Settings"
+            title="Settings"
             className={({ isActive }) =>
               cx("size-11 rounded-[12px] border grid place-items-center no-underline",
                 isActive ? "bg-(--fill-nav-active) border-(--line-4) text-ink-hi" : "border-(--line-1) text-ink-3 hover:bg-(--fill-ctl)")

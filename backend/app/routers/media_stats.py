@@ -1,12 +1,12 @@
 """Timeline and Stats for shows, books and games, and the cross-media summary (REEL_EXPANSION Phase 8).
 Movies keep their own /timeline and /stats; the all-media view only reads the movie tables."""
 from collections import Counter
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from statistics import mean
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlmodel import Session, col, select
+from sqlmodel import Session, col, func, select
 
 from .. import items
 from ..cards import hours as movie_hours
@@ -78,21 +78,29 @@ def years(kind: Kind, s: Session = Depends(get_session)):
 ACTIVITY = ("episode_watched", "progress", "session")
 
 
+def _in_range(q, start: date | None, end: date | None):
+    if start:
+        q = q.where(col(Event.occurred_at) >= datetime.combine(start, time.min, UTC))
+    if end:
+        q = q.where(col(Event.occurred_at) < datetime.combine(end + timedelta(days=1), time.min, UTC))
+    return q
+
+
 def _events(s: Session, kind: str, start: date | None = None, end: date | None = None) -> list[Event]:
     q = select(Event).join(Item, col(Item.id) == col(Event.item_id)).where(Item.kind == kind, col(Event.kind).in_(ACTIVITY))
-    out = list(s.exec(q))
-    return [e for e in out if (start is None or e.occurred_at.date() >= start) and (end is None or e.occurred_at.date() <= end)]
+    return list(s.exec(_in_range(q, start, end)))
 
 
 def _amount(s: Session, kind: str, year: int | None) -> dict:
     """Hours watched (shows), pages read (books) or hours played (games), within the year if given."""
     start, end = (date(year, 1, 1), date(year, 12, 31)) if year else (None, None)
     if kind == "show":
-        eps = {e.id: e for e in s.exec(select(Episode).join(Item, col(Item.id) == col(Episode.item_id)).where(Item.kind == "show"))}
-        default = {i.id: i.details.get("episode_runtime") for i in s.exec(select(Item).where(Item.kind == "show"))}
-        minutes = sum((eps[e.episode_id].runtime_min or default.get(e.item_id) or 30) for e in _events(s, kind, start, end)
-                      if e.kind == "episode_watched" and e.episode_id in eps)
-        return {"hours": round(minutes / 60, 1), "episodes": sum(1 for e in _events(s, kind, start, end) if e.kind == "episode_watched")}
+        # columns, not rows: thousands of episode ticks would otherwise each build an ORM object
+        default = dict(s.exec(select(Item.id, func.json_extract(Item.details, "$.episode_runtime")).where(Item.kind == "show")).all())
+        q = select(Event.item_id, Episode.runtime_min).join(Episode, col(Episode.id) == col(Event.episode_id)).where(Event.kind == "episode_watched")
+        ticks = s.exec(_in_range(q, start, end)).all()
+        minutes = sum(rt or default.get(i) or 30 for i, rt in ticks)
+        return {"hours": round(minutes / 60, 1), "episodes": len(ticks)}
     if kind == "game":
         return {"hours": round(sum(max(e.payload.get("delta") or 0, 0) for e in _events(s, kind, start, end) if e.kind == "session"), 1)}
     # books: page progress events, as deltas per run

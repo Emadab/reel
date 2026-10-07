@@ -1085,7 +1085,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
           <div className="absolute inset-0 bg-bg-hero" />
           {item.backdrop && (
             <>
-              <img src={item.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
+              <img src={item.backdrop} alt="" className="absolute inset-0 size-full object-cover object-top" />
               <div aria-hidden className="absolute inset-0 bg-[rgba(7,8,12,0.35)]" />
             </>
           )}

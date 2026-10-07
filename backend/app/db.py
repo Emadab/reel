@@ -55,6 +55,17 @@ def migrate() -> None:
                 if "sandbox" in names and not names & {"mmo", "mmorpg", "massively multiplayer", "live service", "endless", "open-ended"}:
                     conn.exec_driver_sql("UPDATE item SET endless = 0 WHERE id = ?", (item_id,))
             conn.exec_driver_sql("INSERT INTO setting (key, value) VALUES ('endless_sandbox', '1')")
+    # completed shows flip-flopped through caught_up on every re-derive, resetting their finish dates (once)
+    with Session(engine) as s:
+        if s.get(Setting, "show_flipflop_repair") is None:
+            if s.exec(select(models_media.Event).limit(1)).first():
+                from .backup import snapshot
+                from .shows import repair_flipflops
+
+                snapshot("pre-repair")
+                repair_flipflops(s)
+            s.add(Setting(key="show_flipflop_repair", value="1"))
+            s.commit()
 
 
 def reconnect() -> None:

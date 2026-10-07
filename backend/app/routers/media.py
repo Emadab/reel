@@ -7,7 +7,7 @@ from urllib.parse import quote, urlparse
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-from sqlmodel import Session, col, delete, select
+from sqlmodel import Session, col, delete, func, select
 
 from .. import books, games, items, media, shows
 from ..cards import normalize
@@ -105,15 +105,21 @@ def library(kind: Kind, status: list[str] | None = Query(None), genre: list[str]
             sort: Literal["recent", "watched", "rating", "year", "title"] = "recent", s: Session = Depends(get_session)):
     require_kind(s, kind)
     rows = s.exec(select(Item, LibraryEntry).join(LibraryEntry, col(LibraryEntry.item_id) == col(Item.id)).where(Item.kind == kind)).all()
+    # everything in bulk: one query each for runs and last-activity times, not several per card
+    by_item: dict[int, list[Run]] = {}
+    for r in s.exec(select(Run).join(Item, col(Item.id) == col(Run.item_id)).where(Item.kind == kind).order_by(col(Run.run_no))):
+        by_item.setdefault(r.item_id, []).append(r)
+    last = _last_events(s, kind)
+    watched = _watched_all(s, kind, by_item) if sort == "watched" else {}
     cards, counts = [], {"all": 0}
     for item, entry in rows:
-        c = items.card(s, item, entry)
+        c = items.card(s, item, entry, rs=by_item.get(item.id, []))  # type: ignore[arg-type]
         key = c["status"] or "none"
         counts[key] = counts.get(key, 0) + 1
         counts["all"] += 1
         if (not status or key in status) and (not genre or set(genre) & set(item.genres)):
-            c["_recent"] = _recent(s, item, entry)
-            c["_watched"] = _watched(s, item) if sort == "watched" else ""
+            c["_recent"] = items.utc(last.get(item.id) or entry.added_at).isoformat()  # type: ignore[arg-type]
+            c["_watched"] = watched.get(item.id, "")  # type: ignore[arg-type]
             cards.append(c)
     keys = {"recent": lambda c: c["_recent"], "watched": lambda c: (c["_watched"], c["_recent"]),
             "rating": lambda c: (c["my_rating"] or 0, c["_recent"]),
@@ -126,28 +132,32 @@ def library(kind: Kind, status: list[str] | None = Query(None), genre: list[str]
     return {"counts": counts, "items": cards, "genres": genres}
 
 
-def _watched(s: Session, item: Item) -> str:
-    """When you last watched it: a show's latest episode, or a run's finish (else start) date. Unknown dates
-    (0001-01-01) sort after every real one; never watched sorts last."""
-    if item.kind == "show":
-        e = s.exec(select(Event).where(Event.item_id == item.id, Event.kind == "episode_watched").order_by(col(Event.occurred_at).desc())).first()
-        return items.utc(e.occurred_at).date().isoformat() if e else ""
-    dates = [d for r in items.runs(s, item.id) if (d := r.finished_on or r.started_on)]  # type: ignore[arg-type]
-    return max(dates).isoformat() if dates else ""
+def _last_events(s: Session, kind: str, event_kind: str | None = None) -> dict[int, datetime]:
+    q = select(Event.item_id, func.max(Event.occurred_at)).join(Item, col(Item.id) == col(Event.item_id)).where(Item.kind == kind)
+    if event_kind:
+        q = q.where(Event.kind == event_kind)
+    return {i: (datetime.fromisoformat(t) if isinstance(t, str) else t) for i, t in s.exec(q.group_by(col(Event.item_id)))}
 
 
-def _recent(s: Session, item: Item, entry: LibraryEntry) -> str:
-    e = s.exec(select(Event).where(Event.item_id == item.id).order_by(col(Event.occurred_at).desc())).first()
-    return items.utc(e.occurred_at if e else entry.added_at).isoformat()
+def _watched_all(s: Session, kind: str, by_item: dict[int, list[Run]]) -> dict[int, str]:
+    """When you last watched each item: a show's latest episode, or a run's finish (else start) date. Unknown
+    dates (0001-01-01) sort after every real one; never watched sorts last."""
+    if kind == "show":
+        return {i: items.utc(t).date().isoformat() for i, t in _last_events(s, kind, "episode_watched").items()}
+    out = {}
+    for i, rs in by_item.items():
+        dates = [d for r in rs if (d := r.finished_on or r.started_on)]
+        if dates:
+            out[i] = max(dates).isoformat()
+    return out
 
 
 @router.get("/shows/up-next")
 def up_next(s: Session = Depends(get_session)):
     require_kind(s, "show")
     out = []
-    for item in s.exec(select(Item).where(Item.kind == "show")):
-        run = items.current_run(s, item.id)  # type: ignore[arg-type]
-        if not run or run.status != "watching":
+    for item, run in items.current_runs(s, "show"):
+        if run.status != "watching":
             continue
         nxt = shows.next_episode(s, item, run)
         if nxt:
@@ -165,9 +175,8 @@ def upcoming(s: Session = Depends(get_session)):
     """The next unaired episode of every show you're watching or caught up on, soonest first."""
     require_kind(s, "show")
     out = []
-    for item in s.exec(select(Item).where(Item.kind == "show")):
-        run = items.current_run(s, item.id)  # type: ignore[arg-type]
-        if run and run.status in ("watching", "caught_up") and (ep := shows.upcoming_episode(s, item)):
+    for item, run in items.current_runs(s, "show"):
+        if run.status in ("watching", "caught_up") and (ep := shows.upcoming_episode(s, item)):
             out.append({"item": items.card(s, item, run=run), "episode": shows.episode_out(ep, {})})
     out.sort(key=lambda x: x["episode"]["airstamp"])
     return out

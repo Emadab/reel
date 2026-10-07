@@ -44,10 +44,11 @@ export function NotificationBell() {
       <button
         type="button"
         aria-label={unseen ? `Notifications, ${unseen} new` : "Notifications"}
+        title={open ? undefined : "Notifications"}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={cx("relative size-11 rounded-[12px] border grid place-items-center", open ? "bg-(--fill-nav-active) border-(--line-4) text-ink-hi" : "border-(--line-1) text-ink-3 hover:bg-(--fill-ctl)")}
+        className={cx("relative size-11 rounded-[12px] border grid place-items-center [anchor-name:--bell]", open ? "bg-(--fill-nav-active) border-(--line-4) text-ink-hi" : "border-(--line-1) text-ink-3 hover:bg-(--fill-ctl)")}
       >
         <IconBell size={18} />
         {unseen > 0 && (
@@ -63,7 +64,7 @@ export function NotificationBell() {
           animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.2, ease: [0.2, 0.7, 0.2, 1] } }}
           exit={{ opacity: 0, y: 6, scale: 0.97, transition: { duration: 0.12, ease: "easeIn" } }}
           style={{ transformOrigin: "bottom left" }}
-          role="dialog" aria-label="Notifications" className="absolute left-0 bottom-[calc(100%+10px)] max-[1023px]:left-[calc(100%+10px)] max-[1023px]:bottom-0 z-40 w-[340px] max-h-[460px] flex flex-col rounded-[16px] bg-[rgba(20,22,30,0.94)] border border-(--line-4) backdrop-blur-[24px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)] overflow-hidden">
+          role="dialog" aria-label="Notifications" className="fixed [position-anchor:--bell] left-[anchor(left)] bottom-[calc(anchor(top)+10px)] max-[1023px]:left-[calc(anchor(right)+10px)] max-[1023px]:bottom-[max(12px,anchor(bottom))] z-40 w-[340px] max-h-[min(460px,calc(100vh-24px))] flex flex-col rounded-[16px] bg-[rgba(20,22,30,0.94)] border border-(--line-4) backdrop-blur-[24px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)] overflow-hidden">
           <div className="flex items-center justify-between px-4 h-12 border-b border-(--line-1)">
             <span className="font-mono text-[11px] tracking-[0.1em] uppercase text-ink-3">Notifications</span>
             {unseen > 0 && (

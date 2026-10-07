@@ -155,6 +155,8 @@ def derive(s: Session, item: Item, run: Run, at: datetime | None = None) -> None
         target = "watching"
     else:
         target = "completed" if item.status in ("ended", "canceled") else "caught_up"
+    if run.status == target:
+        return  # already there; a detour through caught_up would wipe the finish date
     if not transition(s, run, "show", target, source="derived"):
         # no direct edge (completed → watching after a revival airs): go through caught_up
         if transition(s, run, "show", "caught_up", source="derived"):
@@ -275,11 +277,29 @@ def add_history(s: Session, item: Item, upto_season: int | None, started_on: dat
 def rederive_all(s: Session) -> int:
     """Time passing airs episodes: re-derive every show run that isn't sticky (startup + scheduler)."""
     changed = 0
-    for item in s.exec(select(Item).where(Item.kind == "show")):
-        run = items.current_run(s, item.id)  # type: ignore[arg-type]
-        if run and run.status not in STICKY:
+    for item, run in items.current_runs(s, "show"):
+        if run.status not in STICKY:
             before = run.status
             derive(s, item, run)
             changed += run.status != before
     s.commit()
     return changed
+
+
+def repair_flipflops(s: Session) -> int:
+    """Undo an old derive bug: re-deriving a show already in its target state detoured through caught_up and
+    back, logging a junk pair of status changes (and, for completed shows, resetting the finish date to that
+    day). Drops the pairs and re-syncs the dates."""
+    evs = s.exec(select(Event).where(Event.kind == "status_change").order_by(col(Event.run_id), col(Event.id))).all()
+    junk = [(a, b) for a, b in zip(evs, evs[1:])
+            if a.run_id == b.run_id and a.payload.get("source") == b.payload.get("source") == "derived"
+            and a.payload.get("to") == "caught_up" == b.payload.get("from") and a.payload.get("from") == b.payload.get("to")
+            and abs((b.occurred_at - a.occurred_at).total_seconds()) < 1]
+    for a, b in junk:
+        s.delete(a)
+        s.delete(b)
+    for run in s.exec(select(Run).join(Item, col(Item.id) == col(Run.item_id)).where(Item.kind == "show", col(Run.status).in_(("completed", "caught_up")))):
+        sync_dates(s, run)
+    s.commit()
+    return len(junk)
+

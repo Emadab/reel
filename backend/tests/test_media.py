@@ -179,6 +179,20 @@ def test_add_history_whole_show_or_up_to_a_season(media):
     assert media.post(f"/api/media/items/{item_id}/history", json={"upto_season": 0}).status_code == 422
 
 
+def test_rederive_leaves_settled_shows_alone(media):
+    """A re-derive of a show already in its derived state logs nothing and keeps its finish date."""
+    SHOW.update(status="ended", future_ep=False)
+    done = media.post("/api/media/show/items", json={"ext_id": "11"}).json()["id"]
+    media.post(f"/api/media/items/{done}/history", json={"finished_on": "2015-06-20", "date_precision": "day"})
+    with Session(db.engine) as s:
+        before = len(s.exec(select(Event)).all())
+        shows.rederive_all(s)
+        shows.rederive_all(s)
+        assert len(s.exec(select(Event)).all()) == before
+    d = media.get(f"/api/media/items/{done}").json()
+    assert d["status"] == "completed" and d["runs"][0]["finished_on"] == "2015-06-20"
+
+
 def test_add_history_on_release_dates(media):
     SHOW.update(status="ended", future_ep=False)
     item_id = media.post("/api/media/show/items", json={"ext_id": "9"}).json()["id"]

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useId, useState, type ButtonHTMLAttributes, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type ComponentProps, type ReactNode } from "react";
 import { Link } from "react-router";
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
@@ -209,3 +209,48 @@ export function useIntro(key: string, ready: boolean) {
   }, [key, on, ready]);
   return on && ready;
 }
+
+/**
+ * Cards that arrive pop in one after another (design extension): every card on a wall's first visit this session,
+ * then each batch that paging adds, counted from the batch's own first card. Coming back renders the wall still,
+ * so the poster can morph home. Returns props for each card's wrapper.
+ */
+export function usePop(key: string, count: number) {
+  const intro = useIntro(key, count > 0);
+  const s = useRef<{ first: number; starts: number[]; seen: number } | null>(null);
+  if (!s.current && count > 0) s.current = { first: intro ? 0 : count, starts: [intro ? 0 : count], seen: count };
+  else if (s.current && count !== s.current.seen) {
+    if (count > s.current.seen) s.current.starts.push(s.current.seen);
+    else s.current.starts = s.current.starts.filter((b) => b < count);
+    s.current.seen = count;
+  }
+  const { first = Infinity, starts = [] } = s.current ?? {};
+  return (i: number): { className: string; style?: CSSProperties } => {
+    const start = starts.findLast((b) => b <= i);
+    if (i < first || start == null) return { className: "min-w-0" };
+    return { className: "min-w-0 card-pop", style: { "--pop": Math.min(i - start, 24) } as CSSProperties };
+  };
+}
+
+const windowShown = new Map<string, number>();
+/**
+ * Seamless paging for a wall that's already in memory: renders `step` more cards each time the sentinel comes
+ * within 1200 px of the viewport, and remembers how far you got so coming back restores the same scroll.
+ */
+export function useWindowed<T>(key: string, items: T[], step = 48) {
+  const [shown, setShown] = useState(() => windowShown.get(key) ?? step);
+  const sentinel = useRef<HTMLDivElement>(null);
+  const more = items.length > shown;
+  useEffect(() => {
+    windowShown.set(key, shown);
+  }, [key, shown]);
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || !more) return;
+    const io = new IntersectionObserver((e) => e[0].isIntersecting && setShown((n) => n + step), { rootMargin: "1200px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [more, step, shown]);
+  return { visible: more ? items.slice(0, shown) : items, sentinel, more };
+}
+

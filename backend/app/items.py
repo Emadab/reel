@@ -187,13 +187,6 @@ def runs(s: Session, item_id: int) -> list[Run]:
     return list(s.exec(select(Run).where(Run.item_id == item_id).order_by(col(Run.run_no))))
 
 
-def current_run(s: Session, item_id: int) -> Run | None:
-    """The active run if any, else the latest."""
-    rs = runs(s, item_id)
-    active = [r for r in rs if r.status and r.status not in ENDED]
-    return (active or rs or [None])[-1]
-
-
 def new_run(s: Session, item: Item, **fields) -> Run:
     n = max((r.run_no for r in runs(s, item.id)), default=0) + 1  # type: ignore[arg-type]
     run = Run(item_id=item.id, run_no=n, **fields)  # type: ignore[arg-type]
@@ -216,11 +209,32 @@ def last_activity(s: Session, run: Run) -> datetime | None:
     return utc(e.occurred_at) if e else None
 
 
-def card(s: Session, item: Item, entry: LibraryEntry | None = None, run: Run | None = None) -> dict:
+def pick_current(rs: list[Run]) -> Run | None:
+    """The active run if any, else the latest (runs in run_no order)."""
+    active = [r for r in rs if r.status and r.status not in ENDED]
+    return (active or rs or [None])[-1]
+
+
+def current_run(s: Session, item_id: int) -> Run | None:
+    return pick_current(runs(s, item_id))
+
+
+def current_runs(s: Session, kind: str) -> list[tuple[Item, Run]]:
+    """Every item of a kind that has runs, with its current run, in two queries."""
+    by_item: dict[int, list[Run]] = {}
+    for r in s.exec(select(Run).join(Item, col(Item.id) == col(Run.item_id)).where(Item.kind == kind).order_by(col(Run.run_no))):
+        by_item.setdefault(r.item_id, []).append(r)
+    return [(i, pick_current(by_item[i.id])) for i in s.exec(select(Item).where(col(Item.id).in_(list(by_item))))]  # type: ignore[misc]
+
+
+def card(s: Session, item: Item, entry: LibraryEntry | None = None, run: Run | None = None,
+         rs: list[Run] | None = None) -> dict:
+    """`rs` (the item's runs in run_no order) lets a caller building many cards load runs in bulk."""
     entry = entry or s.get(LibraryEntry, item.id)
-    run = run or current_run(s, item.id)  # type: ignore[arg-type]
+    rs = runs(s, item.id) if rs is None else rs  # type: ignore[arg-type]
+    run = run or pick_current(rs)
     sub = item.details.get(SUBTITLE[item.kind]) or []
-    rated = [r.rating for r in runs(s, item.id) if r.rating is not None]  # type: ignore[arg-type]
+    rated = [r.rating for r in rs if r.rating is not None]
     return {
         "id": item.id, "kind": item.kind, "title": item.title, "year": item.year,
         "subtitle": ", ".join(sub[:2]) if isinstance(sub, list) else sub,

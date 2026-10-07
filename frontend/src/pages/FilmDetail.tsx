@@ -369,7 +369,7 @@ export default function FilmDetail() {
           <div className="absolute inset-0 bg-bg-hero" />
           {film.backdrop && (
             <>
-              <img src={film.backdrop} alt="" className="absolute inset-0 size-full object-cover" />
+              <img src={film.backdrop} alt="" className="absolute inset-0 size-full object-cover object-top" />
               <div aria-hidden className="absolute inset-0 bg-[rgba(7,8,12,0.35)]" />
             </>
           )}

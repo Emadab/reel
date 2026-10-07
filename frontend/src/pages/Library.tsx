@@ -11,7 +11,7 @@ import { IconCheck, IconPlus } from "../components/Icons";
 import { QuickLog } from "../components/QuickLog";
 import { Poster, posterBg } from "../components/Poster";
 import { useToast } from "../components/Toasts";
-import { Button, PageHeader, PillTab, Segmented, cx, useIntro } from "../components/ui";
+import { Button, PageHeader, PillTab, Segmented, cx, usePop } from "../components/ui";
 import { usePalette } from "../features/search/palette";
 import { lightest } from "../lib/color";
 import { formatLongDate, formatWatchDate, num, rating, runtime, today } from "../lib/format";
@@ -192,7 +192,7 @@ export function Library() {
   const facets = useFacets();
   const first = lib.data?.pages[0];
   const items = useMemo(() => lib.data?.pages.flatMap((p) => p.items) ?? [], [lib.data]);
-  const intro = useIntro("movie", items.length > 0);
+  const pop = usePop("movie", items.length);
   useAmbientGlow(first?.last_watched?.palette[0] ?? (first?.last_watched ? posterBg(first.last_watched) : null));
 
   const update = (k: string, values: string[]) => {
@@ -313,9 +313,11 @@ export function Library() {
           <Corridor3D films={items} />
         </Suspense>
       ) : (
-        <div className={cx(grid, intro && "wall-intro", lib.isPlaceholderData && "opacity-60 transition-opacity")}>
-          {items.map((f) => (
-            <WallCard key={f.tmdb_id} film={f} tab={tab} />
+        <div className={cx(grid, lib.isPlaceholderData && "opacity-60 transition-opacity")}>
+          {items.map((f, n) => (
+            <div key={f.tmdb_id} {...pop(n)}>
+              <WallCard film={f} tab={tab} />
+            </div>
           ))}
         </div>
       )}

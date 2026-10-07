@@ -7,7 +7,7 @@ import { useAmbientGlow } from "../../components/Glow";
 import { IconCheck, IconPlus } from "../../components/Icons";
 import { Poster, posterBg } from "../../components/Poster";
 import { useToast } from "../../components/Toasts";
-import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx, useIntro } from "../../components/ui";
+import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx, usePop, useWindowed } from "../../components/ui";
 import { usePalette } from "../../features/search/palette";
 import { celebrate } from "../../lib/celebrate";
 import { formatFullDate, iso, num, untilLabel } from "../../lib/format";
@@ -268,11 +268,12 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
   const genre = sp.getAll("genre");
   const sort = (sp.get("sort") as MediaSort) || "recent";
   const all = useMediaLibrary(kind, { sort });
-  const lib = useMediaLibrary(kind, { status: tab?.statuses, genre, sort });
+  const lib = useMediaLibrary(kind, { status: tab?.statuses, genre: genre.length ? genre : undefined, sort }); // unfiltered: the same query as `all`
   // games: played (any run, whatever its status or percentage) or not, on top of the tabs
   const played = kind === "game" ? sp.get("played") : null;
   const items = (lib.data?.items ?? []).filter((i) => !played || (played === "yes") === i.run_no > 0);
-  const intro = useIntro(kind, items.length > 0);
+  const wall = useWindowed(kind, items);
+  const pop = usePop(kind, wall.visible.length);
   const everything = all.data?.items ?? [];
   const counts = all.data?.counts ?? {};
   const first = tab ?? null;
@@ -364,10 +365,15 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
           )}
         </div>
       ) : (
-        <div className={cx(wallGrid, intro && "wall-intro", lib.isPlaceholderData && "opacity-60 transition-opacity")}>
-          {items.map((i) => <MediaCard key={i.id} item={i} />)}
+        <div className={cx(wallGrid, lib.isPlaceholderData && "opacity-60 transition-opacity")}>
+          {wall.visible.map((i, n) => (
+            <div key={i.id} {...pop(n)}>
+              <MediaCard item={i} />
+            </div>
+          ))}
         </div>
       )}
+      {wall.more && <div ref={wall.sentinel} aria-hidden className="h-px" />}
     </main>
   );
 }

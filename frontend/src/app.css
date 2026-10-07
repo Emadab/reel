@@ -96,9 +96,17 @@
 /* a press sinks the poster a touch before the page goes */
 .poster-card:active .poster-art, .timeline-poster:active .poster-art, .mini-poster:active .poster-art { scale: .98; transition-duration: .12s; }
 
-/* Wall intro: the first time a wall shows this session its posters rise in, 20 ms apart, capped at 18 (DESIGN_SYSTEM). */
-.wall-intro > * { animation: wall-in .42s var(--ease-out-soft) backwards; animation-delay: calc(min(sibling-index(), 18) * 20ms); }
-@keyframes wall-in { from { opacity: 0; translate: 0 10px; } }
+/* Cards pop in one after another (design extension, usePop): a drop with an overshoot, then a neon flash on the
+   poster that cools off. 55 ms apart, counted from each batch's first card. */
+.card-pop { animation: card-pop .6s cubic-bezier(.22,1.35,.36,1) backwards; animation-delay: calc(var(--pop, 0) * 55ms); }
+.card-pop .poster-art { animation: card-flash .85s cubic-bezier(.16,1,.3,1) backwards; animation-delay: calc(var(--pop, 0) * 55ms + 120ms); }
+@keyframes card-pop {
+  from { opacity: 0; translate: 0 34px; scale: .82; filter: blur(8px) brightness(1.7); }
+  55% { filter: blur(0) brightness(1.15); }
+}
+@keyframes card-flash {
+  from { box-shadow: 0 0 0 1.5px var(--color-accent), 0 0 38px -4px var(--color-accent), 0 18px 40px -18px var(--color-wild); filter: brightness(1.45) saturate(1.25); }
+}
 
 /* Popovers (Select): fade + settle in, quicker fade out; display/overlay stay discrete so the exit can play */
 .pop { transition: opacity .12s ease-in, scale .12s ease-in, translate .12s ease-in, display .12s allow-discrete, overlay .12s allow-discrete; transform-origin: top center; }
@@ -120,7 +128,7 @@
   .bar-grow, .bar-rise { animation: none; transition: none; }
   .poster-card .poster-art, .mini-poster .poster-art, .timeline-poster .poster-art { transition: none; }
   .poster-card:hover .poster-art, .poster-card:focus-visible .poster-art, .mini-poster:hover .poster-art, .timeline-poster:hover .poster-art, .poster-card:active .poster-art, .timeline-poster:active .poster-art, .mini-poster:active .poster-art { translate: none; rotate: none; scale: none; }
-  .wall-intro > * { animation: none; }
+  .card-pop, .card-pop .poster-art { animation: none; }
   .pop, .pop:not(:popover-open) { transition: none; scale: none; translate: none; }
   .ambient-glow { transition: none; }
 }
