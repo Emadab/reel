@@ -449,7 +449,7 @@ function Episodes({ item }: { item: ItemDetail }) {
   const toggle = (e: Episode, ev: MouseEvent<HTMLButtonElement>) => {
     const check = ev.currentTarget.querySelector("[data-check]");
     // ticking off the last of a season (or catching up) gets the big burst
-    const cheer = { onSuccess: (d: ItemDetail) => celebrate(check, { big: shown.number > 0 && d.next_episode?.season !== shown.number, colors: item.palette.slice(0, 2) }) };
+    const cheer = { onSuccess: (d: ItemDetail) => celebrate(check, { big: shown.number > 0 && d.next_episode?.season !== shown.number }) };
     if (ev.shiftKey && !e.watched) {
       // shift-click: everything aired up to here
       const ids = shown.episodes.filter((x) => x.aired && !x.watched && x.number <= e.number).map((x) => x.id);
@@ -1037,7 +1037,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
           const btn = ev.currentTarget;
           const d = await tickNext.mutateAsync(next.id);
           const done = d.next_episode == null;
-          celebrate(btn, { big: done || d.next_episode!.season !== next.season, colors: [glow, glow2] });
+          celebrate(btn, { big: done || d.next_episode!.season !== next.season });
           toast({ text: done ? <>Caught up on <em>{item.title}</em></> : <>Watched S{next.season} · E{next.number}</> });
         }}
         className="flex items-center gap-2 h-[46px] px-5 rounded-[14px] font-semibold text-[14px] border-0 cursor-pointer"

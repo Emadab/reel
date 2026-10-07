@@ -126,7 +126,7 @@ function UpNextRail() {
     const code = `S${u.episode.season} · E${u.episode.number}`;
     const btn = document.querySelector(`[data-up-next="${u.item.id}"]`);
     const caughtUp = (await tick.mutateAsync(u)).next_episode == null;
-    celebrate(btn, { big: caughtUp, colors: u.item.palette.slice(0, 2) });
+    celebrate(btn, { big: caughtUp });
     toast({ text: caughtUp ? <>Caught up on <em>{u.item.title}</em></> : <>Watched <em>{u.item.title}</em> {code}</> });
   };
   if (!up.data?.length) return null;

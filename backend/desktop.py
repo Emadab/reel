@@ -3,6 +3,7 @@ Start it from the Start-menu shortcut (`make shortcut`), `make app`, or `uv run 
 import ctypes
 import os
 import json
+import logging
 import socket
 import sys
 import threading
@@ -21,17 +22,25 @@ STATE = settings.data_dir / "window.json"
 user32 = ctypes.windll.user32 if sys.platform == "win32" else None
 
 
+_mutex = None
+
+
 def single_instance() -> bool:
-    """A named mutex: if Reel is already open, bring its window forward and quit."""
+    """A named mutex: if Reel is already open, bring its window forward and quit. A launch that's still starting has
+    no window yet, so wait for it rather than quitting silently; a holder that never shows one is stuck, so start."""
+    global _mutex
     if not user32:
         return True
-    ctypes.windll.kernel32.CreateMutexW(None, False, APP_ID)
-    if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
-        hwnd = user32.FindWindowW(None, "Reel")
-        if hwnd:
-            user32.ShowWindow(hwnd, 9)  # SW_RESTORE
-            user32.SetForegroundWindow(hwnd)
-        return False
+    k32 = ctypes.windll.kernel32
+    k32.CreateMutexW.restype = ctypes.c_void_p
+    _mutex = k32.CreateMutexW(None, False, APP_ID)
+    if k32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+        for _ in range(200):  # up to 10 s
+            if hwnd := user32.FindWindowW(None, "Reel"):
+                user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                user32.SetForegroundWindow(hwnd)
+                return False
+            time.sleep(0.05)
     # its own taskbar group and icon instead of Python's
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
     return True
@@ -207,8 +216,9 @@ def main() -> None:
         sys.exit(1)
 
     port = free_port()
-    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="info" if os.environ.get("REEL_DEBUG") else "warning"))
-    threading.Thread(target=server.run, daemon=True).start()
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, timeout_graceful_shutdown=1, log_level="info" if os.environ.get("REEL_DEBUG") else "warning"))
+    serving = threading.Thread(target=server.run, daemon=True)
+    serving.start()
     while not server.started:
         time.sleep(0.05)
 
@@ -237,7 +247,15 @@ def main() -> None:
 
     window.events.closing += remember
     webview.start(setup_native, (window, g["maximized"]), storage_path=str(settings.data_dir / "webview"), debug=bool(os.environ.get("REEL_DEBUG")))  # REEL_DEBUG=1 opens WebView2 devtools
+    # Closed: free the name at once so the next launch starts, give the server a moment to shut down cleanly, then
+    # end the process outright. Otherwise Python waits on whatever background job is mid-run (embeddings, UMAP, box
+    # art), and the app lingers unseen holding the mutex. SQLite rolls back anything interrupted.
+    if _mutex:
+        ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(_mutex))
     server.should_exit = True
+    serving.join(timeout=1.5)
+    logging.shutdown()
+    os._exit(0)
 
 
 if __name__ == "__main__":
