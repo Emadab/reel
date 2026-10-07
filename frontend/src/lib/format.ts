@@ -104,6 +104,20 @@ export function relativeTime(isoString: string, now: number = nowMs()): string {
   return d === 1 ? "yesterday" : `${d} days ago`;
 }
 
+/** When something comes out, from today: "today", "tomorrow", "on Friday", "next week", "in 3 weeks", "next month", "in 4 months", "next year". */
+export function untilLabel(isoString: string, ref: Date = today()): string {
+  const d = new Date(isoString.length > 10 ? isoString : `${isoString}T00:00:00`);
+  const days = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() - ref.getTime()) / 86_400_000);
+  if (days <= 0) return "today";
+  if (days === 1) return "tomorrow";
+  if (days < 7) return `on ${d.toLocaleDateString("en-US", { weekday: "long" })}`;
+  if (days < 14) return "next week";
+  if (days < 28) return `in ${Math.round(days / 7)} weeks`;
+  if (days < 60) return "next month";
+  if (days < 365) return `in ${Math.round(days / 30.44)} months`;
+  return days < 730 ? "next year" : `in ${Math.round(days / 365.25)} years`;
+}
+
 export function plural(n: number, one: string, many = `${one}s`): string {
   return `${num(n)} ${n === 1 ? one : many}`;
 }

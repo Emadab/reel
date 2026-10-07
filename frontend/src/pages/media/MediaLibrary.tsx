@@ -1,7 +1,7 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Link, useSearchParams } from "react-router";
-import { mediaApi, useMediaLibrary, useMediaMut, useUpNext, type ItemCard, type Kind, type MediaSort, type UpNext } from "../../api/media";
+import { mediaApi, useMediaLibrary, useMediaMut, useUpcoming, useUpNext, type ItemCard, type Kind, type MediaSort, type UpNext } from "../../api/media";
 import { FilterChip } from "../../components/FilterChip";
 import { useAmbientGlow } from "../../components/Glow";
 import { IconCheck, IconPlus } from "../../components/Icons";
@@ -9,7 +9,8 @@ import { Poster, posterBg } from "../../components/Poster";
 import { useToast } from "../../components/Toasts";
 import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx, useIntro } from "../../components/ui";
 import { usePalette } from "../../features/search/palette";
-import { num } from "../../lib/format";
+import { celebrate } from "../../lib/celebrate";
+import { formatFullDate, iso, num, untilLabel } from "../../lib/format";
 import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
 import type { MenuAt } from "../../components/ContextMenu";
 import { asFilm, fraction, itemPath, MediaCard, MediaCardMenu, Meter, pagePad, progressText, wallGrid } from "./parts";
@@ -120,13 +121,13 @@ function UpNextRail() {
   const up = useUpNext(true);
   const tick = useMediaMut((u: UpNext) => mediaApi.episodes(u.item.id, { episode_ids: [u.episode.id], watched: true }));
   const toast = useToast();
-  const [pulse, setPulse] = useState<{ id: number; k: number } | null>(null);
   const [menu, setMenu] = useState<{ u: UpNext; at: MenuAt } | null>(null);
   const markNext = async (u: UpNext) => {
     const code = `S${u.episode.season} · E${u.episode.number}`;
-    await tick.mutateAsync(u);
-    setPulse({ id: u.item.id, k: Date.now() });
-    toast({ text: <>Watched <em>{u.item.title}</em> {code}</> });
+    const btn = document.querySelector(`[data-up-next="${u.item.id}"]`);
+    const caughtUp = (await tick.mutateAsync(u)).next_episode == null;
+    celebrate(btn, { big: caughtUp, colors: u.item.palette.slice(0, 2) });
+    toast({ text: caughtUp ? <>Caught up on <em>{u.item.title}</em></> : <>Watched <em>{u.item.title}</em> {code}</> });
   };
   if (!up.data?.length) return null;
   return (
@@ -138,8 +139,10 @@ function UpNextRail() {
           const f = fraction("show", u.progress) ?? 0;
           const glow = u.item.palette[0] ?? "var(--color-accent)";
           return (
-            <div
+            <motion.div
               key={u.item.id}
+              layout="position"
+              transition={{ type: "spring", stiffness: 380, damping: 34 }}
               onContextMenu={(e) => {
                 e.preventDefault();
                 setMenu({ u, at: { x: e.clientX, y: e.clientY } });
@@ -167,6 +170,7 @@ function UpNextRail() {
               <div className="relative">
                 <button
                   type="button"
+                  data-up-next={u.item.id}
                   aria-label={`Mark ${u.item.title} ${code} watched`}
                   title="Mark watched"
                   disabled={tick.isPending && tick.variables?.item.id === u.item.id}
@@ -175,22 +179,8 @@ function UpNextRail() {
                 >
                   <IconCheck size={17} />
                 </button>
-                <AnimatePresence>
-                  {pulse?.id === u.item.id && (
-                    <motion.span
-                      key={pulse.k}
-                      aria-hidden
-                      initial={{ scale: 0.7, opacity: 0.9 }}
-                      animate={{ scale: 1.9, opacity: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.7, ease: "easeOut" }}
-                      onAnimationComplete={() => setPulse(null)}
-                      className="absolute inset-0 rounded-full border-2 border-accent pointer-events-none"
-                    />
-                  )}
-                </AnimatePresence>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -203,6 +193,42 @@ function UpNextRail() {
           extra={[{ label: `Mark S${menu.u.episode.season} · E${menu.u.episode.number} watched`, onSelect: () => void markNext(menu.u) }]}
         />
       )}
+    </section>
+  );
+}
+
+/** Shows: the next episode still to air of everything you're watching or caught up on, soonest first. */
+function UpcomingRail() {
+  const strip = useRef<HTMLDivElement>(null);
+  const soon = useUpcoming();
+  if (!soon.data?.length) return null;
+  return (
+    <section className="flex flex-col gap-4" aria-label="Upcoming">
+      <SectionTitle>Upcoming</SectionTitle>
+      <div ref={strip} className="flex gap-4 overflow-x-auto [scrollbar-width:none] pb-2 -mb-2 select-none">
+        {soon.data.map((u) => {
+          const day = u.episode.airstamp!;
+          return (
+            <Link
+              key={u.item.id}
+              to={itemPath(u.item)}
+              draggable={false}
+              className="mini-poster shrink-0 w-[320px] max-[639px]:w-[280px] flex items-center gap-4 p-[14px] rounded-[16px] border border-(--line-2) bg-(--fill-glass) no-underline text-ink hover:text-ink hover:border-(--line-4) transition-[border-color]"
+            >
+              <Poster film={asFilm(u.item)} size="rec" className="w-[52px] rounded-[8px]" layout={false} shadow={false} />
+              <div className="flex-1 min-w-0 flex flex-col gap-[5px]">
+                <span className="text-[15px] font-semibold leading-[1.2] truncate">{u.item.title}</span>
+                <span className="font-mono text-[12px] tracking-[0.06em] text-ink-3">S{u.episode.season} · E{u.episode.number}</span>
+                <span className="text-[13.5px] text-ink-2 truncate">
+                  <span className="text-accent first-letter:uppercase inline-block">{untilLabel(day)}</span>
+                  <span className="text-ink-4"> · {formatFullDate(iso(new Date(day)))}</span>
+                </span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+      <StripScrollbar strip={strip} count={soon.data.length} />
     </section>
   );
 }
@@ -285,6 +311,7 @@ export default function MediaLibrary({ kind }: { kind: Kind }) {
       </PageHeader>
 
       {kind === "show" ? <UpNextRail /> : <InProgressStrip kind={kind} items={everything} />}
+      {kind === "show" && <UpcomingRail />}
       {kind !== "show" && <BacklogPlanner kind={kind} />}
 
       <div className="flex flex-wrap items-center justify-between gap-4">

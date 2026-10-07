@@ -151,9 +151,25 @@ def up_next(s: Session = Depends(get_session)):
             continue
         nxt = shows.next_episode(s, item, run)
         if nxt:
+            evs = shows.watched_events(s, run).values()
+            # the most recently watched episode first; a status change or a new airing doesn't bump a show
+            last = max(((items.utc(e.occurred_at), e.id or 0) for e in evs), default=(datetime.min.replace(tzinfo=UTC), 0))
             out.append({"item": items.card(s, item, run=run), "episode": shows.episode_out(nxt, {}),
-                        "progress": run.progress, "last": (items.last_activity(s, run) or datetime.min.replace(tzinfo=UTC)).isoformat()})
-    out.sort(key=lambda x: x["last"], reverse=True)
+                        "progress": run.progress, "last": last[0].isoformat(), "_key": last})
+    out.sort(key=lambda x: x.pop("_key"), reverse=True)
+    return out
+
+
+@router.get("/shows/upcoming")
+def upcoming(s: Session = Depends(get_session)):
+    """The next unaired episode of every show you're watching or caught up on, soonest first."""
+    require_kind(s, "show")
+    out = []
+    for item in s.exec(select(Item).where(Item.kind == "show")):
+        run = items.current_run(s, item.id)  # type: ignore[arg-type]
+        if run and run.status in ("watching", "caught_up") and (ep := shows.upcoming_episode(s, item)):
+            out.append({"item": items.card(s, item, run=run), "episode": shows.episode_out(ep, {})})
+    out.sort(key=lambda x: x["episode"]["airstamp"])
     return out
 
 

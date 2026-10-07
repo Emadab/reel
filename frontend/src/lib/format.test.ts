@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayLabel, formatFullDate, formatLongDate, formatWatchDate, initials, parseDate, runtime } from "./format";
+import { dayLabel, formatFullDate, formatLongDate, formatWatchDate, initials, parseDate, runtime, untilLabel } from "./format";
 
 const ref = parseDate("2026-10-05");
 
@@ -18,6 +18,20 @@ describe("dates by precision", () => {
   it("has a long form", () => {
     expect(formatLongDate("2026-10-03", "day", ref)).toBe("Sat, Oct 3");
     expect(formatFullDate("2017-10-06")).toBe("Oct 6, 2017");
+  });
+});
+
+describe("untilLabel", () => {
+  it("says when, relative to today", () => {
+    const ref = new Date(2026, 9, 5); // Monday
+    expect(untilLabel("2026-10-05", ref)).toBe("today");
+    expect(untilLabel("2026-10-06", ref)).toBe("tomorrow");
+    expect(untilLabel("2026-10-09", ref)).toBe("on Friday");
+    expect(untilLabel("2026-10-14", ref)).toBe("next week");
+    expect(untilLabel("2026-10-26", ref)).toBe("in 3 weeks");
+    expect(untilLabel("2026-11-20", ref)).toBe("next month");
+    expect(untilLabel("2027-02-05", ref)).toBe("in 4 months");
+    expect(untilLabel("2027-12-01", ref)).toBe("next year");
   });
 });
 

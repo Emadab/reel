@@ -82,6 +82,7 @@ export type Hit = {
 };
 export type MediaSearch = { local: ItemCard[]; results: Hit[] };
 export type UpNext = { item: ItemCard; episode: Episode; progress: Progress; last: string };
+export type Upcoming = { item: ItemCard; episode: Episode };
 
 export type Note = { id: number; type: string; title: string; text: string; path: string | null; item_id: number | null; created_at: string; seen: boolean };
 export type CalendarEntry = { at: string; day: string; item: ItemCard; label: string; title: string | null; aired: boolean };
@@ -137,6 +138,7 @@ export const mediaApi = {
   history: (id: number, body: { upto_season: number | null; started_on?: string; finished_on?: string; date_precision: RunPrecision; rating?: number | null; on_air_dates?: boolean; variant?: Record<string, string> }) =>
     request<ItemDetail>("POST", `/media/items/${id}/history`, { body }),
   upNext: () => request<UpNext[]>("GET", "/media/shows/up-next"),
+  upcoming: () => request<Upcoming[]>("GET", "/media/shows/upcoming"),
   notifications: () => request<{ unseen: number; items: Note[] }>("GET", "/notifications"),
   seen: (ids?: number[]) => request<void>("POST", "/notifications/seen", { body: { ids: ids ?? null } }),
   calendar: (kind: Kind) => request<CalendarEntry[]>("GET", `/media/${kind}/calendar`),
@@ -186,6 +188,7 @@ export const useMediaRecs = (kind: Kind, wild = false) =>
 export const useMediaMap = (kind: Kind) => useQuery({ queryKey: ["media", kind, "map"], queryFn: () => mediaApi.tastemap(kind) });
 export const useBacklog = () => useQuery({ queryKey: ["media", "backlog"], queryFn: mediaApi.backlog });
 export const useUpNext = (enabled: boolean) => useQuery({ queryKey: ["media", "show", "up-next"], queryFn: mediaApi.upNext, enabled });
+export const useUpcoming = () => useQuery({ queryKey: ["media", "show", "upcoming"], queryFn: mediaApi.upcoming });
 
 /** Any media write can change every media view; movie queries are left alone. */
 export function useMediaMut<A, R>(fn: (a: A) => Promise<R>) {

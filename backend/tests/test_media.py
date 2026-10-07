@@ -113,6 +113,8 @@ def test_show_states_watching_caught_up_and_new_episode(media, monkeypatch):
     d = tick(media, card["id"], [ep_id(d, 1, 2)])
     assert d["status"] == "caught_up" and d["next_episode"] is None
     assert tick(media, card["id"], [ep_id(d, 2, 1)])["progress"]["watched"] == 2  # unaired: ignored
+    soon = media.get("/api/media/shows/upcoming").json()
+    assert [(u["item"]["id"], u["episode"]["season"], u["episode"]["number"]) for u in soon] == [(card["id"], 2, 1)]
 
     monkeypatch.setattr(shows, "now", lambda: datetime(2100, 1, 1, tzinfo=UTC))  # S2E1 airs
     with Session(db.engine) as s:

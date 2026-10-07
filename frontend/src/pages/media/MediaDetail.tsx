@@ -13,7 +13,8 @@ import { useToast } from "../../components/Toasts";
 import { Button, ErrorLine, Eyebrow, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
 import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
 import { onColor } from "../../lib/color";
-import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today } from "../../lib/format";
+import { celebrate } from "../../lib/celebrate";
+import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today, untilLabel } from "../../lib/format";
 import { backTarget } from "../../lib/history";
 import { MODES, SHELF_LABEL, START, STATUS_LABEL, statusLabel } from "../../lib/mode";
 import { ScoreGrid, Scores, votes } from "../FilmDetail";
@@ -445,12 +446,15 @@ function Episodes({ item }: { item: ItemDetail }) {
   const done = aired.filter((e) => e.watched).length;
   const all = aired.length > 0 && done === aired.length;
 
-  const toggle = (e: Episode, ev: MouseEvent) => {
+  const toggle = (e: Episode, ev: MouseEvent<HTMLButtonElement>) => {
+    const check = ev.currentTarget.querySelector("[data-check]");
+    // ticking off the last of a season (or catching up) gets the big burst
+    const cheer = { onSuccess: (d: ItemDetail) => celebrate(check, { big: shown.number > 0 && d.next_episode?.season !== shown.number, colors: item.palette.slice(0, 2) }) };
     if (ev.shiftKey && !e.watched) {
       // shift-click: everything aired up to here
       const ids = shown.episodes.filter((x) => x.aired && !x.watched && x.number <= e.number).map((x) => x.id);
-      tick.mutate({ episode_ids: ids, watched: true });
-    } else tick.mutate({ episode_ids: [e.id], watched: !e.watched });
+      tick.mutate({ episode_ids: ids, watched: true }, cheer);
+    } else tick.mutate({ episode_ids: [e.id], watched: !e.watched }, e.watched ? undefined : cheer);
   };
 
   return (
@@ -540,6 +544,7 @@ function Episodes({ item }: { item: ItemDetail }) {
                 </span>
                 <motion.span
                   key={pop != null ? landed!.k : 0}
+                  data-check
                   aria-hidden
                   initial={pop != null ? { scale: 0.2, rotate: -45 } : false}
                   animate={{ scale: 1, rotate: 0 }}
@@ -1028,9 +1033,12 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
     kind === "show" && active && next ? (
       <button
         type="button" disabled={tickNext.isPending}
-        onClick={async () => {
-          await tickNext.mutateAsync(next.id);
-          toast({ text: <>Watched S{next.season} · E{next.number}</> });
+        onClick={async (ev) => {
+          const btn = ev.currentTarget;
+          const d = await tickNext.mutateAsync(next.id);
+          const done = d.next_episode == null;
+          celebrate(btn, { big: done || d.next_episode!.season !== next.season, colors: [glow, glow2] });
+          toast({ text: done ? <>Caught up on <em>{item.title}</em></> : <>Watched S{next.season} · E{next.number}</> });
         }}
         className="flex items-center gap-2 h-[46px] px-5 rounded-[14px] font-semibold text-[14px] border-0 cursor-pointer"
         style={{ background: glow, color: onColor(glow), boxShadow: `0 10px 30px -10px ${glow}` }}
@@ -1039,7 +1047,19 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
         Watched S{next.season} · E{next.number}
       </button>
     ) : !active || (kind === "show" && !next && run?.status !== "watching") ? (
-      kind === "show" && run?.status === "caught_up" ? null : (
+      kind === "show" && run?.status === "caught_up" ? (
+        <span className="flex items-center gap-2 h-[46px] px-[18px] rounded-[14px] bg-white/8 border border-(--line-5) text-ink text-[14px] backdrop-blur-[16px]">
+          <IconCalendar size={15} />
+          {item.upcoming_episode?.airstamp ? (
+            <span>
+              S{item.upcoming_episode.season} · E{item.upcoming_episode.number} airs <span className="font-semibold" style={{ color: glow }}>{untilLabel(item.upcoming_episode.airstamp)}</span>
+              <span className="text-ink-3"> · {formatFullDate(iso(new Date(item.upcoming_episode.airstamp)))}</span>
+            </span>
+          ) : (
+            <span className="text-ink-2">Caught up · next episode not announced yet</span>
+          )}
+        </span>
+      ) : (
         <button
           type="button" disabled={start.isPending}
           onClick={async () => {
