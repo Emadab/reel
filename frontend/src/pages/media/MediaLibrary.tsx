@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link } from "react-router";
+import { useStickySearch } from "../../lib/history";
 import { mediaApi, useMediaLibrary, useMediaMut, useUpcoming, useUpNext, type ItemCard, type Kind, type MediaSort, type UpNext } from "../../api/media";
 import { FilterChip } from "../../components/FilterChip";
 import { useAmbientGlow } from "../../components/Glow";
@@ -261,7 +262,7 @@ function InProgressStrip({ kind, items }: { kind: Kind; items: ItemCard[] }) {
 }
 
 export default function MediaLibrary({ kind }: { kind: Kind }) {
-  const [sp, setSp] = useSearchParams();
+  const [sp, setSp] = useStickySearch(kind, MODES[kind].base);
   const { openPalette } = usePalette();
   const tabs = TABS[kind];
   const tab = tabs.find((t) => t.id === sp.get("tab")) ?? null;

@@ -1,6 +1,7 @@
 import { AnimatePresence } from "framer-motion";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useStickySearch } from "../lib/history";
 import type { LibraryParams } from "../api/client";
 import { useFacets, useLibrary, useWatchlistToggle } from "../api/hooks";
 import type { CardWithWatch, FilmCard } from "../api/types";
@@ -174,7 +175,7 @@ export function WallCard({ film, tab }: { film: FilmCard; tab: Tab }) {
 const grid = "grid grid-cols-[repeat(auto-fill,minmax(min(150px,100%),1fr))] gap-x-5 gap-y-8 max-[639px]:grid-cols-2 max-[639px]:gap-x-3 max-[639px]:gap-y-5";
 
 export function Library() {
-  const [sp, setSp] = useSearchParams();
+  const [sp, setSp] = useStickySearch("movie", "/");
   const { openPalette } = usePalette();
   const params: LibraryParams = useMemo(
     () => ({
