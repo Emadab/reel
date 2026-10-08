@@ -64,10 +64,18 @@ def load_geometry() -> dict:
         return {"width": 1440, "height": 900, "x": None, "y": None, "maximized": False}
 
 
+PORT = 47613  # fixed so the page's origin, and the localStorage it owns (library filters, sort), survives restarts
+
+
 def free_port() -> int:
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+    for port in (PORT, 0):  # 0: the usual one is taken, any free port (that launch starts with fresh filters)
+        with socket.socket() as s:
+            try:
+                s.bind(("127.0.0.1", port))
+            except OSError:
+                continue
+            return s.getsockname()[1]
+    raise OSError("no free port")
 
 
 if user32:
@@ -260,7 +268,7 @@ def main() -> None:
             STATE.write_text(json.dumps({**load_geometry(), "maximized": True}))
 
     window.events.closing += remember
-    webview.start(setup_native, (window, g["maximized"]), storage_path=str(settings.data_dir / "webview"), debug=bool(os.environ.get("REEL_DEBUG")))  # REEL_DEBUG=1 opens WebView2 devtools
+    webview.start(setup_native, (window, g["maximized"]), private_mode=False, storage_path=str(settings.data_dir / "webview"), debug=bool(os.environ.get("REEL_DEBUG")))  # REEL_DEBUG=1 opens WebView2 devtools
     # Closed: free the name at once so the next launch starts, then end the server outright rather than wait on
     # whatever background job is mid-run (embeddings, UMAP, box art). SQLite rolls back anything interrupted.
     if _mutex:
