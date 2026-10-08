@@ -20,8 +20,8 @@ export function VisuallyHidden({ children, ...p }: ComponentProps<"span">) {
   );
 }
 
-const primary = "flex items-center gap-2 h-11 px-[18px] rounded-[14px] bg-accent text-on-accent font-semibold text-[14px] cursor-pointer border-0 whitespace-nowrap disabled:opacity-60 disabled:cursor-default no-underline";
-const secondary = "flex items-center gap-2 h-11 px-[18px] rounded-[14px] border border-(--line-5) bg-(--fill-ctl) text-ink text-[14px] cursor-pointer hover:bg-white/10 whitespace-nowrap no-underline";
+const primary = "flex items-center gap-2 h-11 px-[18px] rounded-[14px] bg-accent text-on-accent font-semibold text-[14px] cursor-pointer border-0 whitespace-nowrap disabled:opacity-60 disabled:cursor-default no-underline transition-[scale,background-color] duration-100 active:scale-[.95]";
+const secondary = "flex items-center gap-2 h-11 px-[18px] rounded-[14px] border border-(--line-5) bg-(--fill-ctl) text-ink text-[14px] cursor-pointer hover:bg-white/10 whitespace-nowrap no-underline transition-[scale,background-color] duration-100 active:scale-[.95]";
 
 type BtnProps = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary"; hero?: boolean };
 export function Button({ variant = "secondary", hero, className, type = "button", ...p }: BtnProps) {
@@ -39,7 +39,7 @@ export function IconButton({ label, on, shrink, className, children, type = "but
       aria-label={label}
       {...p}
       className={cx(
-        "size-11 rounded-[12px] border grid place-items-center cursor-pointer",
+        "size-11 rounded-[12px] border grid place-items-center cursor-pointer transition-[scale,background-color] duration-100 active:scale-[.95]",
         !shrink && "shrink-0",
         on ? "bg-accent border-accent text-on-accent" : "border-(--line-4) bg-transparent text-ink hover:bg-white/10",
         className,

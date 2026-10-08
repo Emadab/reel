@@ -1,13 +1,14 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Fragment, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { mediaApi, useMediaMut, useMediaRecs, type ItemCard, type Kind, type MediaRec } from "../../api/media";
 import { alpha, useAmbientGlow } from "../../components/Glow";
-import { IconBookmark, IconCheck, IconNotInterested, IconThumbUp } from "../../components/Icons";
 import { Poster, posterBg } from "../../components/Poster";
-import { RatingInput } from "../../components/Rating";
+import { CardActions, CardWhy, HeroActions, type Answers } from "../../components/RecActions";
 import { RecHealth, joinAnd } from "../../components/RecHealth";
 import { useToast } from "../../components/Toasts";
-import { Button, ErrorLine, IconButton, PageHeader, Segmented, TagChip, cx } from "../../components/ui";
+import { Button, ErrorLine, PageHeader, Segmented, TagChip, cx } from "../../components/ui";
+import { whenCalm } from "../../lib/celebrate";
 import { pct, rating, relativeTime } from "../../lib/format";
 import { MODES, SHELF_LABEL } from "../../lib/mode";
 import { asFilm, itemPath, pagePad } from "./parts";
@@ -16,40 +17,59 @@ type Filter = "all" | "wild";
 
 const SEEN: Record<Kind, string> = { show: "Seen it, rate it", book: "Read it, rate it", game: "Played it, rate it" };
 
-/** The same four answers a film suggestion takes: want it, more like this, already had it, not interested. */
-function useAnswers(r: MediaRec, kind: Kind) {
+/** The same four answers a film suggestion takes, applied at once and saved behind; a failed save puts the answer
+ *  back. Lists refresh once the animation has played, except this slate, which keeps its cards where they are. */
+function useAnswers(r: MediaRec, kind: Kind): Answers {
   const toast = useToast();
-  const wish = SHELF_LABEL[kind].wishlist;
+  const qc = useQueryClient();
+  const wish = SHELF_LABEL[kind].wishlist.toLowerCase();
+  const [saved, setSaved] = useState(r.shelf === "wishlist");
   const [liked, setLiked] = useState(r.liked);
   const [hidden, setHidden] = useState(false);
   const [rated, setRated] = useState<number | null>(null);
-  const shelf = useMediaMut((s: string) => mediaApi.patch(r.id, { shelf: s }));
-  const like = useMediaMut((v: boolean) => mediaApi.feedback(r.id, v));
-  const seen = useMediaMut((v: number | null) => mediaApi.seenIt(r.id, v));
+  const [open, setOpen] = useState(false);
+  const was = r.shelf === "wishlist" || r.shelf === "not_interested" ? "" : r.shelf ?? "";
+  const send = <T,>(call: Promise<T>, undo: () => void) =>
+    call.then(
+      () => whenCalm(() => void qc.invalidateQueries({ predicate: (q) => q.queryKey[0] === "media" && q.queryKey[2] !== "recs" })),
+      () => {
+        undo();
+        toast({ text: "Couldn't reach the backend" });
+      },
+    );
   return {
     wish,
-    saved: r.shelf === "wishlist",
+    seen: SEEN[kind],
+    saved,
     liked,
-    hidden,
     rated,
-    save: async () => {
-      await shelf.mutateAsync("wishlist");
-      toast({ text: <>Added <em>{r.title}</em> to your {wish.toLowerCase()}</> });
+    hidden,
+    rating: open,
+    save: () => {
+      const next = !saved;
+      setSaved(next);
+      if (next) setHidden(false);
+      void send(mediaApi.patch(r.id, { shelf: next ? "wishlist" : was }), () => setSaved(!next));
     },
-    toggleLike: () => {
-      setLiked(!liked); // optimistic
-      like.mutate(!liked, { onError: () => { setLiked(liked); toast({ text: "Couldn't reach the backend" }); } });
+    like: () => {
+      setLiked(!liked);
+      void send(mediaApi.feedback(r.id, !liked), () => setLiked(liked));
     },
-    hide: async () => {
-      setHidden(true);
-      await shelf.mutateAsync("not_interested");
-      toast({ text: "Got it. It won't come back." });
-    },
-    rate: async (v: number | null) => {
-      if (v == null) return;
+    openRating: () => setOpen((o) => !o),
+    rate: (v) => {
       setRated(v);
-      await seen.mutateAsync(v);
-      toast({ text: <>Logged <em>{r.title}</em> · ★ {rating(v)}</> });
+      setOpen(false);
+      void send(mediaApi.seenIt(r.id, v), () => setRated(null));
+    },
+    hide: () => {
+      const next = !hidden;
+      setHidden(next);
+      if (next) setSaved(false); // the shelf can only be one of them
+      if (next && liked) {
+        setLiked(false); // and a like makes no sense on something hidden
+        void send(mediaApi.feedback(r.id, false), () => setLiked(true));
+      }
+      void send(mediaApi.patch(r.id, { shelf: next ? "not_interested" : was }), () => setHidden(!next));
     },
   };
 }
@@ -71,7 +91,6 @@ function Because({ items }: { items: ItemCard[] }) {
 
 function TopPick({ r, kind }: { r: MediaRec; kind: Kind }) {
   const a = useAnswers(r, kind);
-  const [rating_, setRating] = useState(false);
   const glow = r.palette[0] ?? posterBg(asFilm(r));
   const wild = r.wildcard;
   return (
@@ -92,15 +111,7 @@ function TopPick({ r, kind }: { r: MediaRec; kind: Kind }) {
             {r.reasons.slice(0, 4).map((x) => <TagChip key={x} strong>{x}</TagChip>)}
           </div>
         )}
-        <div className="flex flex-wrap gap-[10px] mt-2">
-          <Button variant="primary" hero className="px-5" disabled={a.saved} onClick={a.save} title={a.saved ? `Already on your ${a.wish.toLowerCase()}` : "Save it for later; the model counts it as interest"}>
-            <IconBookmark size={16} strokeWidth={2.2} />
-            {a.saved ? `On your ${a.wish.toLowerCase()}` : `Add to ${a.wish.toLowerCase()}`}
-          </Button>
-          <Button hero aria-expanded={rating_} onClick={() => setRating((v) => !v)} title={a.rated != null ? "Your rating; the model has learned from it" : "Log it and rate it; your rating teaches the model"}>{a.rated != null ? `Logged · ★ ${rating(a.rated)}` : SEEN[kind]}</Button>
-          <Button hero aria-pressed={a.hidden} onClick={a.hide} title={a.hidden ? "Hidden; the model steers away from it" : "Hide it and steer away from things like it"}>{a.hidden ? "Hidden, model notified" : "Not interested"}</Button>
-        </div>
-        {rating_ && a.rated == null && <RatingInput label="Your rating" value={null} onChange={a.rate} />}
+        <HeroActions a={a} />
       </div>
       <div className="relative flex flex-col items-end gap-[6px] max-[639px]:items-start">
         <span className="font-mono text-[11px] tracking-[0.1em] text-ink-3">CHANCE YOU RATE IT 4+</span>
@@ -112,9 +123,7 @@ function TopPick({ r, kind }: { r: MediaRec; kind: Kind }) {
 
 function RecCard({ r, kind }: { r: MediaRec; kind: Kind }) {
   const a = useAnswers(r, kind);
-  const [rating_, setRating] = useState(false);
   const wild = r.wildcard;
-  const status = a.hidden ? "Hidden, model notified" : a.rated != null ? `Logged · ★ ${rating(a.rated)}` : a.liked ? "Noted: more like this" : a.saved ? `On your ${a.wish.toLowerCase()}` : "";
   const why = r.why ?? (r.because.length ? `Because you loved ${joinAnd(r.because.map((b) => b.title))}` : r.reasons[0] ?? "");
   return (
     <article
@@ -133,29 +142,8 @@ function RecCard({ r, kind }: { r: MediaRec; kind: Kind }) {
           <span className="shrink-0 font-mono text-[14px]" style={{ color: wild ? "var(--color-wild)" : "var(--color-score)" }}>{pct(r.score)}</span>
         </div>
         <span className="truncate text-[13px] text-ink-3">{[r.subtitle, r.year, r.genres.slice(0, 2).join(", ")].filter(Boolean).join(" · ")}</span>
-        {/* a fixed two-line slot: the reason, or the rating keys while "seen it" is open, so every card keeps one size */}
-        <div className="h-[44px] flex items-start">
-          {rating_ && a.rated == null ? (
-            <div className="w-full"><RatingInput compact hideLabel label={`Rate ${r.title}`} value={null} onChange={a.rate} /></div>
-          ) : (
-            <p className="m-0 line-clamp-2 text-[14px] leading-[1.45] text-ink-body">{why}</p>
-          )}
-        </div>
-        <div className="flex gap-[6px] mt-auto pt-[6px]">
-          <IconButton shrink label={a.saved ? `On your ${a.wish.toLowerCase()}` : `Add to ${a.wish.toLowerCase()}`} on={a.saved} onClick={() => !a.saved && a.save()}>
-            <IconBookmark size={18} />
-          </IconButton>
-          <IconButton shrink label="More like this" aria-pressed={a.liked} on={a.liked} onClick={a.toggleLike}>
-            <IconThumbUp size={18} />
-          </IconButton>
-          <IconButton shrink label={SEEN[kind]} aria-expanded={rating_} on={a.rated != null} onClick={() => setRating((v) => !v)}>
-            <IconCheck size={18} />
-          </IconButton>
-          <IconButton shrink label="Not interested" aria-pressed={a.hidden} onClick={a.hide}>
-            <IconNotInterested size={18} />
-          </IconButton>
-          <span className="ml-auto self-center min-w-0 truncate text-[12px] text-ink-4 text-right">{status}</span>
-        </div>
+        <CardWhy a={a} why={why} title={r.title} />
+        <CardActions a={a} />
       </div>
     </article>
   );

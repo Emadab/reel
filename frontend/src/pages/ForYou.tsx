@@ -1,52 +1,76 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence } from "framer-motion";
 import { Fragment, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { api } from "../api/client";
 import { useLogWatch, useOnboarding, useRecs } from "../api/hooks";
 import type { FilmCard, Reaction, Rec } from "../api/types";
 import { alpha } from "../components/Glow";
-import { IconBookmark, IconNotInterested, IconThumbUp } from "../components/Icons";
 import { Poster, posterBg } from "../components/Poster";
-import { QuickLog } from "../components/QuickLog";
 import { RatingInput } from "../components/Rating";
 import { useToast } from "../components/Toasts";
+import { CardActions, CardWhy, HeroActions, type Answers } from "../components/RecActions";
 import { RecHealth, joinAnd } from "../components/RecHealth";
-import { Button, ButtonLink, ErrorLine, IconButton, PageHeader, Segmented, TagChip } from "../components/ui";
+import { Button, ButtonLink, ErrorLine, PageHeader, Segmented, TagChip } from "../components/ui";
+import { whenCalm } from "../lib/celebrate";
 import { iso, pct, rating, relativeTime, runtime, today } from "../lib/format";
 
 type Filter = "all" | "short" | "wild";
 
-function useReaction(rec: Rec) {
+/** A film suggestion's answers, applied at once and saved behind; a failed save puts the answer back. */
+function useAnswers(rec: Rec): Answers {
   const [reaction, setReaction] = useState<Reaction>(rec.reaction ?? null);
   const [saved, setSaved] = useState(rec.on_watchlist);
+  const [rated, setRated] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
   const toast = useToast();
   const qc = useQueryClient();
+  const fail = (undo: () => void) => () => {
+    undo();
+    toast({ text: "Couldn't reach the backend" });
+  };
   const toggle = (signal: "like" | "not_interested") => {
     const prev = reaction;
     const next = prev === signal ? null : signal;
-    setReaction(next); // optimistic
+    setReaction(next);
     const calls: Promise<unknown>[] = [];
     if (prev === "like" || prev === "not_interested") calls.push(api.undoFeedback(rec.tmdb_id, prev));
     if (next) calls.push(api.feedback(rec.tmdb_id, next));
-    Promise.all(calls).catch(() => {
-      setReaction(prev);
-      toast({ text: "Couldn't reach the backend" });
-    });
+    Promise.all(calls).catch(fail(() => setReaction(prev)));
   };
-  const save = async () => {
-    setSaved(true);
-    try {
-      await api.addToWatchlist(rec.tmdb_id);
-      await api.feedback(rec.tmdb_id, "added_watchlist");
-      qc.invalidateQueries({ queryKey: ["library"] });
-      toast({ text: <>Added <em>{rec.title}</em> to your watchlist</> });
-    } catch (e) {
-      setSaved(false);
-      toast({ text: e instanceof Error ? e.message : "Couldn't save" });
-    }
+  const save = () => {
+    const next = !saved;
+    setSaved(next);
+    const calls = next
+      ? [api.addToWatchlist(rec.tmdb_id), api.feedback(rec.tmdb_id, "added_watchlist")]
+      : [api.removeFromWatchlist(rec.tmdb_id), api.undoFeedback(rec.tmdb_id, "added_watchlist").catch(() => {})];
+    Promise.all(calls).then(() => whenCalm(() => void qc.invalidateQueries({ queryKey: ["library"] })), fail(() => setSaved(!next)));
   };
-  return { reaction, toggle, saved, save };
+  return {
+    wish: "watchlist",
+    seen: "Seen it, rate it",
+    saved,
+    liked: reaction === "like",
+    rated,
+    hidden: reaction === "not_interested",
+    rating: open,
+    save,
+    like: () => toggle("like"),
+    openRating: () => setOpen((o) => !o),
+    rate: (v) => {
+      setRated(v);
+      setOpen(false);
+      void api.feedback(rec.tmdb_id, "seen_rated").catch(() => {});
+      api.logWatch({
+        tmdb_id: rec.tmdb_id, watched_on: iso(today()), date_precision: "unknown", rating: v,
+        is_rewatch: false, location: null, with_whom: null, notes: null,
+      }).then(() => whenCalm(() => void qc.invalidateQueries({ predicate: (q) => q.queryKey[0] !== "recs" })), fail(() => setRated(null)));
+    },
+    hide: () => {
+      // not interested takes it off the watchlist too (and replaces a like)
+      if (reaction !== "not_interested" && saved) save();
+      toggle("not_interested");
+    },
+  };
 }
 
 function Because({ films }: { films: FilmCard[] }) {
@@ -65,21 +89,15 @@ function Because({ films }: { films: FilmCard[] }) {
 }
 
 function TopPick({ rec }: { rec: Rec }) {
-  const [quick, setQuick] = useState(false);
-  const { reaction, toggle, saved, save } = useReaction(rec);
+  const a = useAnswers(rec);
   const glow = rec.glow ?? posterBg(rec);
   const wild = rec.is_wildcard;
   return (
-    <section aria-label="Top pick" className="relative flex flex-wrap gap-9 p-7 rounded-[26px] bg-(--fill-glass) border border-(--line-3) backdrop-blur-[24px] overflow-hidden transition-opacity duration-300" style={{ opacity: reaction === "not_interested" ? 0.4 : 1 }}>
+    <section aria-label="Top pick" className="relative flex flex-wrap gap-9 p-7 rounded-[26px] bg-(--fill-glass) border border-(--line-3) backdrop-blur-[24px] overflow-hidden transition-opacity duration-300" style={{ opacity: a.hidden ? 0.4 : 1 }}>
       <div aria-hidden className="absolute right-[-120px] top-[-200px] w-[760px] h-[560px] pointer-events-none" style={{ background: `radial-gradient(closest-side, ${alpha(glow, 0.32)}, ${alpha(glow, 0)})` }} />
-      <div className="relative self-start">
-        <Link to={`/film/${rec.tmdb_id}?from=recs`} aria-label={rec.title} className="relative no-underline">
-          <Poster film={rec} size="top" eager className="w-[190px] max-[639px]:w-[140px]" shadow={`0 34px 70px -30px ${glow}`} />
-        </Link>
-        <AnimatePresence>
-          {quick && <QuickLog film={{ ...rec, watch_count: 0 }} onClose={() => setQuick(false)} className="rounded-b-[16px]" />}
-        </AnimatePresence>
-      </div>
+      <Link to={`/film/${rec.tmdb_id}?from=recs`} aria-label={rec.title} className="relative self-start no-underline">
+        <Poster film={rec} size="top" eager className="w-[190px] max-[639px]:w-[140px]" shadow={`0 34px 70px -30px ${glow}`} />
+      </Link>
       <div className="relative flex-[1_1_380px] flex flex-col gap-[14px] min-w-0">
         <span className="font-mono text-[12px] tracking-[0.12em]" style={{ color: wild ? "var(--color-wild)" : "var(--color-score)" }}>{wild ? "WILDCARD PICK" : "TOP PICK TONIGHT"}</span>
         <h2 className="m-0 font-display font-semibold text-[44px] max-[639px]:text-[32px] leading-[1.05]">
@@ -92,26 +110,7 @@ function TopPick({ rec }: { rec: Rec }) {
             {rec.reasons.slice(0, 4).map((r) => <TagChip key={r} strong>{r}</TagChip>)}
           </div>
         )}
-        <div className="flex flex-wrap gap-[10px] mt-2">
-          <Button variant="primary" hero className="px-5" disabled={saved} onClick={save} title={saved ? "Already on your watchlist" : "Save it for later; the model counts it as interest"}>
-            <IconBookmark size={16} strokeWidth={2.2} />
-            {saved ? "On your watchlist" : "Add to watchlist"}
-          </Button>
-          <Button
-            hero
-            title="Log it and rate it; your rating teaches the model"
-            aria-expanded={quick}
-            onClick={() => {
-              void api.feedback(rec.tmdb_id, "seen_rated").catch(() => {});
-              setQuick(true);
-            }}
-          >
-            Seen it, rate it
-          </Button>
-          <Button hero aria-pressed={reaction === "not_interested"} onClick={() => toggle("not_interested")} title={reaction === "not_interested" ? "Undo: show it again" : "Hide it and steer away from films like it"}>
-            {reaction === "not_interested" ? "Hidden, model notified" : "Not interested"}
-          </Button>
-        </div>
+        <HeroActions a={a} />
       </div>
       <div className="relative flex flex-col items-end gap-[6px] max-[639px]:items-start">
         <span className="font-mono text-[11px] tracking-[0.1em] text-ink-3">CHANCE YOU RATE IT 4+</span>
@@ -122,14 +121,13 @@ function TopPick({ rec }: { rec: Rec }) {
 }
 
 function RecCard({ rec }: { rec: Rec }) {
-  const { reaction, toggle, saved, save } = useReaction(rec);
+  const a = useAnswers(rec);
   const wild = rec.is_wildcard;
-  const status = reaction === "not_interested" ? "Hidden, model notified" : reaction === "like" ? "Noted: more like this" : saved ? "On your watchlist" : "";
   const why = rec.why ?? (rec.because.length ? `Because you loved ${joinAnd(rec.because.map((b) => b.title))}` : rec.reasons[0] ?? "");
   return (
     <article
       className="flex gap-[18px] p-[18px] rounded-[22px] bg-(--fill-card) border transition-opacity duration-300"
-      style={{ borderColor: wild ? "rgba(240,182,218,0.35)" : "var(--line-1)", opacity: reaction === "not_interested" ? 0.4 : 1 }}
+      style={{ borderColor: wild ? "rgba(240,182,218,0.35)" : "var(--line-1)", opacity: a.hidden ? 0.4 : 1 }}
     >
       <Link to={`/film/${rec.tmdb_id}?from=recs`} aria-label={rec.title} className="w-[116px] shrink-0 self-start no-underline">
         {/* a standard 2:3 poster (116 × 174) that sets the card's height; nothing is stretched */}
@@ -144,20 +142,8 @@ function RecCard({ rec }: { rec: Rec }) {
           <span className="shrink-0 font-mono text-[14px]" style={{ color: wild ? "var(--color-wild)" : "var(--color-score)" }}>{pct(rec.score)}</span>
         </div>
         <span className="truncate text-[13px] text-ink-3">{[rec.director, rec.year, runtime(rec.runtime)].filter(Boolean).join(" · ")}</span>
-        {/* at most two lines, so a long reason can't make one card taller than the rest */}
-        <p className="m-0 line-clamp-2 text-[14px] leading-[1.45] text-ink-body">{why}</p>
-        <div className="flex gap-[6px] mt-auto pt-[6px]">
-          <IconButton shrink label={saved ? "On your watchlist" : "Add to watchlist"} on={saved} onClick={() => !saved && save()}>
-            <IconBookmark size={18} />
-          </IconButton>
-          <IconButton shrink label="More like this" aria-pressed={reaction === "like"} on={reaction === "like"} onClick={() => toggle("like")}>
-            <IconThumbUp size={18} />
-          </IconButton>
-          <IconButton shrink label="Not interested" aria-pressed={reaction === "not_interested"} onClick={() => toggle("not_interested")}>
-            <IconNotInterested size={18} />
-          </IconButton>
-          <span className="ml-auto self-center min-w-0 truncate text-[12px] text-ink-4">{status}</span>
-        </div>
+        <CardWhy a={a} why={why} title={rec.title} />
+        <CardActions a={a} />
       </div>
     </article>
   );
