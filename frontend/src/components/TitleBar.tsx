@@ -106,7 +106,7 @@ export function TitleBar() {
     const onScroll = () => {
       frame ||= requestAnimationFrame(check);
     };
-    check();
+    frame = requestAnimationFrame(check); // not mid-commit: reading the heading's position there forces a layout
     document.body.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       cancelAnimationFrame(frame);

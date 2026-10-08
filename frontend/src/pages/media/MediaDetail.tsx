@@ -13,7 +13,7 @@ import { useToast } from "../../components/Toasts";
 import { Button, DetailSkeleton, ErrorLine, Eyebrow, fadeIn, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
 import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
 import { onColor } from "../../lib/color";
-import { celebrate } from "../../lib/celebrate";
+import { celebrate, primeCelebrate } from "../../lib/celebrate";
 import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today, untilLabel } from "../../lib/format";
 import { backTarget } from "../../lib/history";
 import { MODES, SHELF_LABEL, START, STATUS_LABEL, statusLabel } from "../../lib/mode";
@@ -531,6 +531,7 @@ function Episodes({ item }: { item: ItemDetail }) {
                 aria-label={`${e.watched ? "Unmark" : "Mark"} S${e.season} ${code}${e.title ? ` ${e.title}` : ""} watched`}
                 disabled={!e.aired && !e.watched}
                 title={e.aired && !e.watched ? "Shift-click marks everything up to here" : undefined}
+                onPointerDown={primeCelebrate}
                 onClick={(ev) => toggle(e, ev)}
                 className="flex-1 min-w-0 self-stretch flex items-center gap-3 pl-[14px] pr-1 py-[10px] bg-transparent border-0 text-left text-inherit cursor-pointer disabled:cursor-default"
               >
@@ -1039,6 +1040,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
     kind === "show" && active && next ? (
       <button
         type="button" disabled={tickNext.isPending}
+        onPointerDown={primeCelebrate}
         onClick={async (ev) => {
           const btn = ev.currentTarget;
           const d = await tickNext.mutateAsync(next.id);

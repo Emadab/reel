@@ -10,7 +10,7 @@ import { Poster, posterBg } from "../../components/Poster";
 import { useToast } from "../../components/Toasts";
 import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx, usePop, useWindowed } from "../../components/ui";
 import { usePalette } from "../../features/search/palette";
-import { celebrate } from "../../lib/celebrate";
+import { celebrate, primeCelebrate } from "../../lib/celebrate";
 import { formatFullDate, iso, num, untilLabel } from "../../lib/format";
 import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
 import type { MenuAt } from "../../components/ContextMenu";
@@ -64,7 +64,7 @@ function StripScrollbar({ strip, count }: { strip: RefObject<HTMLDivElement | nu
     };
     const ro = new ResizeObserver(schedule);
     ro.observe(el);
-    measure();
+    schedule();
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
@@ -175,6 +175,7 @@ function UpNextRail() {
                   aria-label={`Mark ${u.item.title} ${code} watched`}
                   title="Mark watched"
                   disabled={tick.isPending && tick.variables?.item.id === u.item.id}
+                  onPointerDown={primeCelebrate}
                   onClick={() => void markNext(u)}
                   className="size-11 shrink-0 rounded-full grid place-items-center border border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_12%,transparent)] text-accent cursor-pointer transition-[background-color,color,box-shadow] duration-200 hover:bg-accent hover:text-on-accent hover:shadow-[0_0_18px_-2px_var(--color-accent)] disabled:cursor-wait disabled:animate-pulse"
                 >

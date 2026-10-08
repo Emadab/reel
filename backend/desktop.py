@@ -224,6 +224,9 @@ def main() -> None:
 
     g = load_geometry()
     start = "/" if settings.tmdb_token else "/settings"  # first run: ask for the TMDB token
+    # Render on the integrated GPU on dual-GPU laptops: it's plenty for the UI and keeps the discrete one asleep (battery).
+    # WebView2 reads extra Chromium flags from this variable; pywebview's own flag is repeated in case it takes over.
+    os.environ.setdefault("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--disable-features=ElasticOverscroll --force_low_power_gpu")
     webview.settings["ALLOW_DOWNLOADS"] = True  # backups land in Downloads
     webview.settings["OPEN_EXTERNAL_LINKS_IN_BROWSER"] = True  # TMDB/IMDb links open in the default browser
     chrome = Chrome()

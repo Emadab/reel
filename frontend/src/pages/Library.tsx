@@ -1,5 +1,5 @@
 import { AnimatePresence } from "framer-motion";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, memo, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useStickySearch } from "../lib/history";
 import type { LibraryParams } from "../api/client";
@@ -128,7 +128,7 @@ function WallCardMenu({ film, at, onClose, onQuick }: { film: FilmCard; at: Menu
   );
 }
 
-export function WallCard({ film, tab }: { film: FilmCard; tab: Tab }) {
+export const WallCard = memo(function WallCard({ film, tab }: { film: FilmCard; tab: Tab }) {
   const [quick, setQuick] = useState(false);
   const menu = useContextMenu();
   const watched = film.watch_count > 0;
@@ -170,7 +170,7 @@ export function WallCard({ film, tab }: { film: FilmCard; tab: Tab }) {
       {menu.at && <WallCardMenu film={film} at={menu.at} onClose={menu.close} onQuick={() => setQuick(true)} />}
     </div>
   );
-}
+});
 
 const grid = "grid grid-cols-[repeat(auto-fill,minmax(min(150px,100%),1fr))] gap-x-5 gap-y-8 max-[639px]:grid-cols-2 max-[639px]:gap-x-3 max-[639px]:gap-y-5";
 

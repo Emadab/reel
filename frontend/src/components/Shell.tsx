@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, type ComponentType } from "react";
+import { useEffect, useRef, type ComponentType } from "react";
 import { NavLink, useLocation, useOutlet } from "react-router";
 import { CommandPalette, EditWatchDialog } from "../features/search/CommandPalette";
 import { usePalette } from "../features/search/palette";
 import { trackPath } from "../lib/history";
 import { MODES, useMode, type Mode } from "../lib/mode";
-import { GlowProvider } from "./Glow";
+import { AmbientGlow } from "./Glow";
 import { useSettings } from "../api/hooks";
 import { IconCalendar, IconForYou, IconLibrary, IconSearch, IconSettings, IconStats, IconTasteMap, IconTimeline } from "./Icons";
 import { NotificationBell } from "./NotificationBell";
@@ -158,24 +158,18 @@ function Sidebar() {
 export function Shell() {
   const loc = useLocation();
   const outlet = useOutlet();
-  const { openPalette, state } = usePalette();
+  const { openPalette } = usePalette();
   useModeAccent();
+  // pages fade up as they arrive (.page-in, a compositor animation that the mounting page can't stall); not the first
+  const key = /^\/(shows|books|games)(\/|$)/.test(loc.pathname) ? loc.pathname.split("/").slice(0, 3).join("/") : loc.pathname.split("/").slice(0, 2).join("/") + (loc.pathname.startsWith("/film/") ? loc.pathname : "");
+  const firstKey = useRef(key);
+  const navigated = useRef(false);
+  if (key !== firstKey.current) navigated.current = true;
   useEffect(() => trackPath(loc.pathname), [loc.pathname]);
   useEffect(() => {
     window.scrollTo(0, 0); // a block body: scrollTo() returns a Promise in newer Chromium
     document.body.scrollTo(0, 0); // the desktop window scrolls the body (under the title bar)
   }, [loc.pathname]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        if (state.kind === "closed") openPalette();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [openPalette, state.kind]);
 
   // ?log=:tmdbId opens the palette with the log form for that film
   useEffect(() => {
@@ -184,33 +178,23 @@ export function Shell() {
   }, [loc.search, openPalette]);
 
   return (
-    <GlowProvider>
-      {(glow) => (
-        <div className="min-h-screen bg-bg text-ink font-sans flex lg:flex-wrap relative overflow-clip">
-          <div
-            aria-hidden
-            className="ambient-glow absolute top-[-320px] right-[-180px] w-[980px] h-[680px] pointer-events-none"
-            style={{ "--glow-c": glow ?? "transparent" } as React.CSSProperties}
-          />
-          <TitleBar />
-          <ScrollRail />
-          <Sidebar />
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
-              key={/^\/(shows|books|games)(\/|$)/.test(loc.pathname) ? loc.pathname.split("/").slice(0, 3).join("/") : loc.pathname.split("/").slice(0, 2).join("/") + (loc.pathname.startsWith("/film/") ? loc.pathname : "")}
-              className="flex-[999_1_560px] max-[1023px]:flex-1 min-w-0 flex flex-col relative pt-(--tb)"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.2, 0.7, 0.2, 1] } }}
-              exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            >
-              {outlet}
-            </motion.div>
-          </AnimatePresence>
-          <CommandPalette />
-          <Tooltips />
-          <EditWatchDialog />
-        </div>
-      )}
-    </GlowProvider>
+    <div className="min-h-screen bg-bg text-ink font-sans flex lg:flex-wrap relative overflow-clip">
+      <AmbientGlow />
+      <TitleBar />
+      <ScrollRail />
+      <Sidebar />
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={key}
+          className={cx("flex-[999_1_560px] max-[1023px]:flex-1 min-w-0 flex flex-col relative pt-(--tb)", navigated.current && "page-in")}
+          exit={{ opacity: 0, transition: { duration: 0.12 } }}
+        >
+          {outlet}
+        </motion.div>
+      </AnimatePresence>
+      <CommandPalette />
+      <Tooltips />
+      <EditWatchDialog />
+    </div>
   );
 }

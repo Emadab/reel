@@ -46,7 +46,7 @@ export function ScrollRail() {
     const ro = new ResizeObserver(schedule);
     ro.observe(document.getElementById("root")!);
     ro.observe(body);
-    measure();
+    schedule(); // next frame, not mid-commit: reading sizes here would force an extra layout
     body.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => {

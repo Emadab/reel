@@ -39,9 +39,17 @@ window.addEventListener("vite:preloadError", (e) => reloadOnceForNewBuild() && e
 const qc = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 } } });
 
 // Pointing at (or tabbing to) a film or item link loads its page's code and data, so the click opens it at once and
-// the poster can morph into the hero instead of the page showing a skeleton first.
+// the poster can morph into the hero instead of the page showing a skeleton first. A pointer has to rest on the link
+// for a moment (long before any click lands), so a wall scrolling under a still cursor doesn't fetch every card.
+let resting: ReturnType<typeof setTimeout> | undefined;
 const warm = (e: Event) => {
-  const m = (e.target as Element | null)?.closest?.("a[href]")?.getAttribute("href")?.match(/^\/(film|shows|books|games)\/(\d+)/);
+  clearTimeout(resting);
+  const href = (e.target as Element | null)?.closest?.("a[href]")?.getAttribute("href");
+  if (e.type === "pointerover") resting = setTimeout(() => prefetch(href), 70);
+  else prefetch(href);
+};
+const prefetch = (href: string | null | undefined) => {
+  const m = href?.match(/^\/(film|shows|books|games)\/(\d+)/);
   if (!m) return;
   const id = Number(m[2]);
   if (m[1] === "film") {
@@ -54,6 +62,7 @@ const warm = (e: Event) => {
 };
 document.addEventListener("pointerover", warm);
 document.addEventListener("focusin", warm);
+document.addEventListener("pointerdown", warm, true);
 
 // Focus rings are for keyboard use. Chromium shows one on the last clicked button as soon as any key goes down, even a
 // lone Shift or Ctrl; so after a click, rings stay hidden until a real (non-modifier) key is pressed.

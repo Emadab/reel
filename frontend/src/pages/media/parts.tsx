@@ -1,5 +1,5 @@
 // Shared pieces for the show, book and game pages, built from Reel's existing components and tokens.
-import { useState, type ReactNode } from "react";
+import { memo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 import { mediaApi, useMediaMut, type ItemCard, type Kind, type Progress } from "../../api/media";
 import { ContextMenu, useContextMenu, type MenuAt, type MenuEntry } from "../../components/ContextMenu";
@@ -97,7 +97,7 @@ export function MediaCardMenu({ item, at, onClose, extra = [] }: { item: ItemCar
   return <ContextMenu at={at} title={item.title} items={items} onClose={onClose} />;
 }
 
-export function MediaCard({ item }: { item: ItemCard }) {
+export const MediaCard = memo(function MediaCard({ item }: { item: ItemCard }) {
   const menu = useContextMenu();
   const f = fraction(item.kind, item.progress);
   const active = item.status && !["completed", "finished", "beaten", "wishlist", "backlog"].includes(item.status);
@@ -118,7 +118,7 @@ export function MediaCard({ item }: { item: ItemCard }) {
       {menu.at && <MediaCardMenu item={item} at={menu.at} onClose={menu.close} />}
     </>
   );
-}
+});
 
 export const wallGrid = "grid grid-cols-[repeat(auto-fill,minmax(min(150px,100%),1fr))] gap-x-5 gap-y-8 max-[639px]:grid-cols-2 max-[639px]:gap-x-3 max-[639px]:gap-y-5";
 export const pagePad = "px-12 max-[1023px]:px-6 max-[639px]:px-4";

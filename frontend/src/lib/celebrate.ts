@@ -11,12 +11,24 @@ const SNAP = "cubic-bezier(.05,.9,.2,1)";
 const COOL = ["#ffffff", "#fff3c4", "#ffc65a", "#ff8a24", "#c2410c"]; // white-hot to ember
 
 let audio: AudioContext | null = null;
+let scrape: AudioBuffer | null = null;
+let hush: ReturnType<typeof setTimeout> | undefined;
+
+/** Starting the audio engine blocks for tens of ms. Tick buttons call this on pointer-down, so it happens while the
+ *  tick is saved, not when the burst lands (and not while idle, where it stalled whatever animation was running). */
+export function primeCelebrate() {
+  try {
+    audio ??= new AudioContext();
+  } catch {
+    // no audio device
+  }
+}
 
 /** A struck-steel clang: inharmonic partials ringing down over a bright scrape of noise. */
 function clang(big: boolean) {
   try {
-    audio ??= new AudioContext();
-    const ac = audio;
+    primeCelebrate();
+    const ac = audio!;
     void ac.resume();
     const t = ac.currentTime;
     const out = ac.createGain();
@@ -34,17 +46,22 @@ function clang(big: boolean) {
       o.start(t);
       o.stop(t + 1.2);
     });
-    const len = Math.floor(ac.sampleRate * 0.12);
-    const buf = ac.createBuffer(1, len, ac.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 3;
+    if (!scrape) {
+      const len = Math.floor(ac.sampleRate * 0.12);
+      scrape = ac.createBuffer(1, len, ac.sampleRate);
+      const data = scrape.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 3;
+    }
     const noise = ac.createBufferSource();
     const hp = ac.createBiquadFilter();
     hp.type = "highpass";
     hp.frequency.value = 3200;
-    noise.buffer = buf;
+    noise.buffer = scrape;
     noise.connect(hp).connect(out);
     noise.start(t);
+    // once it has rung out, stop the audio thread (a running context burns CPU and battery on silence)
+    clearTimeout(hush);
+    hush = setTimeout(() => void ac.suspend(), 1500);
   } catch {
     // no audio device: the sparks still fly
   }

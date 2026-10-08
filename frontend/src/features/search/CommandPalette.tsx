@@ -13,7 +13,7 @@ import { Badge, ErrorLine, Kbd, cx } from "../../components/ui";
 import { MODES, useMode } from "../../lib/mode";
 import { emptyValues, LogWatchForm, type LogValues } from "./LogWatchForm";
 import { MediaPalette } from "./MediaPalette";
-import { usePalette, type PaletteFilm } from "./palette";
+import { usePalette, usePaletteState, type PaletteFilm } from "./palette";
 
 function useDebounced<T>(value: T, ms: number): T {
   const [v, setV] = useState(value);
@@ -73,9 +73,22 @@ function GroupHeading({ left, right }: { left: string; right?: string }) {
 }
 
 export function CommandPalette() {
-  const { state, close } = usePalette();
+  const { close } = usePalette();
+  const state = usePaletteState();
   const open = state.kind === "palette";
   const mode = useMode();
+  const { openPalette } = usePalette();
+  const closed = state.kind === "closed";
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (closed) openPalette();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openPalette, closed]);
   return (
     <Dialog open={open} onClose={close} label={mode === "movie" ? "Search films" : `Search ${MODES[mode].noun[1]}`} className="w-[calc(100%-32px)] max-w-[762px] max-[639px]:max-w-none max-[639px]:w-full max-[639px]:h-full max-[639px]:m-0 palette-dialog">
       {open && (mode === "movie" ? <PaletteBody initialFor={state.logFor} initialQuery={state.query} /> : <MediaPalette kind={mode} />)}
@@ -255,7 +268,8 @@ function PaletteBody({ initialFor, initialQuery }: { initialFor?: PaletteFilm; i
 
 /** Editing an existing watch: the same form in a centred dialog, plus a confirmed delete. */
 export function EditWatchDialog() {
-  const { state, close } = usePalette();
+  const { close } = usePalette();
+  const state = usePaletteState();
   const edit = useEditWatch();
   const del = useDeleteWatch();
   const toast = useToast();

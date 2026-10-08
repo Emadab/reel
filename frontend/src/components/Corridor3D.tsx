@@ -301,7 +301,7 @@ export default function Corridor3D({ films }: { films: FilmCard[] }) {
     >
       {/* the hall takes on the colour of the poster in focus */}
       <div aria-hidden className="absolute inset-0 pointer-events-none transition-[background] duration-700" style={{ background: `radial-gradient(70% 55% at 50% 50%, color-mix(in oklch, ${glow} 24%, transparent), transparent 70%)` }} />
-      <Canvas camera={{ position: [0, 0.55, 0], fov: 52, near: 0.1, far: 80 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }}>
+      <Canvas camera={{ position: [0, 0.55, 0], fov: 52, near: 0.1, far: 80 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}>
         <Grid y={-2.1} length={length} glow={accent} strength={0.55} />
         <Grid y={3.6} length={length} glow={accent} strength={0.16} />
         <Dust length={length} color={accent} />

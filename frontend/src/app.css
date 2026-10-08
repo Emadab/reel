@@ -63,10 +63,12 @@
   .img-in { transition: none; }
 }
 
-/* Quick-log button on posters: appears on hover/focus, always visible on touch screens */
-.quick-card .quick-btn { opacity: 0; transform: scale(.85); transition: opacity .18s, transform .22s var(--ease-out-soft), background-color .15s, color .15s; }
-.quick-card:hover .quick-btn, .quick-card:focus-within .quick-btn { opacity: 1; transform: scale(1); }
-@media (hover: none) { .quick-card .quick-btn { opacity: 1; transform: none; } }
+/* Quick-log button on posters: appears on hover/focus, always visible on touch screens.
+   Its glass blur is only live while it shows (dropped once the fade-out ends): a hidden backdrop-filter still costs a
+   compositor layer, one per card on the wall. */
+.quick-card .quick-btn { opacity: 0; transform: scale(.85); backdrop-filter: none; transition: opacity .18s, transform .22s var(--ease-out-soft), background-color .15s, color .15s, backdrop-filter 0s .18s; }
+.quick-card:hover .quick-btn, .quick-card:focus-within .quick-btn { opacity: 1; transform: scale(1); backdrop-filter: blur(10px); transition: opacity .18s, transform .22s var(--ease-out-soft), background-color .15s, color .15s; }
+@media (hover: none) { .quick-card .quick-btn { opacity: 1; transform: none; backdrop-filter: blur(10px); } }
 
 /* Tactile press feedback on every control */
 @layer base {
@@ -84,10 +86,12 @@
   .quick-card .quick-btn, .poster-img { transition: none; }
 }
 
-/* Workspace modes: the accent follows the mode and cross-fades when you switch (registered so it can animate). */
+/* Workspace modes: the accent follows the mode and cross-fades when you switch (registered so it can animate). Only
+   the chrome that stays put fades; the page is swapped (and faded in) anyway. Fading it on the root restyled every
+   element in the document on every frame of the fade. */
 @property --color-accent { syntax: "<color>"; inherits: true; initial-value: #7FDBFF; }
-[data-mode-fade] { transition: --color-accent .6s var(--ease-out-soft); }
-@media (prefers-reduced-motion: reduce) { [data-mode-fade] { transition: none; } }
+[data-mode-fade] nav[aria-label="Primary"] { transition: --color-accent .6s var(--ease-out-soft); }
+@media (prefers-reduced-motion: reduce) { [data-mode-fade] nav[aria-label="Primary"] { transition: none; } }
 
 /* Poster hovers (theme.css recipes) on the individual translate/rotate/scale properties. The poster is framer-motion's
    shared-layout element, and theme.css's `transition: transform` on it smeared the morph back from the detail page
@@ -100,6 +104,12 @@
 .timeline-poster:hover .poster-art { transform: none; translate: 0 -6px; scale: 1.04; }
 /* a press sinks the poster a touch before the page goes */
 .poster-card:active .poster-art, .timeline-poster:active .poster-art, .mini-poster:active .poster-art { scale: .98; transition-duration: .12s; }
+
+/* Route change: the new page fades up 8 px (Shell) */
+.page-in { animation: page-in .24s cubic-bezier(.2,.7,.2,1) backwards; }
+@keyframes page-in { from { opacity: 0; translate: 0 8px; } }
+@keyframes page-in-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .page-in { animation-name: page-in-fade; } }
 
 /* Cards pop in one after another (design extension, usePop): a drop with an overshoot, then a neon flash on the
    poster that cools off. 55 ms apart, counted from each batch's first card. */
