@@ -1,4 +1,4 @@
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { pop } from "../lib/pop";
 import { rating } from "../lib/format";
 import { IconBookmark, IconCheck, IconNotInterested, IconThumbUp } from "./Icons";
@@ -39,6 +39,20 @@ const fx = (kind: Parameters<typeof pop>[1], fn: () => void) => (e: MouseEvent<H
 export const status = (a: Answers) =>
   a.hidden ? "Hidden, model notified" : a.rated != null ? `Logged · ★ ${rating(a.rated)}` : a.liked ? "Noted: more like this" : a.saved ? `On your ${a.wish}` : "";
 
+/**
+ * A label that's as wide as the widest of its states, so a click never resizes the button or shifts its neighbours:
+ * every state sits in the same grid cell and only the current one is visible. Digits are tabular so ratings don't wobble.
+ */
+function Fit({ show, all }: { show: number; all: ReactNode[] }) {
+  return (
+    <span className="grid tabular-nums">
+      {all.map((n, i) => (
+        <span key={i} aria-hidden={i !== show || undefined} className={`[grid-area:1/1] flex items-center justify-center gap-2 ${i === show ? "" : "invisible"}`}>{n}</span>
+      ))}
+    </span>
+  );
+}
+
 /** The top pick's row: labelled buttons. */
 export function HeroActions({ a }: { a: Answers }) {
   return (
@@ -49,14 +63,16 @@ export function HeroActions({ a }: { a: Answers }) {
           title={a.saved ? `Click to take it off your ${a.wish}` : "Save it for later; the model counts it as interest"}
         >
           <IconBookmark size={16} strokeWidth={2.2} fill={a.saved ? "currentColor" : "none"} />
-          {a.saved ? `On your ${a.wish}` : `Add to ${a.wish}`}
+          <Fit show={a.saved ? 1 : 0} all={[`Add to ${a.wish}`, `On your ${a.wish}`]} />
         </Button>
         <Button hero aria-expanded={a.rating} data-seen onClick={fx("undo", a.openRating)} title={a.rated != null ? "Your rating; the model has learned from it" : "Log it and rate it; your rating teaches the model"}>
-          {a.rated != null && <IconCheck size={16} />}
-          {a.rated != null ? `Logged · ★ ${rating(a.rated)}` : a.seen}
+          <Fit
+            show={a.rated != null ? 1 : 0}
+            all={[a.seen, ...[a.rated, 10, 0.5].map((r) => <><IconCheck size={16} />{`Logged · ★ ${rating(r ?? 0)}`}</>)]}
+          />
         </Button>
         <Button hero aria-pressed={a.hidden} onClick={fx(a.hidden ? "undo" : "hide", a.hide)} title={a.hidden ? "Undo: show it again" : "Hide it and steer away from things like it"}>
-          {a.hidden ? "Hidden, model notified" : "Not interested"}
+          <Fit show={a.hidden ? 1 : 0} all={["Not interested", "Hidden, model notified"]} />
         </Button>
       </div>
       {a.rating && a.rated == null && <RatingInput label="Your rating" value={null} onChange={stamp(a.rate)} />}
@@ -80,7 +96,7 @@ export function CardActions({ a }: { a: Answers }) {
       <IconButton shrink label={a.hidden ? "Hidden: click to undo" : "Not interested"} aria-pressed={a.hidden} on={a.hidden} onClick={fx(a.hidden ? "undo" : "hide", a.hide)}>
         <IconNotInterested size={18} />
       </IconButton>
-      <span className="ml-auto self-center min-w-0 truncate text-[12px] text-ink-4 text-right">{status(a)}</span>
+      <span className="flex-1 basis-0 self-center min-w-0 truncate text-[12px] text-ink-4 text-right">{status(a)}</span>
     </div>
   );
 }
