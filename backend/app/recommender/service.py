@@ -14,7 +14,7 @@ from ..cards import film_card, watch_stats, watchlist_ids
 from ..db import get_setting, put_setting
 from ..models import Candidate, Feedback, Movie, now
 from ..tmdb import utc
-from . import candidates, evaluate, ranker, tastemap
+from . import candidates, engine, tastemap
 from . import features as F
 
 RECOMPUTE_EVERY = 3
@@ -90,7 +90,7 @@ async def recompute(s: Session) -> None:
     await asyncio.to_thread(_rank, s, sources)  # scoring, training and UMAP stay off the event loop
 
 
-NOT_A_FILM = re.compile(r"(trilogy|collection|anthology|making of|behind the scenes|featurette)", re.I)
+NOT_A_FILM = re.compile(r"\b(trilogy|collection|anthology|making of|behind the scenes|featurette)\b", re.I)
 
 
 def eligible(m: Movie, docs_ok: bool) -> bool:
@@ -105,42 +105,64 @@ def eligible(m: Movie, docs_ok: bool) -> bool:
     )
 
 
+SLATE = 13
+
+
+def thing(m: Movie) -> engine.Thing:
+    return engine.Thing(m.tmdb_id, F.vec(m), m.title, list(m.genres), [str(d["id"]) for d in m.directors],  # type: ignore[arg-type]
+                        list(m.keywords), m.year, m.tmdb_rating, float(m.tmdb_votes or 0))
+
+
+def labels(s: Session, today: date | None = None) -> list[engine.Label]:
+    """Every film you've watched (a rating, centred on 5.5 of 10, plus the fact you finished it), and reactions
+    to suggestions: more like this or saved (+), not interested or disliked (-)."""
+    today = today or date.today()
+    out: dict[int, engine.Label] = {}
+    for i, st in watch_stats(s).items():
+        m = s.get(Movie, i)
+        if not m or m.embedding is None:
+            continue
+        r = st.my_rating
+        age = 730 if st.latest.date_precision == "unknown" else (today - st.latest.watched_on).days  # unknown: as if two years ago
+        y = 0.7 * (r - 5.5) / 4.5 + 0.3 if r is not None else 0.3
+        out[i] = engine.Label(thing(m), y, r is not None and r >= 8, age)
+    for f in s.exec(select(Feedback).order_by(Feedback.created_at)):
+        if f.tmdb_id in out and out[f.tmdb_id].had or f.signal not in ("like", "added_watchlist", "dislike", "not_interested"):
+            continue
+        m = s.get(Movie, f.tmdb_id)
+        if not m or m.embedding is None:
+            continue
+        good = f.signal in ("like", "added_watchlist")
+        out[f.tmdb_id] = engine.Label(thing(m), 0.5 if good else -0.8, good, (now() - utc(f.created_at)).days, had=False)
+    return list(out.values())
+
+
 def _rank(s: Session, sources: dict[int, list[str]]) -> None:
-    p = ranker.build_profile(s)
-    if p is None:
+    labs = labels(s)
+    if not labs:
         return
-    docs_ok = any("Documentary" in m.genres for m in p.films)
+    docs_ok = any("Documentary" in lab.thing.genres for lab in labs if lab.had)
     cands = [m for i in sources if (m := s.get(Movie, i)) and m.embedding is not None and eligible(m, docs_ok)]
-    if not cands:
+    everything = [lab.thing for lab in labs] + [thing(m) for m in cands]
+    slate = engine.recommend(labs, everything[len(labs):], candidates.links(s), everything=everything,
+                             creator_noun="director", today=date.today())
+    if slate is None or not cands:
         return
-    score, cos = ranker.v1_scores(p, cands)
-    model = ranker.train(s, p)
-    prob = model.predict(p, cands) if model else ranker.calibrator(s, p)(score)
-    rank_by = prob if model else score
-
-    n_wild = max(1, round(0.1 * ranker.SLATE))
-    wild = ranker.wildcards(p, cands, cos, n=5)
-    normal = [i for i in range(len(cands)) if i not in set(wild)]
-    ordered = [normal[j] for j in ranker.mmr([cands[i] for i in normal], rank_by[normal], k=60)]
-    slate = ordered[: ranker.SLATE - n_wild] + wild[:n_wild] + ordered[ranker.SLATE - n_wild:] + wild[n_wild:]
-
-    version = model.version if model else "v1"
+    version = f"v3-{slate.model}"
     s.exec(delete(Candidate))  # type: ignore[call-overload]
-    for rank, i in enumerate(slate):
+    for rank, i in enumerate(slate.order):
         m = cands[i]
         s.add(Candidate(
-            tmdb_id=m.tmdb_id, sources=sources.get(m.tmdb_id, []), score=float(prob[i]), is_wildcard=i in wild,
-            because=[b.tmdb_id for b in ranker.because(p, m)] if i not in wild else [],
-            reasons=ranker.reasons(p, m) if i not in wild else [], rank=rank, model_version=version,
+            tmdb_id=m.tmdb_id, sources=sources.get(m.tmdb_id, []), score=float(slate.prob[i]), is_wildcard=i in slate.wild,
+            because=slate.because.get(i, []), reasons=slate.reasons.get(i, []), rank=rank, model_version=version,
         ))
     s.commit()
-    health = evaluate.evaluate(s, cands) or {}
-    shown = min(len(slate), ranker.SLATE)
-    health.update(candidate_count=len(cands), sources=candidates.source_labels(sources),
-                  wildcard_share=round(min(n_wild, len(wild)) / shown, 2) if shown else 0)
+    shown = min(len(slate.order), SLATE)
+    health = dict(slate.health, candidate_count=len(cands), sources=candidates.source_labels(sources),
+                  wildcard_share=round(sum(i in slate.wild for i in slate.order[:shown]) / shown, 2) if shown else 0)
     put_setting(s, "rec_health", json.dumps(health))
     put_setting(s, "rec_meta", json.dumps({
-        "version": version.split("-")[0], "full_version": version, "ratings_used": _ratings_count(s),
+        "version": "v3", "full_version": version, "ratings_used": _ratings_count(s),
         "reactions_used": s.exec(select(func.count()).select_from(Feedback)).one(), "computed_at": now().isoformat(),
     }))
     tastemap.update(s)
@@ -160,14 +182,14 @@ def _reaction(s: Session, since: datetime | None) -> dict[int, str]:
 def rec_out(s: Session, m: Movie, c: Candidate | None, stats, wl, reaction: str | None = None) -> dict:
     because = [s.get(Movie, i) for i in (c.because if c else [])]
     b_cards = [film_card(b, stats.get(b.tmdb_id)) for b in because if b]
-    why = ranker.wildcard_note(p, m) if c and c.is_wildcard and (p := ranker.build_profile(s)) else None
+    wild = bool(c and c.is_wildcard)
     return {
         **film_card(m, stats.get(m.tmdb_id), m.tmdb_id in wl),
         "score": round(c.score, 3) if c else None,
-        "is_wildcard": bool(c and c.is_wildcard),
+        "is_wildcard": wild,
         "because": b_cards,
-        "reasons": c.reasons if c else [],
-        "why": why,
+        "reasons": c.reasons if c and not wild else [],
+        "why": c.reasons[0] if c and wild and c.reasons else None,  # a wildcard's note is stored as its reason
         "overview": m.overview,
         "glow": m.palette[0] if m.palette else None,
         "reaction": reaction,
@@ -192,7 +214,7 @@ def recommendations(s: Session, filter: str = "all") -> dict:
         if filter == "wild" and not c.is_wildcard:
             continue
         picked.append(rec_out(s, m, c, stats, wl, reaction.get(m.tmdb_id)))
-        if len(picked) == ranker.SLATE:
+        if len(picked) == SLATE:
             break
     health = json.loads(get_setting(s, "rec_health", "{}") or "{}")
     if not rows and ratings >= 10:
@@ -203,7 +225,7 @@ def recommendations(s: Session, filter: str = "all") -> dict:
         "computing": jobs.status.get("recommendations", {}).get("state") in ("queued", "running"),
         "top": picked[0] if picked else None,
         "items": picked[1:],
-        "health": {"hit_at_20": None, "baseline_hit_at_20": None, "holdout_n": evaluate.HOLDOUT,
+        "health": {"hit_at_20": None, "baseline_hit_at_20": None, "holdout_n": engine.HOLDOUT,
                    "candidate_count": 0, "sources": [], "wildcard_share": 0, **health},
     }
 
@@ -230,7 +252,7 @@ def neighbors(s: Session, m: Movie, k: int = 6) -> list[dict]:
 
 def tastemap_points(s: Session) -> dict:
     stats = watch_stats(s)
-    slate = {c.tmdb_id: c for c in s.exec(select(Candidate).order_by(Candidate.rank).limit(ranker.SLATE))}
+    slate = {c.tmdb_id: c for c in s.exec(select(Candidate).order_by(Candidate.rank).limit(SLATE))}
     movies = list(s.exec(select(Movie).where(Movie.umap_x.is_not(None))))  # type: ignore[union-attr]
     points = []
     for m in movies:
@@ -263,28 +285,31 @@ def explain(s: Session, tmdb_id: int) -> dict:
     stats, wl = watch_stats(s), watchlist_ids(s)
     c = s.get(Candidate, tmdb_id)
     film = rec_out(s, m, c, stats, wl)
-    p = ranker.build_profile(s)
     e = F.vec(m)
+    rated = [(x, st.my_rating) for i, st in stats.items() if i != tmdb_id and st.my_rating is not None
+             and (x := s.get(Movie, i)) and x.embedding is not None]
     nearest: list[dict] = []
-    if p and e is not None:
-        rated = [x for x in p.films if p.rating(x) is not None and x.tmdb_id != tmdb_id]
-        pool = [x for x in rated if (p.rating(x) or 0) >= 8] or rated
-        if pool:
-            sims = F.matrix(pool) @ e
-            for i in np.argsort(-sims)[:3]:
-                nearest.append({"film": film_card(pool[i], stats.get(pool[i].tmdb_id)), "similarity": round(float(sims[i]), 2)})
-    return {"film": film, "nearest": nearest, "note": _note(s, m, c, p, nearest)}
+    if rated and e is not None:
+        pool = [x for x, r in rated if r >= 8] or [x for x, _ in rated]
+        sims = F.matrix(pool) @ e
+        for i in np.argsort(-sims)[:3]:
+            nearest.append({"film": film_card(pool[i], stats.get(pool[i].tmdb_id)), "similarity": round(float(sims[i]), 2)})
+    return {"film": film, "nearest": nearest, "note": _note(s, m, c, rated, nearest)}
 
 
-def _note(s: Session, m: Movie, c: Candidate | None, p, nearest: list[dict]) -> str:
+def _note(s: Session, m: Movie, c: Candidate | None, rated: list[tuple[Movie, float]], nearest: list[dict]) -> str:
     if c and c.is_wildcard:
         return "A wildcard: deliberately far from everything you rate highly, so the model keeps learning outside its comfort zone."
-    if p:
-        for d in F.director_ids(m):
-            if d in p.liked_dirs:
-                best = p.liked_dirs[d]
-                genre = (best.genres[0].lower() + " film") if best.genres else "film"
-                return f"Same director as your highest-rated {genre}, {best.title}."
+    liked_dirs: dict[int, Movie] = {}
+    for x, r in sorted(rated, key=lambda xr: -xr[1]):
+        if r >= 8:
+            for d in F.director_ids(x):
+                liked_dirs.setdefault(d, x)
+    for d in F.director_ids(m):
+        if d in liked_dirs:
+            best = liked_dirs[d]
+            genre = (best.genres[0].lower() + " film") if best.genres else "film"
+            return f"Same director as your highest-rated {genre}, {best.title}."
     labels = tastemap.cluster_of(s)
     near_labels = []
     for n in nearest:

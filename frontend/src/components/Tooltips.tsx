@@ -5,10 +5,15 @@ import { createPortal } from "react-dom";
 type Tip = { text: string; x: number; y: number; below: boolean; right?: boolean; host: Element };
 const RAIL = "(min-width: 640px) and (max-width: 1023px)";
 
+/** A control with no text (an icon, a swatch): named by its aria-label, which its tooltip repeats. Links only when
+ *  they're an icon, so poster links stay quiet. */
+const iconOnly = (el: Element) =>
+  el.matches("button[aria-label], [role=button][aria-label], a[aria-label]:has(svg)") && !el.querySelector("img") && !el.textContent?.trim();
+
 /**
  * Replaces the browser's own tooltips everywhere: any element with `title` (or `data-tip`) gets a glass bubble in the
  * app's style after a short hover. The title moves to `data-tip` on first hover so the native one never appears.
- * `data-tip-rail` names an item only while the sidebar is an icon rail, in a bubble to its right.
+ * Icon-only buttons and links get their aria-label as a tooltip. `data-tip-rail` names an item only while the sidebar is an icon rail, in a bubble to its right.
  */
 export function Tooltips() {
   const [tip, setTip] = useState<Tip | null>(null);
@@ -29,7 +34,8 @@ export function Tooltips() {
           el.setAttribute("data-tip", el.getAttribute("title")!);
           el.removeAttribute("title");
         }
-        if (el.hasAttribute("data-tip") || (el.hasAttribute("data-tip-rail") && matchMedia(RAIL).matches)) return el;
+        // an icon-only control (an icon, no text) is named by its aria-label
+        if (iconOnly(el) || el.hasAttribute("data-tip") || (el.hasAttribute("data-tip-rail") && matchMedia(RAIL).matches)) return el;
         el = el.parentElement;
       }
       return null;
@@ -42,7 +48,8 @@ export function Tooltips() {
         const rail = el.getAttribute("data-tip-rail");
         if (rail && !el.hasAttribute("data-tip")) return setTip({ text: rail, x: r.right + 10, y: r.top + r.height / 2, below: false, right: true, host: el });
         const below = r.top < 52;
-        setTip({ text: el.getAttribute("data-tip") ?? "", x: r.left + r.width / 2, y: below ? r.bottom + 8 : r.top - 8, below, host: el });
+        // read at show time: an icon button's label changes with its state ("Add to watchlist" → "On your watchlist")
+        setTip({ text: el.getAttribute("data-tip") ?? el.getAttribute("aria-label") ?? "", x: r.left + r.width / 2, y: below ? r.bottom + 8 : r.top - 8, below, host: el });
       }, delay);
     };
     const hide = () => {

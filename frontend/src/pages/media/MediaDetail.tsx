@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
-import { mediaApi, useFollows, useItem, useMediaMut, type Episode, type Goal, type ItemDetail, type Kind, type RunOut, type RunPrecision } from "../../api/media";
+import { mediaApi, useEpisodeTick, useFollows, useItem, useMediaMut, withEpisodes, type Episode, type Goal, type ItemDetail, type Kind, type RunOut, type RunPrecision } from "../../api/media";
 import { CastPhoto } from "../../components/CastPhoto";
 import { Dialog } from "../../components/Dialog";
 import { mix } from "../../components/Glow";
@@ -13,7 +13,7 @@ import { useToast } from "../../components/Toasts";
 import { Button, DetailSkeleton, ErrorLine, Eyebrow, fadeIn, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
 import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
 import { onColor } from "../../lib/color";
-import { celebrate, primeCelebrate } from "../../lib/celebrate";
+import { afterFirstFrame, celebrate, primeCelebrate } from "../../lib/celebrate";
 import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today, untilLabel } from "../../lib/format";
 import { backTarget } from "../../lib/history";
 import { MODES, SHELF_LABEL, START, STATUS_LABEL, statusLabel } from "../../lib/mode";
@@ -394,14 +394,14 @@ function Episodes({ item }: { item: ItemDetail }) {
   const current = item.next_episode?.season ?? seasons.find((s) => s.number > 0)?.number ?? 0;
   const [pick, setPick] = useState<number | null>(null);
   const shown = seasons.find((s) => s.number === (pick ?? current)) ?? seasons[0];
-  const tick = useMediaMut((b: { episode_ids?: number[]; season?: number; watched: boolean; on_air_dates?: boolean }) => mediaApi.episodes(item.id, b));
+  const toast = useToast();
+  const tick = useEpisodeTick(item.id, () => toast({ text: "Couldn't save that. Try again." }));
   const [dating, setDating] = useState<Episode | null>(null);
   const [history, setHistory] = useState(false);
   // fill handle: drag a watched episode's date onto the episodes after it (like a spreadsheet)
   const [fill, setFill] = useState<{ from: number; to: number; x: number; y: number } | null>(null);
   const [landed, setLanded] = useState<{ ids: Set<number>; from: number; k: number } | null>(null);
   const stamp = useMediaMut((b: { episode_ids: number[]; watched: boolean; watched_on?: string; date_precision: RunPrecision; on_air_dates?: boolean }) => mediaApi.episodes(item.id, b));
-  const toast = useToast();
   if (!shown) return null;
   const eps = shown.episodes;
   const dateOf = (e: Episode) => formatWatchDate(e.watched_on!, e.watched_precision ?? "day");
@@ -447,14 +447,16 @@ function Episodes({ item }: { item: ItemDetail }) {
   const all = aired.length > 0 && done === aired.length;
 
   const toggle = (e: Episode, ev: MouseEvent<HTMLButtonElement>) => {
-    const check = ev.currentTarget.querySelector("[data-check]");
-    // ticking off the last of a season (or catching up) gets the big burst
-    const cheer = { onSuccess: (d: ItemDetail) => celebrate(check, { big: shown.number > 0 && d.next_episode?.season !== shown.number }) };
-    if (ev.shiftKey && !e.watched) {
-      // shift-click: everything aired up to here
-      const ids = shown.episodes.filter((x) => x.aired && !x.watched && x.number <= e.number).map((x) => x.id);
-      tick.mutate({ episode_ids: ids, watched: true }, cheer);
-    } else tick.mutate({ episode_ids: [e.id], watched: !e.watched }, e.watched ? undefined : cheer);
+    // shift-click: everything aired up to here
+    const range = ev.shiftKey && !e.watched;
+    const ids = range ? shown.episodes.filter((x) => x.aired && !x.watched && x.number <= e.number).map((x) => x.id) : [e.id];
+    const watched = range || !e.watched;
+    if (watched) {
+      // the burst lands on the click; ticking off the last of a season (or catching up) gets the big one
+      const left = shown.episodes.some((x) => x.aired && !x.watched && !ids.includes(x.id));
+      celebrate(ev.currentTarget.querySelector("[data-check]"), { big: shown.number > 0 && !left });
+    }
+    afterFirstFrame(() => tick.mutate({ episode_ids: ids, watched }));
   };
 
   return (
@@ -997,7 +999,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
   const { data: item, isLoading, error } = useItem(id);
   const back = useMemo(() => backTarget(loc.pathname), [loc.pathname]);
   const start = useMediaMut((b: { status: string; again: boolean }) => (b.again ? mediaApi.startRun(id, { status: b.status }) : mediaApi.setStatus(id, b.status)));
-  const tickNext = useMediaMut((epId: number) => mediaApi.episodes(id, { episode_ids: [epId], watched: true }));
+  const tickNext = useEpisodeTick(id, () => toast({ text: "Couldn't save that. Try again." }));
   const suggest = useMediaMut((s: string) => mediaApi.setStatus(id, s));
   const [dismissed, setDismissed] = useState(false);
   const [pastRun, setPastRun] = useState(false);
@@ -1041,12 +1043,13 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
       <button
         type="button" disabled={tickNext.isPending}
         onPointerDown={primeCelebrate}
-        onClick={async (ev) => {
-          const btn = ev.currentTarget;
-          const d = await tickNext.mutateAsync(next.id);
-          const done = d.next_episode == null;
-          celebrate(btn, { big: done || d.next_episode!.season !== next.season });
-          toast({ text: done ? <>Caught up on <em>{item.title}</em></> : <>Watched S{next.season} · E{next.number}</> });
+        onClick={(ev) => {
+          const after = withEpisodes(item, new Set([next.id]), true).next_episode;
+          celebrate(ev.currentTarget, { big: after == null || after.season !== next.season });
+          afterFirstFrame(() => {
+            tickNext.mutate({ episode_ids: [next.id], watched: true });
+            toast({ text: after == null ? <>Caught up on <em>{item.title}</em></> : <>Watched S{next.season} · E{next.number}</> });
+          });
         }}
         className="flex items-center gap-2 h-[46px] px-5 rounded-[14px] font-semibold text-[14px] border-0 cursor-pointer"
         style={{ background: glow, color: onColor(glow), boxShadow: `0 10px 30px -10px ${glow}` }}

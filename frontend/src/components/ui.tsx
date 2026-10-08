@@ -56,7 +56,7 @@ export function Segmented<T extends string>({
 }: {
   label: string;
   value: T;
-  options: { id: T; label: string }[];
+  options: { id: T; label: string; tip?: string }[];
   onChange: (v: T) => void;
   variant?: "default" | "form";
   className?: string;
@@ -76,6 +76,7 @@ export function Segmented<T extends string>({
             key={o.id}
             type="button"
             aria-pressed={on}
+            title={o.tip}
             onClick={() => onChange(o.id)}
             className={cx(
               "relative isolate px-[14px] border-0 rounded-[10px] text-[13px] cursor-pointer whitespace-nowrap bg-transparent",

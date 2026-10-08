@@ -77,7 +77,7 @@ const movies = (el: React.ReactNode) => page(<MediaGate kind="movie">{el}</Media
 // shows, books and games: the same sections as movies under their own prefix, each behind its flag
 const media = (kind: Kind, base: string) => [
   { path: base, element: page(<MediaGate kind={kind}><MediaLibrary kind={kind} /></MediaGate>) },
-  { path: `${base}/calendar`, element: page(<MediaGate kind={kind}><MediaCalendar kind={kind} /></MediaGate>) },
+  ...(kind === "book" ? [] : [{ path: `${base}/calendar`, element: page(<MediaGate kind={kind}><MediaCalendar kind={kind} /></MediaGate>) }]), // books have no calendar
   { path: `${base}/timeline/:year?`, element: page(<MediaGate kind={kind}><MediaTimeline kind={kind} /></MediaGate>) },
   { path: `${base}/stats`, element: page(<MediaGate kind={kind}><MediaStats kind={kind} /></MediaGate>) },
   { path: `${base}/for-you`, element: page(<MediaGate kind={kind}><MediaForYou kind={kind} /></MediaGate>) },

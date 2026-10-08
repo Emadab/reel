@@ -1,34 +1,107 @@
 /**
  * Ticking off an episode lands like a deflected blow: on contact a white-hot flash, a flare across the button
  * and a steel clang; the frame holds for a beat (hit-stop); then incandescent sparks tear out, slow, droop and
- * cool from white through gold to ember, a sharp shockwave cuts outward and the page shakes. `big` (caught up,
- * a season done) is the perfect deflect: longer hold, a second wave of sparks, a heavier shake and a deeper
- * ring. Plain DOM + Web Animations on a fixed layer, so it outlives a card that re-sorts or leaves the list the
- * moment the tick lands. Reduced motion keeps only a small press.
+ * cool from white to ember, a sharp shockwave cuts outward and the page shakes. `big` (caught up, a season done)
+ * is the perfect deflect: longer hold, a second wave of sparks, a heavier shake and a deeper ring.
+ *
+ * Built so it can't stutter:
+ * - it fires on the click itself, never after the save (callers update optimistically);
+ * - the burst is drawn on a full-window OffscreenCanvas by a worker with its own frame loop (lib/burst.ts), so
+ *   nothing the main thread does (React renders, layout, GC) can hold up a frame of it;
+ * - what stays on the page (the button's squash and the page shake) animates only transform, on the compositor;
+ * - the slow setup happens on pointer-down, in the ~100 ms before the click: the audio engine starts, the canvas
+ *   and its worker exist, and the page is promoted to its own layer so the shake doesn't rasterize it on impact;
+ * - whatever the click causes (cache updates, refetches) waits for the burst to finish: `whenCalm`.
+ * Reduced motion keeps only a small press.
  */
+import { runner, type BurstSpec } from "./burst";
+
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const SNAP = "cubic-bezier(.05,.9,.2,1)";
-const COOL = ["#ffffff", "#fff3c4", "#ffc65a", "#ff8a24", "#c2410c"]; // white-hot to ember
 
 let audio: AudioContext | null = null;
 let scrape: AudioBuffer | null = null;
 let hush: ReturnType<typeof setTimeout> | undefined;
+let calmAt = 0;
+let promoted: HTMLElement | null = null;
+let fire: ((spec: BurstSpec) => void) | null = null;
+let layer: HTMLCanvasElement | null = null;
+let rest: ReturnType<typeof setTimeout> | undefined;
 
-/** Starting the audio engine blocks for tens of ms. Tick buttons call this on pointer-down, so it happens while the
- *  tick is saved, not when the burst lands (and not while idle, where it stalled whatever animation was running). */
-export function primeCelebrate() {
+/** The full-window canvas the burst is drawn on, handed to a worker when the browser allows it. */
+function canvas(): (spec: BurstSpec) => void {
+  if (fire) return fire;
+  const c = document.createElement("canvas");
+  c.setAttribute("aria-hidden", "true");
+  c.style.cssText = "position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;visibility:hidden";
+  document.body.appendChild(c); // hidden between bursts, so the compositor isn't blending an empty full-window layer
+  layer = c;
+  const size = (): [number, number, number] => [window.innerWidth, window.innerHeight, Math.min(window.devicePixelRatio || 1, 2)];
+  if ("transferControlToOffscreen" in c && typeof Worker !== "undefined") {
+    try {
+      const off = c.transferControlToOffscreen();
+      const worker = new Worker(new URL("./burst.worker.ts", import.meta.url), { type: "module" });
+      worker.postMessage({ canvas: off }, [off]);
+      worker.postMessage({ size: size() });
+      window.addEventListener("resize", () => worker.postMessage({ size: size() }));
+      return (fire = (spec) => worker.postMessage({ fire: spec }));
+    } catch {
+      // fall through to drawing here
+    }
+  }
+  const ctx = c.getContext("2d")!;
+  const r = runner(ctx, requestAnimationFrame, () => performance.now());
+  r.size(...size());
+  window.addEventListener("resize", () => r.size(...size()));
+  return (fire = r.fire);
+}
+
+/** The audio engine (slow to start: tens of ms) and the scrape's noise. Made while idle; it waits suspended,
+ *  costing nothing, until a press resumes it. */
+function engine(): AudioContext | null {
   try {
     audio ??= new AudioContext();
+    if (!scrape) {
+      const len = Math.floor(audio.sampleRate * 0.12);
+      scrape = audio.createBuffer(1, len, audio.sampleRate);
+      const data = scrape.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 3;
+    }
+    return audio;
   } catch {
-    // no audio device
+    return null; // no audio device
   }
+}
+
+/** Call on pointer-down of anything that celebrates: wakes the audio and lifts the page onto its own layer in
+ *  the ~100 ms before the click lands. */
+export function primeCelebrate(ev?: { currentTarget?: EventTarget | null }) {
+  void engine()?.resume();
+  if (reduced()) return;
+  canvas();
+  const page = ev?.currentTarget instanceof Element ? (ev.currentTarget.closest("main") as HTMLElement | null) : null;
+  if (page && promoted !== page) {
+    page.style.willChange = "translate"; // rasterized now, so the shake only moves a layer
+    promoted = page;
+  }
+}
+
+/** Run `fn` once the current burst has played out (right away when none is), when the main thread is idle.
+ *  For the work a tick causes: cache updates, refetches. */
+export function whenCalm(fn: () => void) {
+  const wait = Math.max(0, calmAt - performance.now());
+  setTimeout(() => ("requestIdleCallback" in window ? requestIdleCallback(fn, { timeout: 400 }) : fn()), wait);
+}
+
+/** After the next frame is on screen: lets a burst's first frame land before other work starts. */
+export function afterFirstFrame(fn: () => void) {
+  requestAnimationFrame(() => setTimeout(fn, 0));
 }
 
 /** A struck-steel clang: inharmonic partials ringing down over a bright scrape of noise. */
 function clang(big: boolean) {
   try {
-    primeCelebrate();
-    const ac = audio!;
+    const ac = engine();
+    if (!ac) return;
     void ac.resume();
     const t = ac.currentTime;
     const out = ac.createGain();
@@ -46,12 +119,6 @@ function clang(big: boolean) {
       o.start(t);
       o.stop(t + 1.2);
     });
-    if (!scrape) {
-      const len = Math.floor(ac.sampleRate * 0.12);
-      scrape = ac.createBuffer(1, len, ac.sampleRate);
-      const data = scrape.getChannelData(0);
-      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len) ** 3;
-    }
     const noise = ac.createBufferSource();
     const hp = ac.createBiquadFilter();
     hp.type = "highpass";
@@ -61,7 +128,7 @@ function clang(big: boolean) {
     noise.start(t);
     // once it has rung out, stop the audio thread (a running context burns CPU and battery on silence)
     clearTimeout(hush);
-    hush = setTimeout(() => void ac.suspend(), 1500);
+    hush = setTimeout(() => void ac.suspend(), 2500);
   } catch {
     // no audio device: the sparks still fly
   }
@@ -75,123 +142,48 @@ export function celebrate(el: Element | null | undefined, { big = false }: { big
     return;
   }
   clang(big);
-
-  const accent = getComputedStyle(el).getPropertyValue("--color-accent").trim() || "#7FDBFF";
+  calmAt = performance.now() + hold + 1000;
   const r = el.getBoundingClientRect();
-  const x = r.left + r.width / 2;
-  const y = r.top + r.height / 2;
-  const runs: Animation[] = [];
+  const burst = canvas();
+  layer!.style.visibility = "visible";
+  clearTimeout(rest);
+  rest = setTimeout(() => {
+    layer!.style.visibility = "hidden";
+    if (promoted) promoted.style.willChange = ""; // give the page layer's memory back
+    promoted = null;
+  }, hold + 1050);
+  burst({
+    x: r.left + r.width / 2, y: r.top + r.height / 2, big, size: Math.max(r.width, r.height), seed: (Math.random() * 2 ** 32) >>> 0,
+    accent: getComputedStyle(el).getPropertyValue("--color-accent").trim() || "#7FDBFF",
+  });
 
   // the button takes the blow: crushed on contact, frozen through the hold, then springs back
   const total = hold + 420;
   el.animate(
     [
-      { transform: "scale(1)", filter: "brightness(1)" },
-      { transform: "scale(0.82)", filter: "brightness(2.4)", offset: 0.02 },
-      { transform: "scale(0.82)", filter: "brightness(2.4)", offset: hold / total },
-      { transform: `scale(${big ? 1.22 : 1.14})`, filter: "brightness(1.4)", offset: (hold + 110) / total },
-      { transform: "scale(0.97)", filter: "brightness(1)", offset: (hold + 250) / total },
-      { transform: "scale(1)", filter: "brightness(1)" },
+      { transform: "scale(1)" },
+      { transform: "scale(0.82)", offset: 0.02 },
+      { transform: "scale(0.82)", offset: hold / total },
+      { transform: `scale(${big ? 1.22 : 1.14})`, offset: (hold + 110) / total },
+      { transform: "scale(0.97)", offset: (hold + 250) / total },
+      { transform: "scale(1)" },
     ],
     { duration: total, easing: "linear" },
   );
 
-  const layer = document.createElement("div");
-  layer.setAttribute("aria-hidden", "true");
-  layer.style.cssText = `position:fixed;left:${x}px;top:${y}px;width:0;height:0;pointer-events:none;z-index:9999`;
-  document.body.appendChild(layer);
-  const add = (style: string) => {
-    const d = document.createElement("div");
-    d.style.cssText = `position:absolute;left:0;top:0;${style};opacity:0`; // seen only while its animation runs
-    layer.appendChild(d);
-    return d;
-  };
-
-  // the whole frame blinks white on contact
-  const blink = document.createElement("div");
-  blink.setAttribute("aria-hidden", "true");
-  blink.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9998;background:#fff;mix-blend-mode:overlay;opacity:0";
-  document.body.appendChild(blink);
-  runs.push(blink.animate([{ opacity: big ? 0.5 : 0.32 }, { opacity: big ? 0.5 : 0.32, offset: 0.4 }, { opacity: 0 }], { duration: hold + 120 }));
-
-  // white-hot core, held through the freeze, then gone
-  const c = big ? 170 : 120;
-  runs.push(add(`width:${c}px;height:${c}px;margin:${-c / 2}px;border-radius:50%;background:radial-gradient(closest-side,#fff 0,#fff 30%,#ffe2a0 48%,rgba(255,170,60,0.55) 66%,transparent)`).animate(
-    [{ transform: "scale(0.6)", opacity: 1 }, { transform: "scale(1)", opacity: 1, offset: hold / (hold + 220) }, { transform: "scale(1.5)", opacity: 0 }],
-    { duration: hold + 220, easing: "ease-out" },
-  ));
-
-  // the flare: a razor line across the point of contact, plus a fainter cross
-  const flare = (len: number, angle: number, thick: number, o: number) =>
-    runs.push(add(`width:${len}px;height:${thick}px;margin:${-thick / 2}px 0 0 ${-len / 2}px;border-radius:${thick}px;background:linear-gradient(90deg,transparent,#fff 35%,#fff 65%,transparent);box-shadow:0 0 8px #fff,0 0 18px ${accent},0 0 40px #ffb443`).animate(
-      [
-        { transform: `rotate(${angle}deg) scaleX(0.1) scaleY(1)`, opacity: o },
-        { transform: `rotate(${angle}deg) scaleX(1) scaleY(1)`, opacity: o, offset: hold / (hold + 200) },
-        { transform: `rotate(${angle}deg) scaleX(1.25) scaleY(0)`, opacity: 0 },
-      ],
-      { duration: hold + 200, easing: SNAP },
-    ));
-  flare(big ? 460 : 300, -14, 4, 1);
-  flare(big ? 200 : 130, 76, 3, 0.8);
-
-  // the shockwave: thin, sharp and fast, after the hold
-  for (let i = 0; i < (big ? 2 : 1); i++) {
-    const s = Math.max(r.width, r.height);
-    runs.push(add(`width:${s}px;height:${s}px;margin:${-s / 2}px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px ${accent},inset 0 0 10px ${accent}`).animate(
-      [{ transform: "scale(0.9)", opacity: 1 }, { transform: `scale(${big ? 5 - i * 1.5 : 3.4})`, opacity: 0 }],
-      { duration: 380, delay: hold + i * 90, easing: SNAP, fill: "backwards" },
-    ));
-  }
-
-  // sparks: streaks along their flight, flung hard, dragged to a crawl, pulled down, cooling as they go
-  const wave = (n: number, delay: number, power: number) => {
-    for (let i = 0; i < n; i++) {
-      // mostly a fan up and out, like steel striking steel; some anywhere
-      const a = Math.random() < 0.75 ? -Math.PI / 2 + (Math.random() - 0.5) * 2.6 : Math.random() * Math.PI * 2;
-      const v0 = (700 + Math.random() * 1500) * power;
-      const vx = Math.cos(a) * v0;
-      const vy = Math.sin(a) * v0;
-      const k = 7; // drag
-      const g = 1600; // gravity, px/s²
-      const T = 0.4 + Math.random() * 0.45;
-      const len = 14 + Math.random() * 26 * power;
-      const thick = Math.random() < 0.3 ? 3 : 2;
-      const frames: Keyframe[] = [];
-      const steps = 8;
-      for (let s = 0; s <= steps; s++) {
-        const t = (s / steps) * T;
-        const e = Math.exp(-k * t);
-        const px = (vx / k) * (1 - e);
-        const py = (vy / k) * (1 - e) + (g / k) * t - (g / (k * k)) * (1 - e);
-        const svx = vx * e;
-        const svy = vy * e + (g / k) * (1 - e);
-        const speed = Math.hypot(svx, svy);
-        const p = s / steps;
-        frames.push({
-          transform: `translate(${px}px,${py}px) rotate(${Math.atan2(svy, svx)}rad) scaleX(${Math.max(0.12, Math.min(1, speed / 900))})`,
-          backgroundColor: COOL[Math.min(COOL.length - 1, Math.floor(p * COOL.length))],
-          opacity: p < 0.7 ? 1 : 1 - (p - 0.7) / 0.3,
-        });
-      }
-      runs.push(add(`width:${len}px;height:${thick}px;margin:${-thick / 2}px 0 0 ${-len}px;transform-origin:100% 50%;border-radius:${thick}px;box-shadow:0 0 6px #ffb443,0 0 2px #fff`).animate(
-        frames,
-        { duration: T * 1000, delay: delay + Math.random() * 30, easing: "linear" }, // unseen until the hold breaks
-      ));
-    }
-  };
-  wave(big ? 70 : 40, hold, big ? 1.3 : 1);
-  if (big) wave(36, hold + 150, 0.8);
-
-  // the page takes the impact
-  const page = el.closest("main") ?? document.body;
+  // the page takes the impact (`translate` composes with any transform the page has; a promoted layer just moves)
+  const page = (el.closest("main") as HTMLElement | null) ?? document.body;
   const m = big ? 7 : 4;
   page.animate(
     [{ translate: "0 0" }, { translate: `${m}px ${-m / 2}px` }, { translate: `${-m}px ${m / 2}px` }, { translate: `${m / 2}px ${m / 3}px` }, { translate: `${-m / 3}px 0` }, { translate: "0 0" }],
     { duration: big ? 300 : 220, delay: hold, easing: "ease-out" },
   );
+}
 
-  void Promise.allSettled(runs.map((a) => a.finished)).then(() => {
-    layer.remove();
-    blink.remove();
+// the canvas and its worker start while the app is idle, so even the first tick has them ready
+if (typeof window !== "undefined" && !reduced()) {
+  ("requestIdleCallback" in window ? requestIdleCallback : setTimeout)(() => {
+    canvas();
+    engine();
   });
 }

@@ -1,6 +1,5 @@
-"""Film vectors: a bge-small text embedding (384-d, L2-normalised) plus structured features."""
+"""Film vectors: a bge-small text embedding (384-d, L2-normalised)."""
 import asyncio
-import math
 import os
 
 import numpy as np
@@ -13,11 +12,6 @@ MODEL_NAME = "BAAI/bge-small-en-v1.5"
 DIM = 384
 _model = None
 
-GENRES = ["Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Family", "Fantasy",
-          "History", "Horror", "Music", "Mystery", "Romance", "Science Fiction", "TV Movie", "Thriller", "War", "Western"]
-LANGS = ["en", "fr", "ja", "ko", "es", "it", "de", "zh", "fa", "hi"]
-DECADES = list(range(1920, 2040, 10))
-
 
 def text(m: Movie) -> str:
     return f"{m.title}. {', '.join(m.genres)}. {', '.join(m.keywords[:20])}. {m.overview or ''}"
@@ -29,7 +23,10 @@ def embed_texts(texts: list[str]) -> np.ndarray:
     if _model is None:
         from sentence_transformers import SentenceTransformer
 
-        _model = SentenceTransformer(MODEL_NAME, device="cpu")
+        try:  # the cached copy first: loading must not wait on the network (offline, or HF Hub blocked)
+            _model = SentenceTransformer(MODEL_NAME, device="cpu", local_files_only=True)
+        except OSError:  # first run: download it once
+            _model = SentenceTransformer(MODEL_NAME, device="cpu")
     return np.asarray(_model.encode(texts, batch_size=32, normalize_embeddings=True), dtype=np.float32)
 
 
@@ -55,20 +52,5 @@ async def embed_missing(s: Session, progress=None) -> int:
     return len(todo)
 
 
-def structured(m: Movie) -> np.ndarray:
-    """Decade one-hot, log runtime, language (top 10 + other), genre multi-hot."""
-    dec = np.zeros(len(DECADES))
-    if m.year:
-        dec[min(max((m.year // 10 * 10 - DECADES[0]) // 10, 0), len(DECADES) - 1)] = 1
-    lang = np.zeros(len(LANGS) + 1)
-    lang[LANGS.index(m.language) if m.language in LANGS else -1] = 1
-    gen = np.array([g in m.genres for g in GENRES], dtype=float)
-    return np.concatenate([dec, [math.log1p(m.runtime or 100)], lang, gen])
-
-
 def director_ids(m: Movie) -> set[int]:
     return {d["id"] for d in m.directors}
-
-
-def top_cast(m: Movie) -> set[int]:
-    return {c["id"] for c in m.cast if c.get("order", 99) < 5}

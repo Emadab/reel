@@ -110,6 +110,14 @@ class Candidate(SQLModel, table=True):  # the current recommendation slate
     computed_at: datetime = Field(default_factory=now)
 
 
+class MovieLink(SQLModel, table=True):
+    """TMDB's recommendations/similar for a film you've watched: the collaborative graph the recommender reads.
+    Fetched once per film and kept, so suggestions work offline. dst 0 marks a film whose lists were fetched."""
+    src: int = Field(primary_key=True)
+    dst: int = Field(primary_key=True)
+    weight: float = 0.0
+
+
 class Setting(SQLModel, table=True):
     key: str = Field(primary_key=True)
     value: str

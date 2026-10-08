@@ -5,16 +5,16 @@ import { alpha, useAmbientGlow } from "../../components/Glow";
 import { IconBookmark, IconCheck, IconNotInterested, IconThumbUp } from "../../components/Icons";
 import { Poster, posterBg } from "../../components/Poster";
 import { RatingInput } from "../../components/Rating";
+import { RecHealth, joinAnd } from "../../components/RecHealth";
 import { useToast } from "../../components/Toasts";
 import { Button, ErrorLine, IconButton, PageHeader, Segmented, TagChip, cx } from "../../components/ui";
-import { pct, rating } from "../../lib/format";
+import { pct, rating, relativeTime } from "../../lib/format";
 import { MODES, SHELF_LABEL } from "../../lib/mode";
 import { asFilm, itemPath, pagePad } from "./parts";
 
 type Filter = "all" | "wild";
 
 const SEEN: Record<Kind, string> = { show: "Seen it, rate it", book: "Read it, rate it", game: "Played it, rate it" };
-const joinAnd = (xs: string[]) => (xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
 
 /** The same four answers a film suggestion takes: want it, more like this, already had it, not interested. */
 function useAnswers(r: MediaRec, kind: Kind) {
@@ -86,24 +86,24 @@ function TopPick({ r, kind }: { r: MediaRec; kind: Kind }) {
           <Link to={itemPath(r)} className="no-underline">{r.title}</Link>
         </h2>
         <p className="m-0 text-[15px] text-ink-2b">{[r.subtitle, r.year, r.genres.slice(0, 3).join(", ")].filter(Boolean).join(" · ")}</p>
-        {r.because.length > 0 ? <Because items={r.because} /> : r.overview && <p className="mt-1 mb-0 text-[15px] leading-[1.55] text-ink-body line-clamp-3">{r.overview}</p>}
+        {r.because.length > 0 ? <Because items={r.because} /> : r.why ? <p className="mt-1 mb-0 text-[17px] leading-[1.5]">{r.why}</p> : r.overview && <p className="mt-1 mb-0 text-[15px] leading-[1.55] text-ink-body line-clamp-3">{r.overview}</p>}
         {r.reasons.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {r.reasons.slice(0, 4).map((x) => <TagChip key={x} strong>{x}</TagChip>)}
           </div>
         )}
         <div className="flex flex-wrap gap-[10px] mt-2">
-          <Button variant="primary" hero className="px-5" disabled={a.saved} onClick={a.save}>
+          <Button variant="primary" hero className="px-5" disabled={a.saved} onClick={a.save} title={a.saved ? `Already on your ${a.wish.toLowerCase()}` : "Save it for later; the model counts it as interest"}>
             <IconBookmark size={16} strokeWidth={2.2} />
             {a.saved ? `On your ${a.wish.toLowerCase()}` : `Add to ${a.wish.toLowerCase()}`}
           </Button>
-          <Button hero aria-expanded={rating_} onClick={() => setRating((v) => !v)}>{a.rated != null ? `Logged · ★ ${rating(a.rated)}` : SEEN[kind]}</Button>
-          <Button hero aria-pressed={a.hidden} onClick={a.hide}>{a.hidden ? "Hidden, model notified" : "Not interested"}</Button>
+          <Button hero aria-expanded={rating_} onClick={() => setRating((v) => !v)} title={a.rated != null ? "Your rating; the model has learned from it" : "Log it and rate it; your rating teaches the model"}>{a.rated != null ? `Logged · ★ ${rating(a.rated)}` : SEEN[kind]}</Button>
+          <Button hero aria-pressed={a.hidden} onClick={a.hide} title={a.hidden ? "Hidden; the model steers away from it" : "Hide it and steer away from things like it"}>{a.hidden ? "Hidden, model notified" : "Not interested"}</Button>
         </div>
         {rating_ && a.rated == null && <RatingInput label="Your rating" value={null} onChange={a.rate} />}
       </div>
       <div className="relative flex flex-col items-end gap-[6px] max-[639px]:items-start">
-        <span className="font-mono text-[11px] tracking-[0.1em] text-ink-3">MATCH</span>
+        <span className="font-mono text-[11px] tracking-[0.1em] text-ink-3">CHANCE YOU RATE IT 4+</span>
         <span className="font-display font-medium text-[56px] leading-none" style={{ color: wild ? "var(--color-wild)" : "var(--color-score)" }}>{pct(r.score)}</span>
       </div>
     </section>
@@ -115,7 +115,7 @@ function RecCard({ r, kind }: { r: MediaRec; kind: Kind }) {
   const [rating_, setRating] = useState(false);
   const wild = r.wildcard;
   const status = a.hidden ? "Hidden, model notified" : a.rated != null ? `Logged · ★ ${rating(a.rated)}` : a.liked ? "Noted: more like this" : a.saved ? `On your ${a.wish.toLowerCase()}` : "";
-  const why = r.because.length ? `Because you loved ${joinAnd(r.because.map((b) => b.title))}` : r.reasons[0] ?? "";
+  const why = r.why ?? (r.because.length ? `Because you loved ${joinAnd(r.because.map((b) => b.title))}` : r.reasons[0] ?? "");
   return (
     <article
       className="flex gap-[18px] p-[18px] rounded-[22px] bg-(--fill-card) border transition-opacity duration-300"
@@ -169,11 +169,12 @@ export default function MediaForYou({ kind }: { kind: Kind }) {
   const [top, ...rest] = data?.items ?? [];
   useAmbientGlow(top?.palette[0] ?? null);
   const [, many] = MODES[kind].noun;
-  const sub = data
-    ? data.computing && !data.items.length
-      ? "Finding suggestions…"
-      : `learned from ${data.learned_from} ${many}${data.model ? ` · ${data.model === "lightgbm" ? "trained model" : "taste vector"}` : ""}${data.computing ? " · updating" : ""}`
-    : " ";
+  const m = data?.model;
+  const sub = data?.computing && !data.items.length
+    ? "Finding suggestions…"
+    : m
+      ? `ranked by model ${m.version} · learned from ${m.ratings_used} ${many} + ${m.reactions_used} reactions · updated ${relativeTime(m.computed_at)}`
+      : " ";
   return (
     <main className={cx("flex flex-col gap-7 pt-9 pb-16 max-[1023px]:pt-7 max-[639px]:pt-5 max-[639px]:pb-24 box-border min-w-0", pagePad)}>
       <PageHeader title="For you" subline={sub}>
@@ -181,9 +182,9 @@ export default function MediaForYou({ kind }: { kind: Kind }) {
           label="Show"
           value={filter}
           onChange={(v) => setSp(v === "all" ? {} : { filter: v }, { replace: true })}
-          options={[{ id: "all", label: "All" }, { id: "wild", label: "Wildcards" }]}
+          options={[{ id: "all", label: "All", tip: "Every suggestion" }, { id: "wild", label: "Wildcards", tip: "Well-loved picks outside your usual taste" }]}
         />
-        <Button onClick={() => recompute.mutate(undefined)} disabled={recompute.isPending || data?.computing}>Refresh suggestions</Button>
+        <Button onClick={() => recompute.mutate(undefined)} disabled={recompute.isPending || data?.computing} title="Re-rank with your latest ratings and reactions">Refresh suggestions</Button>
       </PageHeader>
       {error && <ErrorLine error={error} />}
       {isLoading ? (
@@ -200,6 +201,7 @@ export default function MediaForYou({ kind }: { kind: Kind }) {
               {rest.map((r) => <RecCard key={r.id} r={r} kind={kind} />)}
             </div>
           )}
+          {data && data.items.length > 0 && <RecHealth health={data.health} recent={many} mapTo={`${MODES[kind].base}/map`} />}
         </>
       )}
     </main>

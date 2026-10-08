@@ -199,32 +199,62 @@ def stats(kind: Kind, range_: str = Query("all", alias="range"), s: Session = De
     }
 
 
-# ---- recommendations and taste map ----
+# ---- recommendations and taste map: the same shapes as the film endpoints ----
+
+def _cards(s: Session, ids: list[int]) -> dict[int, dict]:
+    """Cards for many items in three queries (items, library entries, runs)."""
+    if not ids:
+        return {}
+    its = {i.id: i for i in s.exec(select(Item).where(col(Item.id).in_(ids)))}
+    entries = {e.item_id: e for e in s.exec(select(LibraryEntry).where(col(LibraryEntry.item_id).in_(ids)))}
+    rs: dict[int, list[Run]] = {i: [] for i in its}  # type: ignore[misc]
+    for r in s.exec(select(Run).where(col(Run.item_id).in_(ids)).order_by(col(Run.run_no))):
+        rs[r.item_id].append(r)
+    return {i: items.card(s, it, entries.get(i), rs=rs[i]) for i, it in its.items()}  # type: ignore[index, misc]
+
+
+def _json_setting(s: Session, key: str) -> dict | None:
+    import json
+
+    from ..db import get_setting
+
+    raw = get_setting(s, key)
+    return json.loads(raw) if raw else None
+
 
 @router.get("/{kind}/recommendations")
 def recommendations(kind: Kind, wild: bool = False, s: Session = Depends(get_session)):
     from .. import jobs
     from ..models_media import MediaCandidate, MediaFeedback
+    from ..recommender import engine
     from ..recommender import media as recs
 
     require_kind(s, kind)
     if recs.is_stale(s, kind):
         recs.request(kind)
-    rows = s.exec(select(MediaCandidate).where(MediaCandidate.kind == kind).order_by(col(MediaCandidate.rank))).all()
+    rows = [c for c in s.exec(select(MediaCandidate).where(MediaCandidate.kind == kind).order_by(col(MediaCandidate.rank)))
+            if not wild or c.wildcard]
+    hidden = set(s.exec(select(LibraryEntry.item_id).where(LibraryEntry.shelf == "not_interested")))
+    rows = [c for c in rows if c.item_id not in hidden][: recs.SLATE]
+    cards = _cards(s, [c.item_id for c in rows] + [b for c in rows for b in c.because])
+    liked = set(s.exec(select(MediaFeedback.item_id).where(col(MediaFeedback.item_id).in_([c.item_id for c in rows]))))
+    overview = dict(s.exec(select(Item.id, Item.overview).where(col(Item.id).in_([c.item_id for c in rows]))).all())
     out = []
     for c in rows:
-        item = s.get(Item, c.item_id)
-        entry = s.get(LibraryEntry, c.item_id)
-        if not item or (entry and entry.shelf == "not_interested") or (wild and not c.wildcard):
+        if c.item_id not in cards:
             continue
-        because = [items.card(s, b) for bid in c.because if (b := s.get(Item, bid))]
-        out.append({**items.card(s, item, entry), "score": round(c.score, 3), "because": because, "reasons": c.reasons,
-                    "overview": item.overview, "wildcard": c.wildcard, "liked": s.get(MediaFeedback, item.id) is not None})
-        if len(out) == recs.SLATE:
-            break
-    labelled = recs.labelled(s, kind)
-    return {"items": out, "model": rows[0].model if rows else None, "learned_from": len(labelled),
-            "computing": jobs.status.get(f"recs:{kind}", {}).get("state") in ("queued", "running")}
+        out.append({**cards[c.item_id], "score": round(c.score, 3), "because": [cards[b] for b in c.because if b in cards],
+                    "reasons": [] if c.wildcard else c.reasons, "why": c.reasons[0] if c.wildcard and c.reasons else None,
+                    "overview": overview.get(c.item_id), "wildcard": c.wildcard, "liked": c.item_id in liked})
+    meta = _json_setting(s, f"rec_meta:{kind}")
+    health = _json_setting(s, f"rec_health:{kind}") or {}
+    return {
+        "items": out,
+        "model": meta and {k: meta[k] for k in ("version", "ratings_used", "reactions_used", "computed_at")},
+        "computing": jobs.status.get(f"recs:{kind}", {}).get("state") in ("queued", "running"),
+        "health": {"hit_at_20": None, "baseline_hit_at_20": None, "holdout_n": engine.HOLDOUT, "candidate_count": 0,
+                   "sources": [], "wildcard_share": 0, **health},
+    }
 
 
 @router.post("/{kind}/recommendations/recompute", status_code=202)
@@ -237,19 +267,39 @@ def recompute(kind: Kind, s: Session = Depends(get_session)):
 
 @router.get("/{kind}/tastemap")
 def tastemap(kind: Kind, s: Session = Depends(get_session)):
+    """Every cached item of the medium: yours (sized by rating), the slate, and the unseen candidates."""
     from ..models_media import MediaCandidate
+    from ..recommender import media as recs
 
     require_kind(s, kind)
-    slate = {c.item_id: c for c in s.exec(select(MediaCandidate).where(MediaCandidate.kind == kind))}
-    lib = {e.item_id: e for e in s.exec(select(LibraryEntry))}
+    slate = {c.item_id: c for c in s.exec(select(MediaCandidate).where(MediaCandidate.kind == kind).order_by(col(MediaCandidate.rank)).limit(recs.SLATE))}
+    pts = list(s.exec(select(Item).where(Item.kind == kind, col(Item.umap_x).is_not(None))))
+    lib = {e.item_id for e in s.exec(select(LibraryEntry)) if e.shelf != "not_interested"}
+    cards = _cards(s, [i.id for i in pts if i.id in lib])  # type: ignore[misc]
     points = []
-    for i in s.exec(select(Item).where(Item.kind == kind, col(Item.umap_x).is_not(None))):
-        if i.id in lib:
-            c = items.card(s, i, lib[i.id])
-            points.append({"id": i.id, "title": i.title, "x": round(i.umap_x, 4), "y": round(i.umap_y, 4), "kind": "mine",  # type: ignore[arg-type]
-                           "rating": c["my_rating"], "status": c["status"], "color": i.palette[0] if i.palette else c["poster_art"]["bg"],
-                           "poster": i.cover_path})
+    for i in pts:
+        base = {"id": i.id, "title": i.title, "x": round(i.umap_x, 4), "y": round(i.umap_y, 4)}  # type: ignore[arg-type]
+        if i.id in cards:
+            c = cards[i.id]  # type: ignore[index]
+            points.append({**base, "kind": "mine", "rating": c["my_rating"], "status": c["status"],
+                           "color": i.palette[0] if i.palette else c["poster_art"]["bg"], "bg": c["poster_art"]["bg"], "poster": i.cover_path})
         elif i.id in slate:
-            points.append({"id": i.id, "title": i.title, "x": round(i.umap_x, 4), "y": round(i.umap_y, 4), "kind": "suggested",  # type: ignore[arg-type]
-                           "score": round(slate[i.id].score, 3), "poster": i.cover_path})
-    return {"points": points}
+            c = slate[i.id]  # type: ignore[index]
+            points.append({**base, "kind": "suggested", "score": round(c.score, 3), "is_wildcard": c.wildcard, "poster": i.cover_path})
+        else:
+            points.append({**base, "kind": "candidate"})
+    cl = _json_setting(s, f"clusters:{kind}") or []
+    return {"count": len(points), "points": points, "clusters": [{k: c[k] for k in ("label", "x", "y")} for c in cl],  # type: ignore[union-attr]
+            "default_selected": next(iter(slate), None)}
+
+
+@router.get("/{kind}/tastemap/explain/{item_id}")
+def tastemap_explain(kind: Kind, item_id: int, s: Session = Depends(get_session)):
+    from ..models_media import MediaCandidate
+    from ..recommender import media as recs
+
+    require_kind(s, kind)
+    item = items.get_item(s, item_id, kind)
+    c = s.get(MediaCandidate, item_id)
+    card = _cards(s, [item_id])[item_id]
+    return {"item": {**card, "score": round(c.score, 3) if c else None, "wildcard": bool(c and c.wildcard)}, **recs.explain(s, item)}

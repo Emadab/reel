@@ -1,8 +1,9 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Link } from "react-router";
 import { useStickySearch } from "../../lib/history";
-import { mediaApi, useMediaLibrary, useMediaMut, useUpcoming, useUpNext, type ItemCard, type Kind, type MediaSort, type UpNext } from "../../api/media";
+import { mediaApi, useMediaLibrary, useUpcoming, useUpNext, type ItemCard, type Kind, type MediaSort, type UpNext } from "../../api/media";
 import { FilterChip } from "../../components/FilterChip";
 import { useAmbientGlow } from "../../components/Glow";
 import { IconCheck, IconPlus } from "../../components/Icons";
@@ -10,7 +11,7 @@ import { Poster, posterBg } from "../../components/Poster";
 import { useToast } from "../../components/Toasts";
 import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx, usePop, useWindowed } from "../../components/ui";
 import { usePalette } from "../../features/search/palette";
-import { celebrate, primeCelebrate } from "../../lib/celebrate";
+import { afterFirstFrame, celebrate, primeCelebrate, whenCalm } from "../../lib/celebrate";
 import { formatFullDate, iso, num, untilLabel } from "../../lib/format";
 import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
 import type { MenuAt } from "../../components/ContextMenu";
@@ -120,15 +121,23 @@ function StripScrollbar({ strip, count }: { strip: RefObject<HTMLDivElement | nu
 function UpNextRail() {
   const strip = useRef<HTMLDivElement>(null);
   const up = useUpNext(true);
-  const tick = useMediaMut((u: UpNext) => mediaApi.episodes(u.item.id, { episode_ids: [u.episode.id], watched: true }));
+  const qc = useQueryClient();
   const toast = useToast();
+  // the burst and toast land on the click; the save runs behind them and the rail refreshes once it has played out
+  const tick = useMutation({
+    mutationFn: (u: UpNext) => mediaApi.episodes(u.item.id, { episode_ids: [u.episode.id], watched: true }),
+    onSuccess: () => whenCalm(() => void qc.invalidateQueries({ queryKey: ["media"] })),
+    onError: () => toast({ text: "Couldn't save that. Try again." }),
+  });
   const [menu, setMenu] = useState<{ u: UpNext; at: MenuAt } | null>(null);
-  const markNext = async (u: UpNext) => {
+  const markNext = (u: UpNext, btn: Element | null) => {
     const code = `S${u.episode.season} · E${u.episode.number}`;
-    const btn = document.querySelector(`[data-up-next="${u.item.id}"]`);
-    const caughtUp = (await tick.mutateAsync(u)).next_episode == null;
+    const caughtUp = (u.progress.watched ?? 0) + 1 >= (u.progress.aired ?? Infinity);
     celebrate(btn, { big: caughtUp });
-    toast({ text: caughtUp ? <>Caught up on <em>{u.item.title}</em></> : <>Watched <em>{u.item.title}</em> {code}</> });
+    afterFirstFrame(() => {
+      tick.mutate(u);
+      toast({ text: caughtUp ? <>Caught up on <em>{u.item.title}</em></> : <>Watched <em>{u.item.title}</em> {code}</> });
+    });
   };
   if (!up.data?.length) return null;
   return (
@@ -176,8 +185,8 @@ function UpNextRail() {
                   title="Mark watched"
                   disabled={tick.isPending && tick.variables?.item.id === u.item.id}
                   onPointerDown={primeCelebrate}
-                  onClick={() => void markNext(u)}
-                  className="size-11 shrink-0 rounded-full grid place-items-center border border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_12%,transparent)] text-accent cursor-pointer transition-[background-color,color,box-shadow] duration-200 hover:bg-accent hover:text-on-accent hover:shadow-[0_0_18px_-2px_var(--color-accent)] disabled:cursor-wait disabled:animate-pulse"
+                  onClick={(ev) => markNext(u, ev.currentTarget)}
+                  className="size-11 shrink-0 rounded-full grid place-items-center border border-[color-mix(in_oklch,var(--color-accent)_55%,transparent)] bg-[color-mix(in_oklch,var(--color-accent)_12%,transparent)] text-accent cursor-pointer transition-[background-color,color,box-shadow] duration-200 hover:bg-accent hover:text-on-accent hover:shadow-[0_0_18px_-2px_var(--color-accent)]"
                 >
                   <IconCheck size={17} />
                 </button>
@@ -192,7 +201,7 @@ function UpNextRail() {
           item={menu.u.item}
           at={menu.at}
           onClose={() => setMenu(null)}
-          extra={[{ label: `Mark S${menu.u.episode.season} · E${menu.u.episode.number} watched`, onSelect: () => void markNext(menu.u) }]}
+          extra={[{ label: `Mark S${menu.u.episode.season} · E${menu.u.episode.number} watched`, onSelect: () => markNext(menu.u, document.querySelector(`[data-up-next="${menu.u.item.id}"]`)) }]}
         />
       )}
     </section>

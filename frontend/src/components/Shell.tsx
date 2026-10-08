@@ -28,7 +28,7 @@ const NAV_ALL: NavItem[] = [
 function navFor(mode: Mode, announcements: boolean): NavItem[] {
   if (mode === "movie") return NAV_ALL.filter((n) => !n.announcements);
   const base = MODES[mode].base;
-  return NAV_ALL.filter((n) => n.media && (!n.announcements || announcements)).map((n) => ({ ...n, to: n.to === "/" ? base : base + n.to }));
+  return NAV_ALL.filter((n) => n.media && (!n.announcements || announcements) && !(mode === "book" && n.to === "/calendar")).map((n) => ({ ...n, to: n.to === "/" ? base : base + n.to }));
 }
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 

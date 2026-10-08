@@ -35,7 +35,8 @@ export function switchPath(pathname: string, to: Mode): string {
   const from = modeOf(pathname);
   const rest = from === "movie" ? pathname : pathname.slice(MODES[from].base.length) || "/";
   const section = ["/timeline", "/stats", "/for-you", "/map", "/calendar"].find((s) => rest.startsWith(s)) ?? "/";
-  if (to === "movie") return section === "/calendar" ? "/" : section;
+  if (section === "/calendar" && (to === "movie" || to === "book")) return to === "movie" ? "/" : MODES[to].base; // books have no calendar
+  if (to === "movie") return section;
   return section === "/" ? MODES[to].base : MODES[to].base + section;
 }
 

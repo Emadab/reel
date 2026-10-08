@@ -13,7 +13,7 @@ from sqlmodel import Session, select
 from app import db, tmdb
 from app.config import settings
 from app.models import Feedback, Watch, WatchlistItem
-from app.recommender import candidates, ranker, service
+from app.recommender import service
 from app.routers import history, search
 from conftest import drain
 from conftest import log as log_
@@ -128,7 +128,7 @@ def test_movie_behaviour_matches_golden(client, monkeypatch):
     for folder in (settings.models_dir, settings.media_dir):
         shutil.rmtree(folder, ignore_errors=True)
         folder.mkdir()
-    for mod in (candidates, ranker, service, history):
+    for mod in (service, history):
         monkeypatch.setattr(mod, "date", Today)
     got = json.loads(json.dumps(_scenario(client)))
     if os.getenv("REEL_UPDATE_GOLDEN") or not GOLDEN.exists():

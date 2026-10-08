@@ -39,50 +39,55 @@ def _fit(E: np.ndarray) -> tuple[object | None, np.ndarray]:
 
 
 def update(s: Session, force: bool = False) -> None:
-    """Refit when the film count has grown by more than 10%; otherwise place new films with transform()."""
     movies = list(s.exec(select(Movie).where(Movie.embedding.is_not(None))))  # type: ignore[union-attr]
-    if not movies:
-        return
-    fitted_n = int(get_setting(s, "umap_n", "0") or 0)
-    model_path = settings.models_dir / MODEL_FILE
-    missing = [m for m in movies if m.umap_x is None]
-    refit = force or fitted_n == 0 or len(movies) > fitted_n * 1.1 or (missing and not model_path.exists())
+    if place(s, movies, F.matrix, "", force):
+        put_setting(s, "clusters", json.dumps(clusters([(m.tmdb_id, m.umap_x, m.umap_y, m.genres + m.keywords[:12]) for m in movies])))
+
+
+def place(s: Session, objs: list, matrix, key: str, force: bool = False) -> bool:
+    """Lay out films or items (anything with umap_x/umap_y): refit when the count has grown by more than 10%,
+    otherwise place only the new ones with transform(). `key` keeps each medium's fit apart ("" is films).
+    True when anything moved."""
+    if not objs:
+        return False
+    fitted_n = int(get_setting(s, f"umap_n{key}", "0") or 0)
+    model_path = settings.models_dir / MODEL_FILE.replace(".", f"{key.replace(':', '-')}.")
+    missing = [m for m in objs if m.umap_x is None]
+    refit = force or fitted_n == 0 or len(objs) > fitted_n * 1.1 or (missing and not model_path.exists())
     if not refit and not missing:
-        return
+        return False
     if refit:
-        reducer, xy = _fit(F.matrix(movies))
+        reducer, xy = _fit(matrix(objs))
         bounds = [float(xy[:, 0].min()), float(xy[:, 1].min()), float(xy[:, 0].max()), float(xy[:, 1].max())]
-        norm = _normalise(xy, bounds)
-        for m, (x, y) in zip(movies, norm):
-            m.umap_x, m.umap_y = float(x), float(y)
-            s.add(m)
+        todo, norm = objs, _normalise(xy, bounds)
         if reducer is not None:
             joblib.dump(reducer, model_path)
         else:
             model_path.unlink(missing_ok=True)
-        put_setting(s, "umap_n", str(len(movies)))
-        put_setting(s, "umap_bounds", json.dumps(bounds))
+        put_setting(s, f"umap_n{key}", str(len(objs)))
+        put_setting(s, f"umap_bounds{key}", json.dumps(bounds))
     else:
         reducer = joblib.load(model_path)
-        bounds = json.loads(get_setting(s, "umap_bounds", "[0,0,1,1]") or "[0,0,1,1]")
-        norm = _normalise(reducer.transform(F.matrix(missing)), bounds)  # type: ignore[attr-defined]
-        for m, (x, y) in zip(missing, norm):
-            m.umap_x, m.umap_y = float(x), float(y)
-            s.add(m)
+        bounds = json.loads(get_setting(s, f"umap_bounds{key}", "[0,0,1,1]") or "[0,0,1,1]")
+        todo, norm = missing, _normalise(reducer.transform(matrix(missing)), bounds)  # type: ignore[attr-defined]
+    for m, (x, y) in zip(todo, norm):
+        m.umap_x, m.umap_y = float(x), float(y)
+        s.add(m)
     s.commit()
-    put_setting(s, "clusters", json.dumps(clusters(movies)))
+    return True
 
 
-def clusters(movies: list[Movie]) -> list[dict]:
-    """HDBSCAN on the 2D points, labelled by the two most over-represented genres/keywords (TF-IDF style)."""
-    pts = [m for m in movies if m.umap_x is not None]
+def clusters(points: list[tuple[int, float | None, float | None, list[str]]]) -> list[dict]:
+    """HDBSCAN on the 2D points (id, x, y, genres + tags), labelled by the two most over-represented terms
+    (TF-IDF style). The same for every medium."""
+    pts = [p for p in points if p[1] is not None]
     if len(pts) < 12:
         return []
     from sklearn.cluster import HDBSCAN
 
-    xy = np.array([[m.umap_x, m.umap_y] for m in pts])
+    xy = np.array([[x, y] for _, x, y, _ in pts])
     lab = HDBSCAN(min_cluster_size=max(4, min(8, len(pts) // 8))).fit_predict(xy)
-    terms = [set(m.genres) | set(m.keywords[:12]) for m in pts]
+    terms = [set(t) for *_, t in pts]
     df = Counter(t for ts in terms for t in ts)
     n = len(pts)
     out = []
@@ -96,10 +101,10 @@ def clusters(movies: list[Movie]) -> list[dict]:
         cx, cy = xy[idx].mean(axis=0)
         top = xy[idx][:, 1].min()
         out.append({"label": " & ".join(best).upper(), "x": round(float(cx), 4),
-                    "y": round(float(max(top - 0.035, 0.02)), 4), "members": [pts[i].tmdb_id for i in idx]})
+                    "y": round(float(max(top - 0.035, 0.02)), 4), "members": [pts[i][0] for i in idx]})
     return out
 
 
-def cluster_of(s: Session) -> dict[int, str]:
-    cl = json.loads(get_setting(s, "clusters", "[]") or "[]")
+def cluster_of(s: Session, key: str = "clusters") -> dict[int, str]:
+    cl = json.loads(get_setting(s, key, "[]") or "[]")
     return {i: c["label"] for c in cl for i in c["members"]}

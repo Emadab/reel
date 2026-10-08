@@ -102,7 +102,7 @@ async def upsert(s: Session, d: ItemData, item: Item | None = None) -> Item:
         item.palette, item.dominant = await asyncio.to_thread(media.palette_for, cover)  # CPU-bound: keep the event loop free
     item.backdrop_path = await media.store_image(f"{d.kind}-backdrop", d.backdrop_url) or item.backdrop_path
     item.refreshed_at = datetime.now(UTC)
-    item.embedding = None  # re-embed with the new text
+    item.embedding = item.umap_x = item.umap_y = None  # re-embed (and re-place on the map) with the new text
     s.add(item)
     s.flush()
     for src, ext in d.external_ids.items():

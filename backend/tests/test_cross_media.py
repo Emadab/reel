@@ -71,7 +71,8 @@ def test_timeline_stats_and_all_media(media):  # noqa: F811
 
 def test_show_recommendations_and_tastemap(media, monkeypatch):  # noqa: F811
     async def fake_get(path, **kw):
-        assert path == "/genre/tv/list"
+        if path != "/genre/tv/list":
+            raise tmdb.TMDBUnavailable("offline")  # enrichment is optional
         return {"genres": [{"id": 18, "name": "Drama"}, {"id": 9648, "name": "Mystery"}]}
 
     async def fake_lists(path, **kw):
@@ -87,10 +88,10 @@ def test_show_recommendations_and_tastemap(media, monkeypatch):  # noqa: F811
     media.post("/api/media/show/recommendations/recompute")
     drain(media)
     r = media.get("/api/media/show/recommendations").json()
-    assert len(r["items"]) == 3 and r["model"] == "cosine" and r["learned_from"] == 1
+    assert len(r["items"]) == 3 and r["model"]["version"] == "v3" and r["model"]["ratings_used"] == 1
     assert r["items"][0]["because"][0]["id"] == item_id and not r["items"][0]["in_library"]
     pts = media.get("/api/media/show/tastemap").json()["points"]
-    assert {p["kind"] for p in pts} == {"mine", "suggested"} and all(0 <= p["x"] <= 1 for p in pts)
+    assert {"mine", "suggested"} <= {p["kind"] for p in pts} and all(0 <= p["x"] <= 1 for p in pts)
     # not interested removes it from the slate
     media.patch(f"/api/media/items/{r['items'][0]['id']}", json={"shelf": "not_interested"})
     assert r["items"][0]["id"] not in [x["id"] for x in media.get("/api/media/show/recommendations").json()["items"]]
@@ -98,6 +99,8 @@ def test_show_recommendations_and_tastemap(media, monkeypatch):  # noqa: F811
 
 def test_show_wildcards_more_like_this_and_seen_it(media, monkeypatch):  # noqa: F811
     async def fake_get(path, **kw):
+        if path != "/genre/tv/list":
+            raise tmdb.TMDBUnavailable("offline")  # enrichment is optional
         return {"genres": [{"id": 18, "name": "Drama"}, {"id": 9648, "name": "Mystery"}, {"id": 35, "name": "Comedy"}]}
 
     async def fake_lists(path, **kw):

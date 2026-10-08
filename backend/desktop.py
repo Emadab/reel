@@ -5,16 +5,16 @@ import os
 import json
 import logging
 import socket
+import subprocess
 import sys
-import threading
 import time
 from pathlib import Path
 
-import uvicorn
 import webview
 
 from app.config import settings
-from app.main import FRONTEND, app
+
+FRONTEND = Path(__file__).parent.parent / "frontend" / "dist"
 
 APP_ID = "Reel.FilmDiary"
 ICON = Path(__file__).parent / "assets" / "reel.ico"
@@ -216,11 +216,22 @@ def main() -> None:
         sys.exit(1)
 
     port = free_port()
-    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, timeout_graceful_shutdown=1, log_level="info" if os.environ.get("REEL_DEBUG") else "warning"))
-    serving = threading.Thread(target=server.run, daemon=True)
-    serving.start()
-    while not server.started:
-        time.sleep(0.05)
+    # the API runs in its own process (app/serve.py says why); this one only hosts the window
+    debug = bool(os.environ.get("REEL_DEBUG"))
+    server = subprocess.Popen(
+        [sys.executable, "-m", "app.serve", str(port), str(os.getpid())], cwd=Path(__file__).parent,
+        stdout=None if debug else subprocess.DEVNULL, stderr=None if debug else subprocess.DEVNULL,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    while server.poll() is None:
+        try:
+            socket.create_connection(("127.0.0.1", port), timeout=0.2).close()
+            break
+        except OSError:
+            time.sleep(0.05)
+    if server.poll() is not None:
+        user32 and user32.MessageBoxW(None, "Reel's server didn't start. Run `uv run python desktop.py` with REEL_DEBUG=1 to see why.", "Reel", 0x10)
+        sys.exit(1)
 
     g = load_geometry()
     start = "/" if settings.tmdb_token else "/settings"  # first run: ask for the TMDB token
@@ -250,13 +261,11 @@ def main() -> None:
 
     window.events.closing += remember
     webview.start(setup_native, (window, g["maximized"]), storage_path=str(settings.data_dir / "webview"), debug=bool(os.environ.get("REEL_DEBUG")))  # REEL_DEBUG=1 opens WebView2 devtools
-    # Closed: free the name at once so the next launch starts, give the server a moment to shut down cleanly, then
-    # end the process outright. Otherwise Python waits on whatever background job is mid-run (embeddings, UMAP, box
-    # art), and the app lingers unseen holding the mutex. SQLite rolls back anything interrupted.
+    # Closed: free the name at once so the next launch starts, then end the server outright rather than wait on
+    # whatever background job is mid-run (embeddings, UMAP, box art). SQLite rolls back anything interrupted.
     if _mutex:
         ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(_mutex))
-    server.should_exit = True
-    serving.join(timeout=1.5)
+    server.terminate()
     logging.shutdown()
     os._exit(0)
 

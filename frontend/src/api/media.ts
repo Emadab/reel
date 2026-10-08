@@ -1,7 +1,9 @@
 // Shows, books and games: response shapes, client and TanStack Query hooks (backend: app/routers/media.py).
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { whenCalm } from "../lib/celebrate";
 import { request } from "./client";
-import type { PosterArtColors } from "./types";
+import type { MapData, MapDot } from "../components/TasteMapView";
+import type { PosterArtColors, Recommendations } from "./types";
 
 export type Kind = "show" | "book" | "game";
 export type RunPrecision = "day" | "month" | "year" | "unknown";
@@ -107,9 +109,11 @@ export type MediaStats = {
   heatmap: { start: string; end: string; days: { date: string; count: number }[] };
 };
 export type AllStats = { rows: { kind: "movie" | Kind; label: string; finished: number; finished_label: string; hours: number | null; pages: number | null; drop_rate: number | null; drop_label: string | null }[]; hours: number };
-export type MediaRec = ItemCard & { score: number; because: ItemCard[]; reasons: string[]; overview: string | null; wildcard: boolean; liked: boolean };
-export type MediaRecs = { items: MediaRec[]; model: string | null; learned_from: number; computing: boolean };
-export type MapPoint = { id: number; title: string; x: number; y: number; kind: "mine" | "suggested"; rating?: number | null; status?: string | null; color?: string; score?: number; poster: string | null };
+export type MediaRec = ItemCard & { score: number; because: ItemCard[]; reasons: string[]; why: string | null; overview: string | null; wildcard: boolean; liked: boolean };
+/** The same shape as the film page's recommendations (model line and health panel), minus onboarding. */
+export type MediaRecs = { items: MediaRec[]; model: Recommendations["model"]; computing: boolean; health: Recommendations["health"] };
+export type MediaMap = { count: number; points: (MapDot & { status?: string | null })[]; clusters: MapData["clusters"]; default_selected: number | null };
+export type MediaExplain = { item: ItemCard & { score: number | null; wildcard: boolean }; nearest: { item: ItemCard; similarity: number }[]; note: string };
 export type ImportRow = { raw: { title: string; author: string | null; status: string; rating: number | null; date: string | null; precision: string }; status: "pending" | "matched" | "ambiguous" | "unmatched"; ext_id?: string | null; include?: boolean; options?: { ext_id: string; title: string; year: number | string | null; subtitle?: string | null }[] };
 export type MediaImportJob = { id: number; source: string; committed: boolean; state: string; progress: { done: number; total: number }; summary: { matched: number; ambiguous: number; unmatched: number; included: number }; rows: ImportRow[] };
 
@@ -154,7 +158,8 @@ export const mediaApi = {
   feedback: (id: number, like: boolean) => request<{ liked: boolean }>("POST", `/media/items/${id}/feedback`, { body: { like } }),
   seenIt: (id: number, rating: number | null) => request<ItemDetail>("POST", `/media/items/${id}/seen`, { body: { rating } }),
   recompute: (kind: Kind) => request<void>("POST", `/media/${kind}/recommendations/recompute`),
-  tastemap: (kind: Kind) => request<{ points: MapPoint[] }>("GET", `/media/${kind}/tastemap`),
+  tastemap: (kind: Kind) => request<MediaMap>("GET", `/media/${kind}/tastemap`),
+  explain: (kind: Kind, id: number) => request<MediaExplain>("GET", `/media/${kind}/tastemap/explain/${id}`),
   importUpload: (source: string, file: File) => {
     const fd = new FormData();
     fd.append("files", file);
@@ -186,11 +191,49 @@ export const useAllStats = (range: string, enabled: boolean) =>
 export const useMediaRecs = (kind: Kind, wild = false) =>
   useQuery({ queryKey: ["media", kind, "recs", wild], queryFn: () => mediaApi.recs(kind, wild), refetchInterval: (q) => (q.state.data?.computing ? 4000 : false) });
 export const useMediaMap = (kind: Kind) => useQuery({ queryKey: ["media", kind, "map"], queryFn: () => mediaApi.tastemap(kind) });
+export const useMediaExplain = (kind: Kind, id: number | null) =>
+  useQuery({ queryKey: ["media", kind, "explain", id], queryFn: () => mediaApi.explain(kind, id!), enabled: id != null, placeholderData: keepPreviousData });
 export const useBacklog = () => useQuery({ queryKey: ["media", "backlog"], queryFn: mediaApi.backlog });
 export const useUpNext = (enabled: boolean) => useQuery({ queryKey: ["media", "show", "up-next"], queryFn: mediaApi.upNext, enabled });
 export const useUpcoming = () => useQuery({ queryKey: ["media", "show", "upcoming"], queryFn: mediaApi.upcoming });
 
 /** Any media write can change every media view; movie queries are left alone. */
+type EpisodesBody = Parameters<typeof mediaApi.episodes>[1];
+
+/** The item with these episodes marked, and its next episode moved on: what the server will answer, shown now. */
+export function withEpisodes(d: ItemDetail, ids: Set<number>, watched: boolean): ItemDetail {
+  const seasons = d.seasons?.map((s) => ({ ...s, episodes: s.episodes.map((e) => (ids.has(e.id) ? { ...e, watched } : e)) }));
+  const next = seasons?.flatMap((s) => (s.number > 0 ? s.episodes : [])).find((e) => e.aired && !e.watched) ?? null;
+  return { ...d, seasons, next_episode: next };
+}
+
+/**
+ * Ticking episodes, optimistically: the item's cache changes on the spot (callers celebrate first, then call this
+ * after the burst's first frame), the save runs behind it, and the server's answer plus every refetch it causes
+ * wait until the burst has played out, so nothing re-renders under it. A failed save rolls back.
+ */
+export function useEpisodeTick(itemId: number, onError?: (e: unknown) => void) {
+  const qc = useQueryClient();
+  const key = ["media", "item", itemId];
+  return useMutation({
+    mutationFn: (b: EpisodesBody) => mediaApi.episodes(itemId, b),
+    onMutate: (b) => {
+      const prev = qc.getQueryData<ItemDetail>(key);
+      if (prev && b.episode_ids) qc.setQueryData(key, withEpisodes(prev, new Set(b.episode_ids), b.watched));
+      return { prev };
+    },
+    onError: (e, _b, ctx) => {
+      if (ctx?.prev) qc.setQueryData(key, ctx.prev);
+      onError?.(e);
+    },
+    onSuccess: (d) =>
+      whenCalm(() => {
+        qc.setQueryData(key, d);
+        void qc.invalidateQueries({ queryKey: ["media"], predicate: (q) => q.queryKey[2] !== itemId });
+      }),
+  });
+}
+
 export function useMediaMut<A, R>(fn: (a: A) => Promise<R>) {
   const qc = useQueryClient();
   return useMutation({

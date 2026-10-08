@@ -79,7 +79,7 @@ def test_recommender_slate_explains_and_learns(client):
     client.post("/api/recommendations/recompute")
     drain(client)
     recs = client.get("/api/recommendations").json()
-    assert recs["onboarding"] is False and recs["model"]["version"] in ("v1", "v2")
+    assert recs["onboarding"] is False and recs["model"]["version"] == "v3"
     slate = [recs["top"]] + recs["items"]
     ids = [r["tmdb_id"] for r in slate]
     assert set(ids) <= {593, 146233, 11104, 25623}  # only candidates, never something seen

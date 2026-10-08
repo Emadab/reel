@@ -11,14 +11,11 @@ import { Poster, posterBg } from "../components/Poster";
 import { QuickLog } from "../components/QuickLog";
 import { RatingInput } from "../components/Rating";
 import { useToast } from "../components/Toasts";
+import { RecHealth, joinAnd } from "../components/RecHealth";
 import { Button, ButtonLink, ErrorLine, IconButton, PageHeader, Segmented, TagChip } from "../components/ui";
 import { iso, pct, rating, relativeTime, runtime, today } from "../lib/format";
 
 type Filter = "all" | "short" | "wild";
-
-function joinAnd(xs: string[]): string {
-  return xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
-}
 
 function useReaction(rec: Rec) {
   const [reaction, setReaction] = useState<Reaction>(rec.reaction ?? null);
@@ -96,12 +93,13 @@ function TopPick({ rec }: { rec: Rec }) {
           </div>
         )}
         <div className="flex flex-wrap gap-[10px] mt-2">
-          <Button variant="primary" hero className="px-5" disabled={saved} onClick={save}>
+          <Button variant="primary" hero className="px-5" disabled={saved} onClick={save} title={saved ? "Already on your watchlist" : "Save it for later; the model counts it as interest"}>
             <IconBookmark size={16} strokeWidth={2.2} />
             {saved ? "On your watchlist" : "Add to watchlist"}
           </Button>
           <Button
             hero
+            title="Log it and rate it; your rating teaches the model"
             aria-expanded={quick}
             onClick={() => {
               void api.feedback(rec.tmdb_id, "seen_rated").catch(() => {});
@@ -110,7 +108,7 @@ function TopPick({ rec }: { rec: Rec }) {
           >
             Seen it, rate it
           </Button>
-          <Button hero aria-pressed={reaction === "not_interested"} onClick={() => toggle("not_interested")}>
+          <Button hero aria-pressed={reaction === "not_interested"} onClick={() => toggle("not_interested")} title={reaction === "not_interested" ? "Undo: show it again" : "Hide it and steer away from films like it"}>
             {reaction === "not_interested" ? "Hidden, model notified" : "Not interested"}
           </Button>
         </div>
@@ -205,7 +203,7 @@ function Onboarding() {
               <span className="text-[14px] font-medium truncate">{f.title} <span className="font-mono text-[12px] text-ink-3">{f.year}</span></span>
               <RatingInput label="Your rating" value={ratings[f.tmdb_id] ?? null} onChange={(r) => rate(f, r)} />
               {ratings[f.tmdb_id] == null && (
-                <button type="button" onClick={() => skip(f)} className="self-start h-11 bg-transparent border-0 p-0 text-[13px] text-ink-3 underline underline-offset-2 cursor-pointer hover:text-ink">
+                <button type="button" title="Skip it; you'll get another film to rate" onClick={() => skip(f)} className="self-start h-11 bg-transparent border-0 p-0 text-[13px] text-ink-3 underline underline-offset-2 cursor-pointer hover:text-ink">
                   Haven't seen it
                 </button>
               )}
@@ -234,7 +232,6 @@ export default function ForYou() {
   const { data, error, isLoading } = useRecs(filter);
   const m = data?.model;
   const h = data?.health;
-  const sources = h?.sources.length ? joinAnd(h.sources) : "TMDB";
 
   return (
     <main className="flex flex-col gap-7 pt-9 px-12 pb-16 max-[1023px]:pt-7 max-[1023px]:px-6 max-[639px]:pt-5 max-[639px]:px-4 max-[639px]:pb-24 box-border min-w-0 relative">
@@ -246,10 +243,10 @@ export default function ForYou() {
           label="Show"
           value={filter}
           onChange={(v) => setSp(v === "all" ? {} : { filter: v }, { replace: true })}
-          options={[{ id: "all", label: "All" }, { id: "short", label: "Under 2 hours" }, { id: "wild", label: "Wildcards" }]}
+          options={[{ id: "all", label: "All", tip: "Every suggestion" }, { id: "short", label: "Under 2 hours", tip: "Only films under 2 hours" }, { id: "wild", label: "Wildcards", tip: "Well-loved picks outside your usual taste" }]}
         />
         {!data?.onboarding && (
-          <Button onClick={refresh} disabled={refreshing || data?.computing}>Refresh suggestions</Button>
+          <Button onClick={refresh} disabled={refreshing || data?.computing} title="Re-rank with your latest ratings and reactions">Refresh suggestions</Button>
         )}
       </PageHeader>
 
@@ -268,33 +265,7 @@ export default function ForYou() {
         </div>
       )}
 
-      {h && !data?.onboarding && (data?.top || data?.items.length) ? (
-        <section aria-label="Recommender health" className="flex flex-wrap gap-8 items-center py-5 px-6 rounded-[20px] border border-(--line-2)">
-          <div className="flex flex-col gap-1">
-            <span className="font-mono text-[11px] tracking-[0.1em] text-ink-3">HELD-OUT HIT RATE · TOP 20</span>
-            <span className="text-[15px]">
-              {h.hit_at_20 != null ? (
-                <>
-                  {h.hit_at_20} of your last {h.holdout_n} watches <span className="text-ink-3">(v1 found {h.baseline_hit_at_20})</span>
-                </>
-              ) : (
-                <span className="text-ink-3">needs 20 rated watches</span>
-              )}
-            </span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="font-mono text-[11px] tracking-[0.1em] text-ink-3">CANDIDATES</span>
-            <span className="text-[15px]">{h.candidate_count} from {sources}</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="font-mono text-[11px] tracking-[0.1em] text-ink-3">WILDCARD SHARE</span>
-            <span className="text-[15px]">{Math.round(h.wildcard_share * 100)}% of slots</span>
-          </div>
-          <Link to="/map" className="ml-auto max-[639px]:ml-0 flex items-center h-11 box-content px-4 rounded-[12px] border border-(--line-5) no-underline text-[14px]">
-            See why on the taste map
-          </Link>
-        </section>
-      ) : null}
+      {h && !data?.onboarding && (data?.top || data?.items.length) ? <RecHealth health={h} recent="watches" mapTo="/map" /> : null}
     </main>
   );
 }
