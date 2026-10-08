@@ -322,7 +322,7 @@ def test_show_scores_fetched_in_background(media, monkeypatch):
     from tests.conftest import drain
 
     async def fake_scores(imdb):
-        return {"imdb": "8.7", "rt": "96%", "metacritic": None}
+        return {"imdb": "8.7", "imdb_votes": "2,100,000", "rt": "96%", "metacritic": None}
 
     monkeypatch.setattr(omdb, "scores_for", fake_scores)
     item_id = media.post("/api/media/show/items", json={"ext_id": "95396"}).json()["id"]

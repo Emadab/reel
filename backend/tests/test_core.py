@@ -149,7 +149,8 @@ def test_scores_without_an_omdb_key_come_from_imdb_and_wikidata(client, monkeypa
     client.get("/api/movies/329865")  # queues the lookup
     drain(client)
     with Session(db.engine) as s:  # the latest Tomatometer wins; the RT average and older values are ignored
-        assert s.get(Movie, 329865).omdb == {"imdb": "7.9", "rt": "94%", "metacritic": "81"}
+        assert s.get(Movie, 329865).omdb == {"imdb": "7.9", "imdb_votes": "800000", "rt": "94%", "metacritic": "81"}
+    assert client.get("/api/movies/329865").json()["votes"]["imdb"] == 800000
 
 
 def test_detail_is_complete_and_ratings_keep_one_decimal(client):

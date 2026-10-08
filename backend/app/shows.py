@@ -70,7 +70,9 @@ def scores_pending(s: Session, item: Item) -> bool:
     """IMDb, Rotten Tomatoes and Metacritic like a film's, fetched in the background when missing or a month old.
     True while that fetch is queued or running, so the page polls until the scores land."""
     at = item.details.get("scores_at")
-    if (imdb := imdb_id(s, item)) and (not at or now().timestamp() - datetime.fromisoformat(at).timestamp() > SCORES_STALE):
+    stale = not at or now().timestamp() - datetime.fromisoformat(at).timestamp() > SCORES_STALE
+    old = "imdb" in (sc := item.details.get("scores") or {}) and "imdb_votes" not in sc  # fetched before votes were kept
+    if (imdb := imdb_id(s, item)) and (stale or old):
         jobs.enqueue(f"scores:item:{item.id}", lambda i=item.id, x=imdb: fill_scores(i, x))
     return jobs.status.get(f"scores:item:{item.id}", {}).get("state") in ("queued", "running")
 

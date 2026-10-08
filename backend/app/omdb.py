@@ -47,7 +47,12 @@ async def scores_for(imdb_id: str) -> dict:
         d = (await client.get("https://www.omdbapi.com/", params={"i": imdb_id, "apikey": settings.omdb_key})).json()
         return _parse(d) if d.get("Response") == "True" else {}
     imdb = await imdb_ratings({imdb_id})
-    return {"imdb": imdb.get(imdb_id), "rt": None, "metacritic": None} | (await wikidata_scores([imdb_id])).get(imdb_id, {})
+    return _keyless(imdb.get(imdb_id)) | (await wikidata_scores([imdb_id])).get(imdb_id, {})
+
+
+def _keyless(imdb: tuple[str, str] | None) -> dict:
+    rating, votes = imdb or (None, None)
+    return {"imdb": rating, "imdb_votes": votes, "rt": None, "metacritic": None}
 
 
 async def check_key(key: str) -> bool:
@@ -66,8 +71,8 @@ TOMATOMETER, METASCORE = "http://www.wikidata.org/entity/Q108403393", "http://ww
 open_client = httpx.AsyncClient(timeout=60, headers={"User-Agent": "Reel/1.0 (personal film diary; local app)"}, follow_redirects=True)
 
 
-async def imdb_ratings(ids: set[str]) -> dict[str, str]:
-    """IMDb rating per title from IMDb's free dataset (≈9 MB, refreshed weekly on disk)."""
+async def imdb_ratings(ids: set[str]) -> dict[str, tuple[str, str]]:
+    """IMDb (rating, vote count) per title from IMDb's free dataset (≈9 MB, refreshed weekly on disk)."""
     path = settings.data_dir / "imdb-ratings.tsv.gz"
     if not path.exists() or time.time() - path.stat().st_mtime > 7 * 86400:
         tmp = path.with_suffix(".part")
@@ -78,13 +83,13 @@ async def imdb_ratings(ids: set[str]) -> dict[str, str]:
                     f.write(chunk)
         tmp.replace(path)
 
-    def scan() -> dict[str, str]:
+    def scan() -> dict[str, tuple[str, str]]:
         out = {}
         with gzip.open(path, "rt", encoding="utf-8") as f:
             for line in f:
-                tid, rating, _ = line.split("\t", 2)
+                tid, rating, votes = line.rstrip("\n").split("\t")
                 if tid in ids:
-                    out[tid] = rating
+                    out[tid] = (rating, votes)
         return out
 
     return await asyncio.to_thread(scan)  # 1.5 M lines: keep the event loop free
@@ -126,9 +131,10 @@ async def fill_scores(ids: list[int] | None = None, force: bool = False) -> None
             q = q.where(Movie.tmdb_id.in_(ids))
         else:
             q = q.where(or_(Movie.tmdb_id.in_(select(Watch.tmdb_id)), Movie.tmdb_id.in_(select(WatchlistItem.tmdb_id))))
-        if not force:
-            q = q.where(Movie.omdb_fetched_at.is_(None))
         films = list(s.exec(q))
+        if not force:  # missing, a month old, or from before vote counts were kept
+            films = [m for m in films if not m.omdb_fetched_at or now() - utc(m.omdb_fetched_at) >= STALE
+                     or "imdb_votes" not in (m.omdb or {})]
         if not films:
             return
         if settings.omdb_key:
@@ -142,7 +148,7 @@ async def fill_scores(ids: list[int] | None = None, force: bool = False) -> None
         except (httpx.HTTPError, OSError, ValueError, KeyError):
             return  # offline: try again next start
         for m in films:
-            m.omdb = {"imdb": imdb.get(m.imdb_id), "rt": None, "metacritic": None} | wd.get(m.imdb_id, {})
+            m.omdb = _keyless(imdb.get(m.imdb_id)) | wd.get(m.imdb_id, {})
             m.omdb_fetched_at = now()
             s.add(m)
         s.commit()
