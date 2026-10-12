@@ -731,6 +731,8 @@ function YourRun({ item, run, glow, pick }: { item: ItemDetail; run: RunOut; glo
   const rateSeason = useMediaMut((b: { season: number; rating: number | null }) => mediaApi.rateSeason(item.id, b.season, b.rating));
   const season = item.kind === "show" ? seasonsOf(item, pick).shown : undefined;
   const seasonName = season && (season.name ?? `Season ${season.number}`);
+  const rated = season && season.number > 0 ? season : undefined; // the rating box rates the highlighted season
+  const mine = rated ? (rateSeason.isPending ? rateSeason.variables.rating : rated.rating) : run.rating;
   const [dating, setDating] = useState(false);
   const bySeason = Object.keys(run.season_ratings).length;
   const f = fraction(item.kind, run.progress);
@@ -761,11 +763,24 @@ function YourRun({ item, run, glow, pick }: { item: ItemDetail; run: RunOut; glo
       {item.kind === "book" && run.status && !FINAL.has(run.status) && <BookProgress item={item} run={run} />}
       {item.kind === "game" && run.status && !["abandoned", "retired"].includes(run.status) && <GameProgress item={item} run={run} />}
       <div className="flex flex-col gap-2">
-        <Eyebrow className="text-[10.5px]" style={{ color: glow }}>{season && season.number > 0 ? `Your rating · ${seasonName}` : "Your rating"}</Eyebrow>
-        {season && season.number > 0 ? (
+        <div className="flex items-center justify-between gap-3 -my-3">
+          <Eyebrow className="text-[10.5px]" style={{ color: glow }}>
+            {season && season.number > 0 ? `Your rating · ${seasonName}` : "Your rating"}
+            {mine != null && ` · ★ ${mine.toFixed(1)}`}
+          </Eyebrow>
+          {mine != null && !(bySeason && !rated) && (
+            <button
+              type="button" onClick={() => (rated ? rateSeason.mutate({ season: rated.number, rating: null }) : rate.mutate(null))}
+              className="h-11 px-0 bg-transparent border-0 text-[13px] text-ink-3 hover:text-ink-hi underline cursor-pointer"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        {rated ? (
           <RatingInput
-            value={rateSeason.isPending ? rateSeason.variables.rating : season.rating}
-            onChange={(v) => rateSeason.mutate({ season: season.number, rating: v })}
+            value={mine}
+            onChange={(v) => rateSeason.mutate({ season: rated.number, rating: v })}
             hideLabel label={`Rate ${seasonName}`}
           />
         ) : bySeason ? (
