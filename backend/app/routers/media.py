@@ -237,8 +237,9 @@ def _detail(s: Session, item: Item) -> dict:
         seen = shows.watched_events(s, run)
         eps = shows.episodes(s, item.id)  # type: ignore[arg-type]
         seasons = s.exec(select(Season).where(Season.item_id == item.id).order_by(col(Season.number))).all()
+        rated = (run.season_ratings if run else None) or {}
         out["seasons"] = [{"number": se.number, "name": se.name, "premiere": se.premiere_date.isoformat() if se.premiere_date else None,
-                           "episodes": [shows.episode_out(e, seen) for e in eps if e.season == se.number]} for se in seasons]
+                           "rating": rated.get(str(se.number)), "episodes": [shows.episode_out(e, seen) for e in eps if e.season == se.number]} for se in seasons]
         nxt, upcoming = shows.next_episode(s, item, run), shows.upcoming_episode(s, item)
         out["next_episode"] = shows.episode_out(nxt, seen) if nxt else None
         out["upcoming_episode"] = shows.episode_out(upcoming, seen) if upcoming else None
@@ -260,7 +261,8 @@ def _run_out(r: Run) -> dict:
     return {"id": r.id, "run_no": r.run_no, "status": r.status, "status_source": r.status_source,
             "started_on": r.started_on.isoformat() if r.started_on else None,
             "finished_on": r.finished_on.isoformat() if r.finished_on else None, "date_precision": r.date_precision,
-            "progress": r.progress, "goal": r.goal, "variant": r.variant, "rating": r.rating, "review": r.review}
+            "progress": r.progress, "goal": r.goal, "variant": r.variant, "rating": r.rating, "review": r.review,
+            "season_ratings": r.season_ratings or {}}
 
 
 def _suggest(s: Session, run: Run | None) -> str | None:
@@ -449,6 +451,28 @@ def tick(item_id: int, body: EpisodesIn, s: Session = Depends(get_session)):
     dated = body.watched_on is not None or body.date_precision == "unknown"
     shows.set_watched(s, item, ids, body.watched, shows.event_time(body.watched_on, body.date_precision) if dated else None,
                       body.date_precision if dated else "day", on_air=body.watched and body.on_air_dates)
+    return _detail(s, item)
+
+
+class SeasonRatingIn(BaseModel):
+    rating: float | None = Field(default=None, gt=0, le=10)  # None clears it
+
+
+@router.patch("/items/{item_id}/seasons/{number}")
+def rate_season(item_id: int, number: int, body: SeasonRatingIn, s: Session = Depends(get_session)):
+    """Rate a season for the current time through the show; a rewatch rates its seasons afresh."""
+    item = _item(s, item_id)
+    if not s.exec(select(Season).where(Season.item_id == item.id, Season.number == number, Season.number > 0)).first():
+        raise HTTPException(404, "No such season")
+    run = items.current_run(s, item.id)  # type: ignore[arg-type]
+    if not run:
+        raise HTTPException(422, "Start watching the show first")
+    rated = {k: v for k, v in (run.season_ratings or {}).items() if k != str(number)}
+    run.season_ratings = rated | ({str(number): body.rating} if body.rating is not None else {})  # a new dict, so it saves
+    run.updated_at = datetime.now(UTC)
+    s.add(Event(item_id=item.id, run_id=run.id, kind="rating", payload={"season": number, "rating": body.rating}))  # type: ignore[arg-type]
+    s.add(run)
+    s.commit()
     return _detail(s, item)
 
 

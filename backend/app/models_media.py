@@ -116,6 +116,7 @@ class Run(SQLModel, table=True):
     goal: str | None = None  # games: main | main_extras | completionist
     variant: dict = _json(dict)  # platform, edition, format
     rating: float | None = Field(default=None, gt=0, le=10)  # same 0–10 scale as movie watches
+    season_ratings: dict | None = Field(default=None, sa_column=Column(JSON))  # shows: {"1": 8.5}, per time through
     review: str | None = None
     updated_at: datetime = Field(default_factory=now)
 

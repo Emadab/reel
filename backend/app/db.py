@@ -66,6 +66,19 @@ def migrate() -> None:
                 repair_flipflops(s)
             s.add(Setting(key="show_flipflop_repair", value="1"))
             s.commit()
+        # season ratings arrived: every rated time through a show starts with its rating on each season (once)
+        if s.get(Setting, "season_ratings_backfill") is None:
+            regular: dict[int, list[int]] = {}
+            for se in s.exec(select(models_media.Season).where(models_media.Season.number > 0)):
+                regular.setdefault(se.item_id, []).append(se.number)
+            runs = s.exec(select(models_media.Run).join(models_media.Item).where(
+                models_media.Item.kind == "show", models_media.Run.rating.is_not(None)))  # type: ignore[union-attr]
+            for run in runs:
+                if not run.season_ratings and regular.get(run.item_id):
+                    run.season_ratings = {str(n): run.rating for n in sorted(regular[run.item_id])}
+                    s.add(run)
+            s.add(Setting(key="season_ratings_backfill", value="1"))
+            s.commit()
 
 
 def reconnect() -> None:

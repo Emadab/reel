@@ -49,6 +49,7 @@ export type RunOut = {
   id: number; run_no: number; status: string | null; status_source: "user" | "derived";
   started_on: string | null; finished_on: string | null; date_precision: RunPrecision;
   progress: Progress; goal: Goal | null; variant: Record<string, string>; rating: number | null; review: string | null;
+  season_ratings: Record<string, number>;
 };
 export type Goal = "main" | "main_extras" | "completionist";
 
@@ -64,7 +65,7 @@ export type ItemDetail = ItemCard & {
   platforms: string[];
   runs: RunOut[];
   suggest: string | null;
-  seasons?: { number: number; name: string | null; premiere: string | null; episodes: Episode[] }[];
+  seasons?: { number: number; name: string | null; premiere: string | null; rating: number | null; episodes: Episode[] }[];
   next_episode?: Episode | null;
   upcoming_episode?: Episode | null;
   collection?: { name: string; items: ItemCard[] } | null;
@@ -139,6 +140,8 @@ export const mediaApi = {
     request<ItemDetail>("POST", `/media/runs/${runId}/progress`, { body }),
   episodes: (id: number, body: { episode_ids?: number[]; season?: number; watched: boolean; watched_on?: string; date_precision?: RunPrecision; on_air_dates?: boolean }) =>
     request<ItemDetail>("POST", `/media/items/${id}/episodes`, { body }),
+  rateSeason: (id: number, season: number, rating: number | null) =>
+    request<ItemDetail>("PATCH", `/media/items/${id}/seasons/${season}`, { body: { rating } }),
   history: (id: number, body: { upto_season: number | null; started_on?: string; finished_on?: string; date_precision: RunPrecision; rating?: number | null; on_air_dates?: boolean; variant?: Record<string, string> }) =>
     request<ItemDetail>("POST", `/media/items/${id}/history`, { body }),
   upNext: () => request<UpNext[]>("GET", "/media/shows/up-next"),

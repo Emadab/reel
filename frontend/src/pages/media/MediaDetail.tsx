@@ -402,6 +402,7 @@ function Episodes({ item }: { item: ItemDetail }) {
   const [fill, setFill] = useState<{ from: number; to: number; x: number; y: number } | null>(null);
   const [landed, setLanded] = useState<{ ids: Set<number>; from: number; k: number } | null>(null);
   const stamp = useMediaMut((b: { episode_ids: number[]; watched: boolean; watched_on?: string; date_precision: RunPrecision; on_air_dates?: boolean }) => mediaApi.episodes(item.id, b));
+  const rateSeason = useMediaMut((b: { season: number; rating: number | null }) => mediaApi.rateSeason(item.id, b.season, b.rating));
   if (!shown) return null;
   const eps = shown.episodes;
   const dateOf = (e: Episode) => formatWatchDate(e.watched_on!, e.watched_precision ?? "day");
@@ -478,6 +479,13 @@ function Episodes({ item }: { item: ItemDetail }) {
           {shown.number === 0 ? "Specials don't count toward your progress" : `${shown.name ?? `Season ${shown.number}`} · ${done} of ${aired.length} aired watched`}
           {shown.episodes.length > aired.length && ` · ${shown.episodes.length - aired.length} still to air`}
         </span>
+        {shown.number > 0 && item.runs.length > 0 && (
+          <RatingInput
+            compact hideLabel label={`Rate ${shown.name ?? `Season ${shown.number}`}`}
+            value={rateSeason.isPending ? rateSeason.variables.rating : shown.rating}
+            onChange={(v) => rateSeason.mutate({ season: shown.number, rating: v })}
+          />
+        )}
         <span className="flex flex-wrap gap-[10px]">
           <Button onClick={() => setHistory(true)}><IconPlus size={15} /> Add to history</Button>
           {aired.length > 0 && (
@@ -794,6 +802,7 @@ function Runs({ item, glow, glow2 }: { item: ItemDetail; glow: string; glow2: st
                 {r.goal && <MonoTag>{GOALS.find((g) => g.id === r.goal)?.label}</MonoTag>}
                 {r.variant.format && <MonoTag>{FORMATS.find((f) => f.id === r.variant.format)?.label}</MonoTag>}
                 {r.variant.platform && <MonoTag>{r.variant.platform}</MonoTag>}
+                {Object.entries(r.season_ratings).sort(([a], [b]) => Number(a) - Number(b)).map(([n, v]) => <MonoTag key={n}>S{n} ★ {rating(v)}</MonoTag>)}
               </div>
               {confirm === r.id ? (
                 <span className="flex items-center gap-3 text-[13px]">

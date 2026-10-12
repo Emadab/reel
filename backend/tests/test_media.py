@@ -179,6 +179,45 @@ def test_add_history_whole_show_or_up_to_a_season(media):
     assert media.post(f"/api/media/items/{item_id}/history", json={"upto_season": 0}).status_code == 422
 
 
+def test_season_ratings_per_time_through(media):
+    SHOW.update(status="ended", future_ep=False)
+    item_id = media.post("/api/media/show/items", json={"ext_id": "9"}).json()["id"]
+    assert media.patch(f"/api/media/items/{item_id}/seasons/1", json={"rating": 8}).status_code == 422  # not started
+    media.post(f"/api/media/items/{item_id}/history", json={"date_precision": "unknown"})
+    d = media.patch(f"/api/media/items/{item_id}/seasons/1", json={"rating": 8.5}).json()
+    assert d["seasons"][1]["rating"] == 8.5 and d["runs"][0]["season_ratings"] == {"1": 8.5}
+    d = media.post(f"/api/media/items/{item_id}/refresh").json()
+    assert d["seasons"][1]["rating"] == 8.5
+    # a rewatch rates its seasons afresh; the first time keeps its own
+    d = media.post(f"/api/media/items/{item_id}/history", json={"date_precision": "unknown"}).json()
+    assert d["seasons"][1]["rating"] is None
+    d = media.patch(f"/api/media/items/{item_id}/seasons/1", json={"rating": 6}).json()
+    assert [r["season_ratings"] for r in d["runs"]] == [{"1": 8.5}, {"1": 6}]
+    d = media.patch(f"/api/media/items/{item_id}/seasons/1", json={"rating": None}).json()
+    assert d["runs"][1]["season_ratings"] == {}
+    assert media.patch(f"/api/media/items/{item_id}/seasons/99", json={"rating": 5}).status_code == 404
+
+
+def test_season_ratings_backfilled_from_the_show_rating(media):
+    from app.models import Setting
+    from app.recommender.media import liking
+
+    SHOW.update(status="ended", future_ep=False)
+    item_id = media.post("/api/media/show/items", json={"ext_id": "10"}).json()["id"]
+    media.post(f"/api/media/items/{item_id}/history", json={"date_precision": "unknown", "rating": 7})
+    with Session(db.engine) as s:
+        s.delete(s.get(Setting, "season_ratings_backfill"))
+        s.commit()
+    db.migrate()
+    with Session(db.engine) as s:
+        run = s.exec(select(Run).where(Run.item_id == item_id)).one()
+        assert run.season_ratings == {"1": 7, "2": 7} and liking(run) == 7
+        run.season_ratings = {"1": 9, "2": 5}
+        assert liking(run) == 7  # the overall 7 blended with the seasons' mean of 7
+        run.rating = None
+        assert liking(run) == 7
+
+
 def test_rederive_leaves_settled_shows_alone(media):
     """A re-derive of a show already in its derived state logs nothing and keeps its finish date."""
     SHOW.update(status="ended", future_ep=False)
