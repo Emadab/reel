@@ -386,14 +386,16 @@ function airLabel(e: Episode): string {
   return e.aired ? formatWatchDate(d, "day") : `Airs ${formatFullDate(d)}`;
 }
 
-function Episodes({ item }: { item: ItemDetail }) {
-  const seasons = useMemo(() => {
-    const s = item.seasons ?? [];
-    return [...s.filter((x) => x.number > 0), ...s.filter((x) => x.number === 0)].filter((x) => x.episodes.length);
-  }, [item.seasons]);
-  const current = item.next_episode?.season ?? seasons.find((s) => s.number > 0)?.number ?? 0;
-  const [pick, setPick] = useState<number | null>(null);
-  const shown = seasons.find((s) => s.number === (pick ?? current)) ?? seasons[0];
+// seasons in display order (specials last), and the one the season picker has selected
+function seasonsOf(item: ItemDetail, pick: number | null) {
+  const s = item.seasons ?? [];
+  const seasons = [...s.filter((x) => x.number > 0), ...s.filter((x) => x.number === 0)].filter((x) => x.episodes.length);
+  const current = item.next_episode?.season ?? seasons.find((x) => x.number > 0)?.number ?? 0;
+  return { seasons, shown: seasons.find((x) => x.number === (pick ?? current)) ?? seasons[0] };
+}
+
+function Episodes({ item, pick, setPick }: { item: ItemDetail; pick: number | null; setPick: (n: number) => void }) {
+  const { seasons, shown } = seasonsOf(item, pick);
   const toast = useToast();
   const tick = useEpisodeTick(item.id, () => toast({ text: "Couldn't save that. Try again." }));
   const [dating, setDating] = useState<Episode | null>(null);
@@ -402,7 +404,6 @@ function Episodes({ item }: { item: ItemDetail }) {
   const [fill, setFill] = useState<{ from: number; to: number; x: number; y: number } | null>(null);
   const [landed, setLanded] = useState<{ ids: Set<number>; from: number; k: number } | null>(null);
   const stamp = useMediaMut((b: { episode_ids: number[]; watched: boolean; watched_on?: string; date_precision: RunPrecision; on_air_dates?: boolean }) => mediaApi.episodes(item.id, b));
-  const rateSeason = useMediaMut((b: { season: number; rating: number | null }) => mediaApi.rateSeason(item.id, b.season, b.rating));
   if (!shown) return null;
   const eps = shown.episodes;
   const dateOf = (e: Episode) => formatWatchDate(e.watched_on!, e.watched_precision ?? "day");
@@ -479,13 +480,6 @@ function Episodes({ item }: { item: ItemDetail }) {
           {shown.number === 0 ? "Specials don't count toward your progress" : `${shown.name ?? `Season ${shown.number}`} · ${done} of ${aired.length} aired watched`}
           {shown.episodes.length > aired.length && ` · ${shown.episodes.length - aired.length} still to air`}
         </span>
-        {shown.number > 0 && item.runs.length > 0 && (
-          <RatingInput
-            compact hideLabel label={`Rate ${shown.name ?? `Season ${shown.number}`}`}
-            value={rateSeason.isPending ? rateSeason.variables.rating : shown.rating}
-            onChange={(v) => rateSeason.mutate({ season: shown.number, rating: v })}
-          />
-        )}
         <span className="flex flex-wrap gap-[10px]">
           <Button onClick={() => setHistory(true)}><IconPlus size={15} /> Add to history</Button>
           {aired.length > 0 && (
@@ -732,8 +726,11 @@ function Variant({ item, run }: { item: ItemDetail; run: RunOut }) {
   );
 }
 
-function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: string }) {
+function YourRun({ item, run, glow, pick }: { item: ItemDetail; run: RunOut; glow: string; pick: number | null }) {
   const rate = useMediaMut((v: number | null) => mediaApi.patchRun(run.id, v == null ? { clear_rating: true } : { rating: v }));
+  const rateSeason = useMediaMut((b: { season: number; rating: number | null }) => mediaApi.rateSeason(item.id, b.season, b.rating));
+  const season = item.kind === "show" ? seasonsOf(item, pick).shown : undefined;
+  const seasonName = season && (season.name ?? `Season ${season.number}`);
   const [dating, setDating] = useState(false);
   const bySeason = Object.keys(run.season_ratings).length;
   const f = fraction(item.kind, run.progress);
@@ -764,8 +761,14 @@ function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: str
       {item.kind === "book" && run.status && !FINAL.has(run.status) && <BookProgress item={item} run={run} />}
       {item.kind === "game" && run.status && !["abandoned", "retired"].includes(run.status) && <GameProgress item={item} run={run} />}
       <div className="flex flex-col gap-2">
-        <Eyebrow className="text-[10.5px]" style={{ color: glow }}>Your rating</Eyebrow>
-        {bySeason ? (
+        <Eyebrow className="text-[10.5px]" style={{ color: glow }}>{season && season.number > 0 ? `Your rating · ${seasonName}` : "Your rating"}</Eyebrow>
+        {season && season.number > 0 ? (
+          <RatingInput
+            value={rateSeason.isPending ? rateSeason.variables.rating : season.rating}
+            onChange={(v) => rateSeason.mutate({ season: season.number, rating: v })}
+            hideLabel label={`Rate ${seasonName}`}
+          />
+        ) : bySeason ? (
           <span className="flex items-baseline gap-3">
             <span className="font-mono text-[14px]" style={{ color: glow }}>★ {rating(run.rating!)}</span>
             <span className="font-mono text-[12px] text-ink-3">average of {bySeason} season{bySeason > 1 ? "s" : ""}</span>
@@ -1009,6 +1012,7 @@ function Neighbours({ item }: { item: ItemDetail }) {
 }
 
 export default function MediaDetail({ kind }: { kind: Kind }) {
+  const [season, setSeason] = useState<number | null>(null);
   const id = Number(useParams().id);
   const loc = useLocation();
   const nav = useNavigate();
@@ -1186,7 +1190,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
               </div>
             )}
           </section>
-          {kind === "show" && <Episodes item={item} />}
+          {kind === "show" && <Episodes item={item} pick={season} setPick={setSeason} />}
           {kind === "game" && Array.isArray(item.details.screenshots) && item.details.screenshots.length > 0 && (
             <section className="flex flex-col gap-4" aria-label="Screenshots">
               <SectionTitle>Screenshots</SectionTitle>
@@ -1200,7 +1204,7 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
           <People item={item} />
         </div>
         <aside className="flex-[1_1_340px] min-w-0 flex flex-col gap-5">
-          {run && run.status && <YourRun item={item} run={run} glow={glow} />}
+          {run && run.status && <YourRun item={item} run={run} glow={glow} pick={season} />}
           <Runs item={item} glow={glow} glow2={glow2} />
           {kind === "show" && <Scores film={showScores(item)} glow={glow} critics={false} pending={item.scores_pending} />}
           {kind === "game" && (
