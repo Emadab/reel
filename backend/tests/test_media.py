@@ -193,15 +193,18 @@ def test_season_ratings_per_time_through(media):
     assert d["seasons"][1]["rating"] is None
     d = media.patch(f"/api/media/items/{item_id}/seasons/1", json={"rating": 6}).json()
     assert [r["season_ratings"] for r in d["runs"]] == [{"1": 8.5}, {"1": 6}]
+    # the show's score is the average of its seasons, and can't be set over them
+    d = media.patch(f"/api/media/items/{item_id}/seasons/2", json={"rating": 7.5}).json()
+    assert d["runs"][1]["rating"] == 6.8 and d["my_rating"] == 6.8
+    assert media.patch(f"/api/media/runs/{d['runs'][1]['id']}", json={"rating": 9}).status_code == 422
+    media.patch(f"/api/media/items/{item_id}/seasons/2", json={"rating": None})
     d = media.patch(f"/api/media/items/{item_id}/seasons/1", json={"rating": None}).json()
-    assert d["runs"][1]["season_ratings"] == {}
+    assert d["runs"][1]["season_ratings"] == {} and d["runs"][1]["rating"] is None
     assert media.patch(f"/api/media/items/{item_id}/seasons/99", json={"rating": 5}).status_code == 404
 
 
 def test_season_ratings_backfilled_from_the_show_rating(media):
     from app.models import Setting
-    from app.recommender.media import liking
-
     SHOW.update(status="ended", future_ep=False)
     item_id = media.post("/api/media/show/items", json={"ext_id": "10"}).json()["id"]
     media.post(f"/api/media/items/{item_id}/history", json={"date_precision": "unknown", "rating": 7})
@@ -211,11 +214,7 @@ def test_season_ratings_backfilled_from_the_show_rating(media):
     db.migrate()
     with Session(db.engine) as s:
         run = s.exec(select(Run).where(Run.item_id == item_id)).one()
-        assert run.season_ratings == {"1": 7, "2": 7} and liking(run) == 7
-        run.season_ratings = {"1": 9, "2": 5}
-        assert liking(run) == 7  # the overall 7 blended with the seasons' mean of 7
-        run.rating = None
-        assert liking(run) == 7
+        assert run.season_ratings == {"1": 7, "2": 7} and run.rating == 7
 
 
 def test_rederive_leaves_settled_shows_alone(media):

@@ -62,15 +62,6 @@ def fraction(kind: str, run: Run, item: Item) -> float | None:
     return None
 
 
-def liking(run: Run) -> float | None:
-    """Your rating of a time through: the overall rating, blended evenly with the mean of its season ratings."""
-    seasons = [v for v in (run.season_ratings or {}).values() if v is not None]
-    if not seasons:
-        return run.rating
-    mean = sum(seasons) / len(seasons)
-    return mean if run.rating is None else (run.rating + mean) / 2
-
-
 def signal(kind: str, item: Item, run: Run | None, entry: LibraryEntry | None) -> float | None:
     """-1..1 for how much you liked it, or None when there's nothing to learn from."""
     if entry and entry.shelf == "not_interested":
@@ -88,8 +79,8 @@ def signal(kind: str, item: Item, run: Run | None, entry: LibraryEntry | None) -
     else:  # in progress: engagement grows with how far you've got
         f = fraction(kind, run, item)
         state = 0.4 if f and f >= 0.5 else 0.15
-    if (r := liking(run)) is not None:
-        return 0.7 * (r - 5.5) / 4.5 + 0.3 * state
+    if run.rating is not None:
+        return 0.7 * (run.rating - 5.5) / 4.5 + 0.3 * state
     return state
 
 
@@ -102,7 +93,7 @@ def _rows(s: Session, kind: str) -> list[tuple[Item, float, datetime, float | No
         entry, run = entries[item.id], runs.get(item.id)  # type: ignore[index]
         w = signal(kind, item, run, entry)
         if w is not None:
-            out.append((item, w, items.utc(run.updated_at if run else entry.added_at), liking(run) if run else None,
+            out.append((item, w, items.utc(run.updated_at if run else entry.added_at), run.rating if run else None,
                         run is not None and run.status is not None))
     have = {r[0].id for r in out}
     for fb, item in s.exec(select(MediaFeedback, Item).join(Item, col(Item.id) == col(MediaFeedback.item_id)).where(Item.kind == kind)):

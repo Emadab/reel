@@ -735,6 +735,7 @@ function Variant({ item, run }: { item: ItemDetail; run: RunOut }) {
 function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: string }) {
   const rate = useMediaMut((v: number | null) => mediaApi.patchRun(run.id, v == null ? { clear_rating: true } : { rating: v }));
   const [dating, setDating] = useState(false);
+  const bySeason = Object.keys(run.season_ratings).length;
   const f = fraction(item.kind, run.progress);
   const text = progressText(item.kind, run.progress);
   const dates = run.date_precision === "unknown" ? (run.started_on || run.finished_on ? "date unknown" : "")
@@ -764,7 +765,14 @@ function YourRun({ item, run, glow }: { item: ItemDetail; run: RunOut; glow: str
       {item.kind === "game" && run.status && !["abandoned", "retired"].includes(run.status) && <GameProgress item={item} run={run} />}
       <div className="flex flex-col gap-2">
         <Eyebrow className="text-[10.5px]" style={{ color: glow }}>Your rating</Eyebrow>
-        <RatingInput value={run.rating} onChange={(v) => rate.mutate(v)} hideLabel label={`Rate ${item.title}`} />
+        {bySeason ? (
+          <span className="flex items-baseline gap-3">
+            <span className="font-mono text-[14px]" style={{ color: glow }}>★ {rating(run.rating!)}</span>
+            <span className="font-mono text-[12px] text-ink-3">average of {bySeason} season{bySeason > 1 ? "s" : ""}</span>
+          </span>
+        ) : (
+          <RatingInput value={run.rating} onChange={(v) => rate.mutate(v)} hideLabel label={`Rate ${item.title}`} />
+        )}
       </div>
     </section>
   );

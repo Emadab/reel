@@ -366,6 +366,8 @@ def patch_run(run_id: int, body: RunPatch, s: Session = Depends(get_session)):
     run.started_on = normalize(run.started_on, run.date_precision) if run.started_on else None
     run.finished_on = normalize(run.finished_on, run.date_precision) if run.finished_on else None
     if body.rating is not None or body.clear_rating:
+        if run.season_ratings:
+            raise HTTPException(422, "A show rated by season is scored by their average")
         run.rating = None if body.clear_rating else body.rating
         s.add(Event(item_id=item.id, run_id=run.id, kind="rating", payload={"rating": run.rating}))  # type: ignore[arg-type]
     run.updated_at = datetime.now(UTC)
@@ -469,6 +471,8 @@ def rate_season(item_id: int, number: int, body: SeasonRatingIn, s: Session = De
         raise HTTPException(422, "Start watching the show first")
     rated = {k: v for k, v in (run.season_ratings or {}).items() if k != str(number)}
     run.season_ratings = rated | ({str(number): body.rating} if body.rating is not None else {})  # a new dict, so it saves
+    scores = list(run.season_ratings.values())
+    run.rating = round(sum(scores) / len(scores), 1) if scores else None  # the show's score is its seasons' average
     run.updated_at = datetime.now(UTC)
     s.add(Event(item_id=item.id, run_id=run.id, kind="rating", payload={"season": number, "rating": body.rating}))  # type: ignore[arg-type]
     s.add(run)
