@@ -11,7 +11,7 @@ import { Poster, posterBg } from "../../components/Poster";
 import { useToast } from "../../components/Toasts";
 import { Button, ButtonLink, PageHeader, PillTab, SectionTitle, cx, usePop, useWindowed } from "../../components/ui";
 import { usePalette } from "../../features/search/palette";
-import { afterFirstFrame, celebrate, primeCelebrate, whenCalm } from "../../lib/celebrate";
+import { afterFirstFrame, celebrate, primeCelebrate, strike, whenCalm } from "../../lib/celebrate";
 import { formatFullDate, iso, num, untilLabel } from "../../lib/format";
 import { MODES, SHELF_LABEL, START, TABS } from "../../lib/mode";
 import type { MenuAt } from "../../components/ContextMenu";
@@ -131,6 +131,10 @@ function UpNextRail() {
   });
   const [menu, setMenu] = useState<{ u: UpNext; at: MenuAt } | null>(null);
   const markNext = (u: UpNext, btn: Element | null) => {
+    // hitting it again while its combo is open deflects again, without ticking another episode
+    const n = strike(`up:${u.item.id}`);
+    if (n == null) return;
+    if (n > 1) return void celebrate(btn, { n });
     const code = `S${u.episode.season} · E${u.episode.number}`;
     const caughtUp = (u.progress.watched ?? 0) + 1 >= (u.progress.aired ?? Infinity);
     celebrate(btn, { big: caughtUp });

@@ -3,7 +3,8 @@
  * OffscreenCanvas (lib/burst.worker.ts) so nothing on the main thread can stall it; the same code draws on the
  * main thread where workers can't take a canvas.
  */
-export type BurstSpec = { x: number; y: number; big: boolean; accent: string; size: number; seed: number };
+/** `soft`: a light sprinkle (a rating) with no flash, flare or hit-stop. */
+export type BurstSpec = { x: number; y: number; big: boolean; accent: string; size: number; seed: number; soft?: boolean };
 
 type Spark = { vx: number; vy: number; T: number; len: number; thick: number; delay: number };
 type Burst = BurstSpec & { start: number; hold: number; sparks: Spark[] };
@@ -31,9 +32,9 @@ function sparks(n: number, delay: number, power: number, rnd: () => number): Spa
 }
 
 export function makeBurst(spec: BurstSpec, now: number): Burst {
-  const hold = spec.big ? 130 : 80; // the hit-stop
+  const hold = spec.soft ? 0 : spec.big ? 130 : 80; // the hit-stop
   const rnd = rng(spec.seed);
-  const list = sparks(spec.big ? 70 : 40, hold, spec.big ? 1.3 : 1, rnd);
+  const list = spec.soft ? sparks(14, 0, 0.6, rnd) : sparks(spec.big ? 70 : 40, hold, spec.big ? 1.3 : 1, rnd);
   if (spec.big) list.push(...sparks(36, hold + 150, 0.8, rnd));
   return { ...spec, start: now, hold, sparks: list };
 }
@@ -53,11 +54,11 @@ export function draw(ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingCon
   let alive = false;
   for (const b of bursts) {
     const t = now - b.start;
-    const { x, y, hold, big, accent } = b;
+    const { x, y, hold, big, accent, soft } = b;
     if (t < hold + 1000) alive = true;
 
     // the frame flashes from the point of contact
-    if (t < hold + 120) {
+    if (!soft && t < hold + 120) {
       const o = (big ? 0.55 : 0.38) * (t < (hold + 120) * 0.4 ? 1 : 1 - (t - (hold + 120) * 0.4) / ((hold + 120) * 0.6));
       const r = Math.hypot(w, h) * 0.6;
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
@@ -72,7 +73,7 @@ export function draw(ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingCon
     // white-hot core, held through the freeze, then gone
     const coreEnd = hold + 220;
     if (t < coreEnd) {
-      const c = (big ? 170 : 120) / 2;
+      const c = (soft ? 60 : big ? 170 : 120) / 2;
       const p = t / coreEnd;
       const hp = hold / coreEnd;
       const s = p < hp ? 0.6 + 0.4 * snap(p / hp) : 1 + 0.5 * snap((p - hp) / (1 - hp));
@@ -92,7 +93,7 @@ export function draw(ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingCon
 
     // the flare: a razor line across the point of contact, plus a fainter cross
     const flareEnd = hold + 200;
-    if (t < flareEnd) {
+    if (!soft && t < flareEnd) {
       for (const [len, angle, thick, o0] of [[big ? 460 : 300, -14, 4, 1], [big ? 200 : 130, 76, 3, 0.8]]) {
         const p = t / flareEnd;
         const hp = hold / flareEnd;

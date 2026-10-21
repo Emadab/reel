@@ -13,7 +13,7 @@ import { useToast } from "../../components/Toasts";
 import { Button, DetailSkeleton, ErrorLine, Eyebrow, fadeIn, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
 import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
 import { onColor } from "../../lib/color";
-import { afterFirstFrame, celebrate, primeCelebrate } from "../../lib/celebrate";
+import { afterFirstFrame, celebrate, primeCelebrate, strike } from "../../lib/celebrate";
 import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today, untilLabel } from "../../lib/format";
 import { backTarget } from "../../lib/history";
 import { MODES, SHELF_LABEL, START, STATUS_LABEL, statusLabel } from "../../lib/mode";
@@ -451,12 +451,19 @@ function Episodes({ item, pick, setPick }: { item: ItemDetail; pick: number | nu
   const toggle = (e: Episode, ev: MouseEvent<HTMLButtonElement>) => {
     // shift-click: everything aired up to here
     const range = ev.shiftKey && !e.watched;
-    const ids = range ? shown.episodes.filter((x) => x.aired && !x.watched && x.number <= e.number).map((x) => x.id) : [e.id];
+    const check = ev.currentTarget.querySelector("[data-check]");
+    if (!range) {
+      // hitting it again while its combo is open deflects again (nothing saved); a cooling-down click is dropped
+      const n = strike(`ep:${e.id}`);
+      if (n == null) return;
+      if (n > 1 && e.watched) return void celebrate(check, { n });
+    }
+    const ids =range ? shown.episodes.filter((x) => x.aired && !x.watched && x.number <= e.number).map((x) => x.id) : [e.id];
     const watched = range || !e.watched;
     if (watched) {
       // the burst lands on the click; ticking off the last of a season (or catching up) gets the big one
       const left = shown.episodes.some((x) => x.aired && !x.watched && !ids.includes(x.id));
-      celebrate(ev.currentTarget.querySelector("[data-check]"), { big: shown.number > 0 && !left });
+      celebrate(check, { big: shown.number > 0 && !left });
     }
     afterFirstFrame(() => tick.mutate({ episode_ids: ids, watched }));
   };
