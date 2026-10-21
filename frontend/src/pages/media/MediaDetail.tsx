@@ -456,7 +456,7 @@ function Episodes({ item, pick, setPick }: { item: ItemDetail; pick: number | nu
       // hitting it again while its combo is open deflects again (nothing saved); a cooling-down click is dropped
       const n = strike(`ep:${e.id}`);
       if (n == null) return;
-      if (n > 1 && e.watched) return void celebrate(check, { n });
+      if (n > 1) return void (e.watched && celebrate(check, { n })); // never toggles back and forth
     }
     const ids =range ? shown.episodes.filter((x) => x.aired && !x.watched && x.number <= e.number).map((x) => x.id) : [e.id];
     const watched = range || !e.watched;
@@ -1087,6 +1087,10 @@ export default function MediaDetail({ kind }: { kind: Kind }) {
         type="button" disabled={tickNext.isPending}
         onPointerDown={primeCelebrate}
         onClick={(ev) => {
+          // it moves on to the next episode at once, so a combo on it deflects instead of ticking off the season
+          const n = strike(`next:${item.id}`);
+          if (n == null) return;
+          if (n > 1) return void celebrate(ev.currentTarget, { n });
           const after = withEpisodes(item, new Set([next.id]), true).next_episode;
           celebrate(ev.currentTarget, { big: after == null || after.season !== next.season });
           afterFirstFrame(() => {
