@@ -117,15 +117,23 @@ export function strike(key: string, now = performance.now()): number | null {
   return n;
 }
 
-/** One struck-steel voice: inharmonic partials ringing down over a bright scrape of noise. `drop` starts the
- *  pitch that much sharp and lets it fall (the ting of a parry); `at` delays it (s). */
-type Tone = { base: number; ratios: number[]; decay: number; hp: number; scrape: number; drop?: number; at?: number };
-// a combo's deflects, in turn: the clang, a parry ting, a heavy deflect, a spike, a double strike
+/** The hit on `key` didn't open a combo (an un-mark): the next click past the cooldown is a fresh hit. */
+export function endCombo(key: string) {
+  if (last?.key === key) last.n = 0;
+}
+
+/** One struck-steel voice: inharmonic partials ringing down over a bright scrape of noise; `at` delays it (s). */
+type Tone = { base: number; ratios: number[]; decay: number; hp: number; scrape: number; at?: number };
+// a combo's deflects, in turn, all blade on blade: the clang, a longer mid clash, a heavy deflect, a bright
+// clash with a grinding scrape, a double strike
 const STRIKES: Tone[][] = [
   [{ base: 520, ratios: [1, 2.76, 5.4, 8.93], decay: 0.7, hp: 3200, scrape: 1 }],
-  [{ base: 1250, ratios: [1, 2.4, 4.1], decay: 0.45, hp: 5200, scrape: 0.6, drop: 1.18 }],
+  [{ base: 430, ratios: [1, 2.76, 5.4, 8.93], decay: 0.9, hp: 2600, scrape: 1.3 }],
   [{ base: 300, ratios: [1, 2.76, 5.4, 8.93, 12.1], decay: 1.3, hp: 1800, scrape: 1.6 }],
-  [{ base: 1800, ratios: [1, 3.2], decay: 0.22, hp: 6500, scrape: 2.2, drop: 1.5 }],
+  [
+    { base: 610, ratios: [1, 2.76, 5.4, 8.93, 12.1], decay: 0.65, hp: 3600, scrape: 1.4 },
+    { base: 610, ratios: [], decay: 0, hp: 2400, scrape: 1, at: 0.06 }, // the blades grind on
+  ],
   [
     { base: 660, ratios: [1, 2.76, 5.4], decay: 0.5, hp: 3600, scrape: 1 },
     { base: 990, ratios: [1, 2.76, 5.4], decay: 0.6, hp: 4200, scrape: 0.8, at: 0.045 },
@@ -150,8 +158,7 @@ function clang(big: boolean, n = 1) {
         const o = ac.createOscillator();
         const g = ac.createGain();
         o.type = "sine";
-        o.frequency.setValueAtTime(base * ratio * (v.drop ?? 1), t);
-        if (v.drop) o.frequency.exponentialRampToValueAtTime(base * ratio, t + 0.05);
+        o.frequency.value = base * ratio;
         g.gain.setValueAtTime(0.6 / (i + 1), t);
         g.gain.exponentialRampToValueAtTime(0.0001, t + decay / (1 + i * 0.6));
         o.connect(g).connect(out);

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { primeCelebrate, rated } from "../lib/celebrate";
 import { rating } from "../lib/format";
 
@@ -34,10 +34,14 @@ export function RatingInput({
   const set = (v: number | null, n?: number, keys = false) => {
     onChange(v);
     rated(n ? row.current?.querySelector(`[data-score="${n}"]`) : null, v, { keys });
-    if (keys) return;
-    if (v == null) setPopped((p) => ({ n: 0, k: (p?.k ?? 0) + 1, down: true }));
-    else if (n) setPopped((p) => ({ n, k: (p?.k ?? 0) + 1 }));
+    if (!keys && v != null && n) setPopped((p) => ({ n, k: (p?.k ?? 0) + 1 }));
   };
+  // cleared, here or by a Clear button outside: the keys dip back down
+  const was = useRef(value);
+  useEffect(() => {
+    if (was.current != null && value == null) setPopped((p) => ({ n: 0, k: (p?.k ?? 0) + 1, down: true }));
+    was.current = value;
+  }, [value]);
   const at = (clientX: number) => {
     const b = row.current!.getBoundingClientRect();
     return tenth(((clientX - b.left) / b.width) * 10);

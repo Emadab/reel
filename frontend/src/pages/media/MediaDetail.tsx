@@ -13,7 +13,7 @@ import { useToast } from "../../components/Toasts";
 import { Button, DetailSkeleton, ErrorLine, Eyebrow, fadeIn, MonoTag, SectionTitle, Segmented, TagChip, cx } from "../../components/ui";
 import { DateOrUnknown, PrecisionPicker, fromUnknown } from "../../components/WhenFields";
 import { onColor } from "../../lib/color";
-import { afterFirstFrame, celebrate, primeCelebrate, strike } from "../../lib/celebrate";
+import { afterFirstFrame, celebrate, chime, endCombo, primeCelebrate, strike } from "../../lib/celebrate";
 import { formatFullDate, formatWatchDate, iso, pct, rating, relativeTime, today, untilLabel } from "../../lib/format";
 import { backTarget } from "../../lib/history";
 import { MODES, SHELF_LABEL, START, STATUS_LABEL, statusLabel } from "../../lib/mode";
@@ -456,7 +456,8 @@ function Episodes({ item, pick, setPick }: { item: ItemDetail; pick: number | nu
       // hitting it again while its combo is open deflects again (nothing saved); a cooling-down click is dropped
       const n = strike(`ep:${e.id}`);
       if (n == null) return;
-      if (n > 1) return void (e.watched && celebrate(check, { n })); // never toggles back and forth
+      if (n > 1 && e.watched) return void celebrate(check, { n });
+      if (e.watched) endCombo(`ep:${e.id}`); // un-marking opens no combo: the next click marks it again
     }
     const ids =range ? shown.episodes.filter((x) => x.aired && !x.watched && x.number <= e.number).map((x) => x.id) : [e.id];
     const watched = range || !e.watched;
@@ -777,7 +778,8 @@ function YourRun({ item, run, glow, pick }: { item: ItemDetail; run: RunOut; glo
           </Eyebrow>
           {mine != null && !(bySeason && !rated) && (
             <button
-              type="button" onClick={() => (rated ? rateSeason.mutate({ season: rated.number, rating: null }) : rate.mutate(null))}
+              type="button" onPointerDown={primeCelebrate}
+              onClick={() => (chime(null), rated ? rateSeason.mutate({ season: rated.number, rating: null }) : rate.mutate(null))}
               className="h-11 px-0 bg-transparent border-0 text-[13px] text-ink-3 hover:text-ink-hi underline cursor-pointer"
             >
               Clear
